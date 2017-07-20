@@ -139,7 +139,7 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			{
 				testWorld.addCell(bestDNA[rand() % bestDNA.size()]->mutate(0.1), 500, 100 + rand() % 2000);
 			}
-			testWorld.jump(10000, true);
+			testWorld.jump(2000, true);
 			bestDNA = testWorld.getDNA();
 
 			sort(bestDNA.begin(), bestDNA.end(),

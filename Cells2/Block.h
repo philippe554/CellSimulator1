@@ -25,9 +25,8 @@ public:
 	void calcCollisionBorder();
 	void calcCollisionChunk(const Block* chunk, const bool cellCell);
 
-	void reflow();
-	void calcTemp();
-	void calcParticles();
+	void calcFlow();
+	void moveFlow();
 
 	void loadDefaultChunk();
 	void addLine(const double x1, const double y1, const double x2, const double y2);
@@ -35,6 +34,10 @@ public:
 
 	double getTemperature()const;
 	double getPresure()const;
+	double getMass()const;
+	double getConcentration(const int& particle, const Vector& place)const;
+	void addFrictionForce(const Vector& force);
+
 	vector<shared_ptr<DNA>> getDNA();
 
 	vector<Cell*> cells;
@@ -52,9 +55,14 @@ public:
 private:
 	void linkBlocks(int x, int y, int i1, int i2);
 
-	int totalParticles;
-	double temperature;
+	void moveFlowHelper(Block* neighbour, float total);
+
+	float getConcentrationHelper(Block* neighbour, const int& particle)const;
+
+	float totalParticles;
+	float temperature;
 	Vector flow;
+	Vector frictionForce;
 
 	enum particlesName
 	{
@@ -62,5 +70,5 @@ private:
 		e_AmountOfParticles
 	};
 
-	int particles[e_AmountOfParticles];
+	float particles[e_AmountOfParticles];
 };

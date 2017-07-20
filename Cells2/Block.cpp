@@ -28,7 +28,7 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 		if(neighbour!=nullptr)
 		{
 			counter++;
-			sumTemp += neighbour->temperature;
+			sumTemp += neighbour->getTemperature();
 		}
 	}
 	if(counter==0)
@@ -209,7 +209,7 @@ void Block::calcCollisionChunk(const Block* block, const bool cellCell)
 	}
 }
 
-void Block::reflow()
+void Block::calcFlow()
 {
 	int flowCounter = 0;
 	Vector flowSum(0.0, 0.0);
@@ -223,6 +223,13 @@ void Block::reflow()
 			flowSum += flowSub;
 		}
 	}
+	if (neighbours[6] != nullptr)
+	{
+		if(getTemperature()>neighbours[6]->getTemperature())
+		{
+			flowSum.add(0, (neighbours[6]->getTemperature() - getTemperature())*0.1);
+		}
+	}
 	if(flowCounter>0)
 	{
 		flow = (flow*0.25)+(flowSum * (0.75 * world->c_BlockSize / flowCounter));
@@ -231,38 +238,62 @@ void Block::reflow()
 	{
 		flow.multiply(0.25);
 	}
+	flow.add(frictionForce / getMass());
+	frictionForce.set(0, 0);
 }
-void Block::calcTemp()
+void Block::moveFlow()
 {
-	int j = 0;
-	if (neighbours[j] != nullptr) {
-		double tempDif = temperature - neighbours[j]->temperature;
-		double particalRatio = totalParticles / neighbours[j]->totalParticles;
-		temperature -= tempDif*world->c_FlowRate / particalRatio;
-		neighbours[j]->temperature += tempDif*world->c_FlowRate*particalRatio;
-	}
-	j = 6;
-	if(neighbours[j]!=nullptr){
-		double tempDif = temperature - neighbours[j]->temperature;
-		if (tempDif>0) {
-			tempDif *= 5;
-		}
-		else
-		{
-			tempDif /= 5;
-		}
-		double particalRatio = totalParticles / neighbours[j]->totalParticles;
-		temperature -= tempDif*world->c_FlowRate / particalRatio;
-		neighbours[j]->temperature += tempDif*world->c_FlowRate*particalRatio;
-	}
-	for (auto cell : cells)
+	if(flow.getX()>0)
 	{
-		temperature += cell->calcHeating(temperature) / totalParticles;
-		cell->applyForce(flow);
+		if(neighbours[0]!=nullptr)
+		{
+			moveFlowHelper(neighbours[0], flow.getX());
+		}
+	}
+	else
+	{
+		if (neighbours[4] != nullptr)
+		{
+			moveFlowHelper(neighbours[4], -flow.getX());
+		}
+	}
+	if (flow.getY()>0)
+	{
+		if (neighbours[2] != nullptr)
+		{
+			moveFlowHelper(neighbours[2], flow.getY());
+		}
+	}
+	else
+	{
+		if (neighbours[6] != nullptr)
+		{
+			moveFlowHelper(neighbours[6], -flow.getY());
+		}
 	}
 }
-void Block::calcParticles()
+void Block::moveFlowHelper(Block* neighbour, float total)
 {
+	float energyLeaving = total * temperature;
+	float energyNeighbour = neighbour->totalParticles*neighbour->temperature;
+
+	for (int i = 0; i<e_AmountOfParticles; i++)
+	{
+		float moving = (particles[i] * flow.getX()) / totalParticles; //TODO: split total and amount
+		totalParticles -= moving;
+		particles[i] -= moving;
+
+
+		neighbour->totalParticles += moving;
+		neighbour->particles[i] += moving;
+
+		total -= moving;
+	}
+
+	totalParticles -= total;
+	neighbour->totalParticles += total;
+
+	neighbour->temperature = (energyLeaving + energyNeighbour) / neighbour->totalParticles;
 }
 
 void Block::loadDefaultChunk()
@@ -390,7 +421,41 @@ double Block::getTemperature()const
 }
 double Block::getPresure()const
 {
-	return world->c_FlowConstant * totalParticles * temperature / (world->c_BlockSize*world->c_BlockSize); 
+	return world->c_FlowConstant * totalParticles * getTemperature() / (world->c_BlockSize*world->c_BlockSize);
+}
+double Block::getMass() const
+{
+	return totalParticles*world->c_ParticalMass;
+}
+double Block::getConcentration(const int& particle, const Vector& place) const
+{
+	float Q11 = particles[particle] / totalParticles;
+	float Q21 = getConcentrationHelper(neighbours[0], particle);
+	float Q22 = getConcentrationHelper(neighbours[1], particle);
+	float Q12 = getConcentrationHelper(neighbours[2], particle);
+
+	float x1 = bx * world->c_BlockSize;
+	float x2 = (bx+1) * world->c_BlockSize;
+	float y1 = by * world->c_BlockSize;
+	float y2 = (by+1) * world->c_BlockSize;
+	
+	float R1 = ((x2 - place.getX()) / (x2 - x1))*Q11 + ((place.getX() - x1) / (x2 - x1))*Q21;
+	float R2 = ((x2 - place.getX()) / (x2 - x1))*Q12 + ((place.getX() - x1) / (x2 - x1))*Q22;
+
+	return ((y2 - place.getY()) / (y2 - y1))*R1 + ((place.getY() - y1) / (y2 - y1))*R2;
+}
+float Block::getConcentrationHelper(Block* neighbour, const int& particle) const
+{
+	if (neighbours[0] != nullptr)
+	{
+		return neighbours[0]->particles[particle] / neighbours[0]->totalParticles;
+	}
+	return particles[particle] / totalParticles;
+}
+
+void Block::addFrictionForce(const Vector& force)
+{
+	frictionForce -= force;
 }
 
 vector<shared_ptr<DNA>> Block::getDNA()

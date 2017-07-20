@@ -54,9 +54,10 @@ public:
 	const double c_Precision = 0.2;
 	
 	const double c_FlowRate = 0.005;
-	const double c_DefaultChunkParticleCount = 100;
+	const double c_DefaultChunkParticleCount = 1000;
 	const double c_ChunkRediation = 0.00001;
 	const double c_DefaultTemperature = 300;
+	const double c_ParticalMass=0.001;
 	const double c_FlowConstant = 1.0 / (c_DefaultChunkParticleCount*c_DefaultTemperature);
 	const double c_TermalFlowConstant = 0.1;
 	const double c_CellHeatProduction = 100;

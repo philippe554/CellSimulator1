@@ -206,7 +206,7 @@ long long World::getTime()
 #endif
 	for (auto& chunk : chunks)
 	{
-		chunk.second->reflow();
+		chunk.second->calcFlow();
 		chunk.second->calcTemp();
 		chunk.second->doRestructure();
 	}
