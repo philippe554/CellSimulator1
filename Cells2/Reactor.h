@@ -3,35 +3,38 @@
 
 class Reactor;
 
-#include "DNA.h";
-
-using namespace std;
+#include "World.h"
+#include "Membrane.h"
+#include "Particle.h"
+#include "ParticleFactory.h"
 
 class Reactor
 {
 public:
-	Reactor(float _volume);
+	enum particlesName
+	{
+		p_hydrogen, p_carbon, p_oxygen, p_nitrogen,
+		e_AmountOfParticles
+	};
 
-	static void loadPrototypes();
-	static void printPrototypes();
+	static Particle prototypes[];
 
-	void incubate();
-	void exchange(Reactor*other,bool membrame, double surface);
+	Reactor(World* world, float _volume, float _temperature);
 
-	bool compose(int i,int amount);
-	bool decompose(int i,int amount);
+	double getTemperature()const;
+	double getPresure()const;
+	double getAmountOfParticles()const;
+	double getMass()const;
+	double getConcentration(const int& particle)const;
 
-	static const int amountOfProteins = 50;
-	static const int amountOfHeavyProteins = 50;
+	void exchange(Reactor*other, double surface, Membrane* membrane);
+	void exchange(Reactor*other, double surface, double flow);
+
+	void applyFactory(ParticleFactory* factory);
+
 private:
-	vector<DNA> dnas;
-	int elements[25];
-	int proteins[amountOfProteins+amountOfHeavyProteins];
-
-	static bool prototypesLoaded;
-	static int primes[25];
-	static vector<int> prototype[amountOfProteins + amountOfHeavyProteins];
-
+	World *world;
 	float temperature;
 	float volume;
+	float particles[e_AmountOfParticles];
 };

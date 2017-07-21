@@ -99,6 +99,9 @@
     <ClCompile Include="Matrix.cpp">
       <Filter>Source Files\Physics\Math</Filter>
     </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>Source Files\Physics\Chemical</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -146,9 +149,6 @@
     <ClInclude Include="World.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="Base.h">
-      <Filter>Header Files\Physics\Chemical</Filter>
-    </ClInclude>
     <ClInclude Include="DNA.h">
       <Filter>Header Files\Physics\Chemical</Filter>
     </ClInclude>
@@ -160,6 +160,15 @@
     </ClInclude>
     <ClInclude Include="Matrix.h">
       <Filter>Header Files\Physics\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>Header Files\Physics\Chemical</Filter>
+    </ClInclude>
+    <ClInclude Include="Membrane.h">
+      <Filter>Header Files\Physics\Chemical</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleFactory.h">
+      <Filter>Header Files\Physics\Chemical</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

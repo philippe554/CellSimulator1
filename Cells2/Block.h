@@ -34,6 +34,7 @@ public:
 
 	double getTemperature()const;
 	double getPresure()const;
+	double getAmountOfParticles()const;
 	double getMass()const;
 	double getConcentration(const int& particle, const Vector& place)const;
 	void addFrictionForce(const Vector& force);
@@ -58,17 +59,4 @@ private:
 	void moveFlowHelper(Block* neighbour, float total);
 
 	float getConcentrationHelper(Block* neighbour, const int& particle)const;
-
-	float totalParticles;
-	float temperature;
-	Vector flow;
-	Vector frictionForce;
-
-	enum particlesName
-	{
-		p_carbon, p_oxygen, p_nitrogen,
-		e_AmountOfParticles
-	};
-
-	float particles[e_AmountOfParticles];
 };

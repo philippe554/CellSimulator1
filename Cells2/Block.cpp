@@ -41,7 +41,7 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 
 	//loadDefaultChunk();
 
-	totalParticles = world->c_DefaultChunkParticleCount * world->c_BlockSize* world->c_BlockSize;
+	particles[p_hydrogen] = 5000;
 	particles[p_carbon] = 400;
 	particles[p_oxygen] = 100;
 	particles[p_nitrogen] = 50;
@@ -272,28 +272,20 @@ void Block::moveFlow()
 		}
 	}
 }
-void Block::moveFlowHelper(Block* neighbour, float total)
+void Block::moveFlowHelper(Block* neighbour, float amount)
 {
-	float energyLeaving = total * temperature;
-	float energyNeighbour = neighbour->totalParticles*neighbour->temperature;
+	float energyLeaving = amount * temperature;
+	float energyNeighbour = neighbour->getAmountOfParticles() * neighbour->temperature;
+	float amountOfParticles = getAmountOfParticles();
 
 	for (int i = 0; i<e_AmountOfParticles; i++)
 	{
-		float moving = (particles[i] * flow.getX()) / totalParticles; //TODO: split total and amount
-		totalParticles -= moving;
+		float moving = (particles[i] * amount) / amountOfParticles;
 		particles[i] -= moving;
-
-
-		neighbour->totalParticles += moving;
 		neighbour->particles[i] += moving;
-
-		total -= moving;
 	}
 
-	totalParticles -= total;
-	neighbour->totalParticles += total;
-
-	neighbour->temperature = (energyLeaving + energyNeighbour) / neighbour->totalParticles;
+	neighbour->temperature = (energyLeaving + energyNeighbour) / neighbour->getAmountOfParticles();
 }
 
 void Block::loadDefaultChunk()
@@ -421,15 +413,24 @@ double Block::getTemperature()const
 }
 double Block::getPresure()const
 {
-	return world->c_FlowConstant * totalParticles * getTemperature() / (world->c_BlockSize*world->c_BlockSize);
+	return world->c_FlowConstant * getAmountOfParticles() * getTemperature() / (world->c_BlockSize*world->c_BlockSize);
+}
+double Block::getAmountOfParticles() const
+{
+	float total = 0;
+	for(int i=0;i<e_AmountOfParticles;i++)
+	{
+		total += particles[i];
+	}
+	return total;
 }
 double Block::getMass() const
 {
-	return totalParticles*world->c_ParticalMass;
+	return getAmountOfParticles()*world->c_ParticalMass;
 }
 double Block::getConcentration(const int& particle, const Vector& place) const
 {
-	float Q11 = particles[particle] / totalParticles;
+	float Q11 = particles[particle] / getAmountOfParticles();
 	float Q21 = getConcentrationHelper(neighbours[0], particle);
 	float Q22 = getConcentrationHelper(neighbours[1], particle);
 	float Q12 = getConcentrationHelper(neighbours[2], particle);
@@ -446,11 +447,11 @@ double Block::getConcentration(const int& particle, const Vector& place) const
 }
 float Block::getConcentrationHelper(Block* neighbour, const int& particle) const
 {
-	if (neighbours[0] != nullptr)
+	if (neighbours[0] != nullptr) 
 	{
-		return neighbours[0]->particles[particle] / neighbours[0]->totalParticles;
+		return neighbours[0]->particles[particle] / neighbours[0]->getAmountOfParticles();
 	}
-	return particles[particle] / totalParticles;
+	return particles[particle] / getAmountOfParticles();
 }
 
 void Block::addFrictionForce(const Vector& force)
