@@ -111,16 +111,16 @@ Block* World::findBlock_B(const int x, const int y)
 }
 int World::calcChunk(const double input)const
 {
-	const double length = c_BlockSize*c_ChunkSize;
+	const double length = ws.blockSize*ws.blockSize;
 	return int((input >= 0 ? input : input - length + 1) / length);
 }
 int World::calcBlock(const double input) const
 {
-	return int((input >= 0 ? input : input - c_BlockSize + 1) / c_BlockSize);
+	return int((input >= 0 ? input : input - ws.blockSize + 1) / ws.chunkSize);
 }
 int World::calcChunk_B(const int input)
 {
-	return int(double(input >= 0 ? input : input - c_ChunkSize + 1) / c_ChunkSize);
+	return int(double(input >= 0 ? input : input - ws.chunkSize + 1) / ws.chunkSize);
 }
 
 vector<shared_ptr<DNA>> World::getDNA()

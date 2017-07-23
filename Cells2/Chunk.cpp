@@ -10,21 +10,21 @@ Chunk::Chunk(World*_world,const int _cx,const int _cy, long long _time)
 	world = _world;
 	cx = _cx;
 	cy = _cy;
-	blocks = new Block*[World::c_ChunkSize*World::c_ChunkSize];
+	blocks = new Block*[world->ws.chunkSize*world->ws.chunkSize];
 
-	for (int i = 0; i < World::c_ChunkSize; i++)
+	for (int i = 0; i < world->ws.chunkSize; i++)
 	{
-		for (int j = 0; j < World::c_ChunkSize; j++)
+		for (int j = 0; j < world->ws.chunkSize; j++)
 		{
-			blocks[i*World::c_ChunkSize + j] = nullptr;
+			blocks[i * world->ws.chunkSize + j] = nullptr;
 		}
 	}
 
-	for(int i=0;i<World::c_ChunkSize;i++)
+	for(int i=0;i<world->ws.chunkSize;i++)
 	{
-		for(int j=0;j<World::c_ChunkSize;j++)
+		for(int j=0;j<world->ws.chunkSize;j++)
 		{
-			blocks[i*World::c_ChunkSize + j] = new Block(world, this, cx, cy, cx*World::c_ChunkSize + i, cy*World::c_ChunkSize + j);
+			blocks[i*world->ws.chunkSize + j] = new Block(world, this, cx, cy, cx*world->ws.chunkSize + i, cy*world->ws.chunkSize + j);
 		}
 	}
 
@@ -47,7 +47,7 @@ Chunk::~Chunk()
 	runningMutex.lock();
 	running = true;
 	runningMutex.unlock();
-	for(int i=0;i<World::c_ChunkSize*World::c_ChunkSize;i++)
+	for(int i=0;i<world->ws.chunkSize*world->ws.chunkSize;i++)
 	{
 		delete blocks[i];
 	}
@@ -64,31 +64,31 @@ void Chunk::linkChunk(int x, int y, int i1, int i2)
 
 Block* Chunk::findBlock_B(int x, int y) const
 {	
-	if (x < cx*world->c_ChunkSize || x >= (cx + 1)*world->c_ChunkSize || y < cy*world->c_ChunkSize || y >= (cy + 1)*world->c_ChunkSize)
+	if (x < cx*world->ws.chunkSize || x >= (cx + 1)*world->ws.chunkSize || y < cy*world->ws.chunkSize || y >= (cy + 1)*world->ws.chunkSize)
 	{
 		return nullptr;
 	}
 	if (x >= 0) 
 	{
-		x = x%world->c_ChunkSize;
+		x = x%world->ws.chunkSize;
 	}
 	else
 	{
-		x = (world->c_ChunkSize - ((-x) % world->c_ChunkSize)) % world->c_ChunkSize;
+		x = (world->ws.chunkSize - ((-x) % world->ws.chunkSize)) % world->ws.chunkSize;
 	}
 	if (y >= 0) 
 	{
-		y = y%world->c_ChunkSize;
+		y = y%world->ws.chunkSize;
 	}
 	else
 	{
-		y = (world->c_ChunkSize - ((-y) % world->c_ChunkSize)) % world->c_ChunkSize;
+		y = (world->ws.chunkSize - ((-y) % world->ws.chunkSize)) % world->ws.chunkSize;
 	}
-	return blocks[x*world->c_ChunkSize+y];
+	return blocks[x*world->ws.chunkSize+y];
 }
 Block* Chunk::findBlock_N(const int input) const
 {
-	if(input>=0&&input<world->c_ChunkSize*world->c_ChunkSize)
+	if(input>=0&&input<world->ws.chunkSize*world->ws.chunkSize)
 	{
 		return blocks[input];
 	}
@@ -102,7 +102,7 @@ void Chunk::run()
 {
 	acceptAllCells();
 
-	for (int i = 0; i < World::c_ChunkSize*World::c_ChunkSize; i++)
+	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
 		blocks[i]->calcJointForces();
 
@@ -110,12 +110,12 @@ void Chunk::run()
 		blocks[i]->cellCellCollision();
 #endif
 	}
-	for (int i = 0; i < World::c_ChunkSize*World::c_ChunkSize; i++)
+	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
 		blocks[i]->movePoints(world->c_Precision, world->c_WaterFriction);
 	}
 
-	for (int i = 0; i < World::c_ChunkSize*World::c_ChunkSize; i++)
+	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
 		blocks[i]->calcFlow();
 		blocks[i]->moveFlow();
@@ -155,7 +155,7 @@ void Chunk::acceptAllCells()
 vector<shared_ptr<DNA>> Chunk::getDNA()
 {
 	vector<shared_ptr<DNA>> data;
-	for (int i = 0; i < World::c_ChunkSize*World::c_ChunkSize; i++)
+	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
 		vector<shared_ptr<DNA>> toBeAdded = blocks[i]->getDNA();
 		data.insert(data.end(), toBeAdded.begin(), toBeAdded.end());

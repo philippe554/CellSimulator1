@@ -6,6 +6,7 @@ tail(4,10),
 membrane(WorldSettings::e_AmountOfParticles,1)
 {
 	tail.setRandom();
+	membrane.setRandom();
 	fitness = 0;
 }
 

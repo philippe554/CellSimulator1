@@ -36,6 +36,7 @@ public:
 	
 	float getConcentrationPoint(const int& particle, const Vector& place)const;
 	void addFrictionForce(const Vector& force);
+	float getVolume() const override;
 
 	vector<shared_ptr<DNA>> getDNA();
 

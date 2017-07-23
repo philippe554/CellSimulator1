@@ -27,14 +27,12 @@ public:
 
 	int calcChunk(const double input) const;
 	int calcBlock(const double input) const;
-	static int calcChunk_B(const int input);
+	int calcChunk_B(const int input);
 
 	vector<shared_ptr<DNA>> getDNA();
 
 	const static int c_Cores = 3;
 
-	const double c_BlockSize = 50;
-	const static int c_ChunkSize = 10;
 	const int c_WorldBoundary = 6;
 
 	const double c_WaterLevel = 0;

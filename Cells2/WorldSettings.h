@@ -3,10 +3,11 @@
 class WorldSettings
 {
 public: 
-	float blockSize = 50;
-	float chunkSize = 10;
+	float blockSize = 10;
+	int chunkSize = 10;
 	float liquidFlowRate = 0.000001;
-	float defaultTemperature = 300;
+	float defaultTemperature = 100;
+	float surfacePressure = 0.02;
 
 	enum particlesName
 	{

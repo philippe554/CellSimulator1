@@ -1,7 +1,7 @@
 #include "Block.h"
 
 Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int _bx, const int _by)
-	: Reactor(&tWorld->ws, tWorld->c_BlockSize * tWorld->c_BlockSize)
+	: Reactor(&tWorld->ws, tWorld->ws.defaultTemperature)
 {
 	world = tWorld;
 	chunk = tChunk;
@@ -33,19 +33,16 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 	}
 	if (counter == 0)
 	{
-		temperature = world->c_DefaultTemperature;
+		setTemperature(world->c_DefaultTemperature);
 	}
 	else
 	{
-		temperature = sumTemp / counter;
+		setTemperature(sumTemp / counter);
 	}
 
 	//loadDefaultChunk();
 
-	particles[WorldSettings::p_hydrogen] = 5000;
-	particles[WorldSettings::p_carbon] = 400;
-	particles[WorldSettings::p_oxygen] = 100;
-	particles[WorldSettings::p_nitrogen] = 50;
+	setDefaultParticles(world->ws.blockSize*world->ws.blockSize);
 }
 
 Block::~Block()
@@ -81,9 +78,13 @@ void Block::linkBlocks(int x, int y, int i1, int i2)
 
 void Block::calcJointForces()
 {
+	float blockPressure = getPressure();
 	for(auto cell:cells)
 	{
 		cell->calcJointForces(flow);
+
+		float pressureDifference = blockPressure - cell->getPressure();
+		cell->applyPressure(pressureDifference*world->ws.surfacePressure);
 	}
 }
 
@@ -235,13 +236,13 @@ void Block::calcFlow()
 	}
 	if(flowCounter>0)
 	{
-		flow = (flow*0.25)+(flowSum * (0.75 * world->c_BlockSize / flowCounter));
+		//flow = (flow*0.25)+(flowSum * (0.75 * world->ws.blockSize / flowCounter));
 	}
 	else
 	{
-		flow.multiply(0.25);
+		//flow.multiply(0.25);
 	}
-	flow.add(frictionForce / getMass());
+	//flow.add(frictionForce / getMass());
 	frictionForce.set(0, 0);
 }
 void Block::moveFlow()
@@ -250,28 +251,28 @@ void Block::moveFlow()
 	{
 		if(neighbours[0]!=nullptr)
 		{
-			exchange(neighbours[0], world->c_BlockSize, flow.getX());
+			//exchange(neighbours[0], world->ws.blockSize, flow.getX());
 		}
 	}
 	else
 	{
 		if (neighbours[4] != nullptr)
 		{
-			exchange(neighbours[4], world->c_BlockSize, -flow.getX());
+			//exchange(neighbours[4], world->ws.blockSize, -flow.getX());
 		}
 	}
 	if (flow.getY()>0)
 	{
 		if (neighbours[2] != nullptr)
 		{
-			exchange(neighbours[2], world->c_BlockSize, flow.getY());
+			//exchange(neighbours[2], world->ws.blockSize, flow.getY());
 		}
 	}
 	else
 	{
 		if (neighbours[6] != nullptr)
 		{
-			exchange(neighbours[6], world->c_BlockSize, -flow.getY());
+			//exchange(neighbours[6], world->ws.blockSize, -flow.getY());
 		}
 	}
 	for(auto cell : cells)
@@ -319,10 +320,10 @@ void Block::loadDefaultChunk()
 }
 void Block::addLine(const double x1, const double y1, const double x2, const double y2)
 {
-	const double left = bx*world->c_BlockSize;
-	const double top = by*world->c_BlockSize;
-	const double right = left + world->c_BlockSize;
-	const double bottom = top + world->c_BlockSize;
+	const double left = bx*world->ws.blockSize;
+	const double top = by*world->ws.blockSize;
+	const double right = left + world->ws.blockSize;
+	const double bottom = top + world->ws.blockSize;
 	Vector p1(left, top);
 	Vector p2(right,top);
 	Vector p3(right,bottom);
@@ -392,10 +393,10 @@ float Block::getConcentrationPoint(const int& particle, const Vector& place) con
 	float Q22 = getConcentrationHelper(neighbours[1], particle);
 	float Q12 = getConcentrationHelper(neighbours[2], particle);
 
-	float x1 = bx * world->c_BlockSize;
-	float x2 = (bx+1) * world->c_BlockSize;
-	float y1 = by * world->c_BlockSize;
-	float y2 = (by+1) * world->c_BlockSize;
+	float x1 = bx * world->ws.blockSize;
+	float x2 = (bx+1) * world->ws.blockSize;
+	float y1 = by * world->ws.blockSize;
+	float y2 = (by+1) * world->ws.blockSize;
 	
 	float R1 = ((x2 - place.getX()) / (x2 - x1))*Q11 + ((place.getX() - x1) / (x2 - x1))*Q21;
 	float R2 = ((x2 - place.getX()) / (x2 - x1))*Q12 + ((place.getX() - x1) / (x2 - x1))*Q22;
@@ -414,6 +415,11 @@ float Block::getConcentrationHelper(Block* neighbour, const int& particle) const
 void Block::addFrictionForce(const Vector& force)
 {
 	frictionForce -= force;
+}
+
+float Block::getVolume() const
+{
+	return world->ws.blockSize*world->ws.blockSize;
 }
 
 vector<shared_ptr<DNA>> Block::getDNA()

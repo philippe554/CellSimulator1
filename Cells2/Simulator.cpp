@@ -19,33 +19,33 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 	Cell* selectedCell = nullptr;
 
 	for (auto& chunk : world.chunks) {
-		for (int i = 0; i < world.c_ChunkSize*world.c_ChunkSize;i++)
+		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize;i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			fillRectrangle(RenderTarget, Vector(block->bx*world.c_BlockSize, block->by*world.c_BlockSize),
-				Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize),
+			fillRectrangle(RenderTarget, Vector(block->bx*world.ws.blockSize, block->by*world.ws.blockSize),
+				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
 				Color::heightMap(block->getTemperature() / 500));
 		}
 	}
 	for (auto& chunk : world.chunks) {
-		for (int i = 0; i < world.c_ChunkSize*world.c_ChunkSize; i++)
+		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			drawLine(RenderTarget, Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize),
-				Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize), Color::black());
-			drawLine(RenderTarget, Vector(block->bx*world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize),
-				Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize), Color::black());
-			drawLine(RenderTarget,Vector(block->bx*world.c_BlockSize + 0.5*world.c_BlockSize, 
-				block->by*world.c_BlockSize + 0.5*world.c_BlockSize),
-				Vector(block->bx*world.c_BlockSize + 0.5*world.c_BlockSize, 
-					block->by*world.c_BlockSize + 0.5*world.c_BlockSize) + block->getFlow()*10, Color::black());
+			drawLine(RenderTarget, Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize),
+				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
+			drawLine(RenderTarget, Vector(block->bx*world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
+				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
+			drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
+				block->by*world.ws.blockSize + 0.5*world.ws.blockSize),
+				Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
+					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10, Color::black());
 
 		}
 	}
 
 	for (auto& chunk : world.chunks) 
 	{
-		for (int i = 0; i < world.c_ChunkSize*world.c_ChunkSize; i++)
+		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
 			for (auto& line : block->lines) {
@@ -93,18 +93,19 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 	Writer::print("World time: "+ to_string(world.getTime()), Color::black(), Writer::normal(), { 0,50,400,100 });
 	Writer::print("Cells broken: " + to_string(world.stats_CellsBroken), Color::black(), Writer::normal(), { 0,100,400,150 });
 
-	Block* mouseOnBlock = world.findBlock_B(world.calcBlock(mouseX / scale), world.calcBlock(mouseY / scale));
+	Block* mouseOnBlock = world.findBlock_B(world.calcBlock((mouseX-xOffset) / scale), world.calcBlock((mouseY-yOffset) / scale));
 	if (mouseOnBlock != nullptr)
 	{
 		Writer::print("Block: (" + to_string(mouseOnBlock->bx) + ","+to_string(mouseOnBlock->by)+")", Color::black(), Writer::normal(), { 0,400,400,50 });
 		Writer::print("Temperature: " + to_string(mouseOnBlock->getTemperature()), Color::black(), Writer::normal(), { 0,440,400,50 });
 		Writer::print("Mass: " + to_string(mouseOnBlock->getMass()), Color::black(), Writer::normal(), { 0,480,400,50 });
 		Writer::print("Presure: " + to_string(mouseOnBlock->getPressure()), Color::black(), Writer::normal(), { 0,520,400,50 });
+		Writer::print("Volume: " + to_string(mouseOnBlock->getVolume()), Color::black(), Writer::normal(), { 0,560,400,50 });
 		for(int i=0;i<WorldSettings::e_AmountOfParticles;i++)
 		{
 			Writer::print(to_string(i)+": M = " + to_string(mouseOnBlock->getParticle(i)) +
 				", C = " + to_string(mouseOnBlock->getConcentrationPoint(i, Vector(mouseX / scale, mouseY / scale)))
-				, Color::black(), Writer::normal(), { 0,float(560+i*40),400,50 });
+				, Color::black(), Writer::normal(), { 0,float(600+i*40),600,50 });
 		}
 	}
 
@@ -114,11 +115,12 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		Writer::print("Temperature: " + to_string(selectedCell->getTemperature()), Color::black(), Writer::normal(), { 0,840,400,50 });
 		Writer::print("Mass: " + to_string(selectedCell->getMass()), Color::black(), Writer::normal(), { 0,880,400,50 });
 		Writer::print("Presure: " + to_string(selectedCell->getPressure()), Color::black(), Writer::normal(), { 0,920,400,50 });
+		Writer::print("Volume: " + to_string(selectedCell->getVolume()), Color::black(), Writer::normal(), { 0,960,400,50 });
 		for (int i = 0; i<WorldSettings::e_AmountOfParticles; i++)
 		{
 			Writer::print(to_string(i) + ": M = " + to_string(selectedCell->getParticle(i)) +
 				", C = " + to_string(selectedCell->getConcentration(i))
-				, Color::black(), Writer::normal(), { 0,float(960 + i * 40),400,50 });
+				, Color::black(), Writer::normal(), { 0,float(1000 + i * 40),600,50 });
 		}
 	}
 }
@@ -170,12 +172,12 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	{
 		bool found = false;
 		POINT pt = { LOWORD(lParam), HIWORD(lParam) };
-		pt.x = (pt.x-place.left)/scale;
-		pt.y = (pt.y-place.top)/scale;
+		pt.x = (pt.x-place.left-xOffset)/scale;
+		pt.y = (pt.y-place.top-yOffset)/scale;
 		float smallestDistance = 10000;
 		for (auto& chunk : world.chunks)
 		{
-			for (int i = 0; i < world.c_ChunkSize*world.c_ChunkSize; i++)
+			for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 			{
 				Block*block = chunk.second->findBlock_N(i);
 				for (auto& cell : block->cells)

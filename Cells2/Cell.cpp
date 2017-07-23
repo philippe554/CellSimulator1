@@ -3,7 +3,7 @@
 int Cell::idCounter = 0;
 
 Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
-: Reactor(&tWorld->ws, tRadius*tRadius*3.1415926535897)
+: Reactor(&tWorld->ws, tWorld->ws.defaultTemperature)
 {
 	dna = tDna;
 	world = tWorld;
@@ -12,7 +12,7 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
 	idCounter++;
 
 	radius = tRadius;
-	double pointMass = getVolume() / (amountEdges + 1.0);
+	double pointMass = 1;//old
 
 	Chunk* chunk = world->findChunk_C(world->calcChunk(tCenter.getX()), world->calcChunk(tCenter.getY()));
 
@@ -73,17 +73,12 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
 	tailCounter = 0;
 
 	outerMembrane = new Membrane(dna->membrane);
-	temperature = ws->defaultTemperature; //TODO: get this temp from somewhere
+	setDefaultParticles(Cell::getVolume());
 
 	for (int i = 0; i < amountEdges; i++)
 	{
 		connectedCells[i] = nullptr;
 	}
-
-	particles[WorldSettings::p_hydrogen] = 500;
-	particles[WorldSettings::p_carbon] = 40;
-	particles[WorldSettings::p_oxygen] = 10;
-	particles[WorldSettings::p_nitrogen] = 5;
 }
 
 Cell::~Cell(){
@@ -431,9 +426,39 @@ Membrane* Cell::getOuterMembrane() const
 	return outerMembrane;
 }
 
+void Cell::applyPressure(float p)
+{
+	for(auto joint : edgeJoints)
+	{
+		Vector jointLine = Vector(joint->p1->getPlace(), joint->p2->getPlace());
+		float surface = jointLine.getLength();
+		Vector normal = jointLine.getPerpendicularCounterClockwise().getUnit();
+		normal.multiply(0.5*surface*p);
+		joint->p1->addForce(normal);
+		joint->p2->addForce(normal);
+	}
+}
+
 double Cell::getSurface()const
 {
 	return 2 * radius * 3.1415926535897;
+}
+
+float Cell::getVolume() const
+{
+	float total = 0;
+
+	for(int i=0;i<amountEdges-1;i++)
+	{
+		total += surfaceTriangle(Vector::getLength(center->getPlace(),edgePoints[i]->getPlace()),
+			Vector::getLength(center->getPlace(), edgePoints[i+1]->getPlace()),
+			Vector::getLength(edgePoints[i]->getPlace(), edgePoints[i+1]->getPlace()));
+	}
+	total += surfaceTriangle(Vector::getLength(center->getPlace(), edgePoints[0]->getPlace()),
+		Vector::getLength(center->getPlace(), edgePoints[amountEdges - 1]->getPlace()),
+		Vector::getLength(edgePoints[0]->getPlace(), edgePoints[amountEdges - 1]->getPlace()));
+
+	return total;
 }
 
 int Cell::getId() const
@@ -448,6 +473,25 @@ void Cell::applyForce(Vector& v)
 		edgePoints[i]->addForce(v / (amountEdges + 1.0));
 	}
 }
+
+/*void Cell::expand(float rate)
+{
+	for(auto joint : radiusJoints)
+	{
+		joint->length *= rate;
+		joint->originalLength *= rate;
+	}
+	for (auto joint : edgeJoints)
+	{
+		joint->length *= rate;
+		joint->originalLength *= rate;
+	}
+	for (auto joint : tailJoints)
+	{
+		joint->length *= rate;
+		joint->originalLength *= rate;
+	}
+}*/
 
 shared_ptr<DNA> Cell::getDNA()
 {

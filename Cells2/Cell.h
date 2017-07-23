@@ -32,7 +32,10 @@ public:
 
 	Membrane* getOuterMembrane()const;
 
+	void applyPressure(float p);
+
 	double getSurface()const;
+	float getVolume() const override;
 
 	int getId()const;
 
