@@ -2,7 +2,9 @@
 
 int Cell::idCounter = 0;
 
-Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius) {
+Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
+: Reactor(&tWorld->ws, tRadius*tRadius*3.1415926535897)
+{
 	dna = tDna;
 	world = tWorld;
 	world->stats_CellsCreated++;
@@ -10,8 +12,7 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius) {
 	idCounter++;
 
 	radius = tRadius;
-	termalEnergy = world->c_DefaultTemperature * (getVolume()*buoyancy);
-	double pointMass = getVolume() * buoyancy / (amountEdges + 1.0);
+	double pointMass = getVolume() / (amountEdges + 1.0);
 
 	Chunk* chunk = world->findChunk_C(world->calcChunk(tCenter.getX()), world->calcChunk(tCenter.getY()));
 
@@ -21,11 +22,11 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius) {
 	double y = tCenter.getY();
 
 	edgePoints[0] = Point::MakePoint(chunk, x, y - 20 * radius / 20, pointMass, id);
-	edgePoints[1] = Point::MakePoint(chunk, x + 17.32* radius / 20, y - 10 * radius / 20, pointMass, id);
-	edgePoints[2] = Point::MakePoint(chunk, x + 17.32* radius / 20, y + 10 * radius / 20, pointMass, id);
+	edgePoints[1] = Point::MakePoint(chunk, x + 17.32 * radius / 20, y - 10 * radius / 20, pointMass, id);
+	edgePoints[2] = Point::MakePoint(chunk, x + 17.32 * radius / 20, y + 10 * radius / 20, pointMass, id);
 	edgePoints[3] = Point::MakePoint(chunk, x, y + 20 * radius / 20, pointMass, id);
-	edgePoints[4] = Point::MakePoint(chunk, x - 17.32* radius / 20, y + 10 * radius / 20, pointMass, id);
-	edgePoints[5] = Point::MakePoint(chunk, x - 17.32* radius / 20, y - 10 * radius / 20, pointMass, id);
+	edgePoints[4] = Point::MakePoint(chunk, x - 17.32 * radius / 20, y + 10 * radius / 20, pointMass, id);
+	edgePoints[5] = Point::MakePoint(chunk, x - 17.32 * radius / 20, y - 10 * radius / 20, pointMass, id);
 
 	radiusJoints[0] = new Joint(center, edgePoints[0], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false, 0, id);
 	radiusJoints[1] = new Joint(center, edgePoints[1], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false, 0, id);
@@ -43,7 +44,8 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius) {
 
 	for (int i = 0; i < dna->tail.getAmountOfRows() - 1; i++)
 	{
-		for (int j = 0; j < 3; j++) {
+		for (int j = 0; j < 3; j++)
+		{
 			int index = i * 3 + j;
 			tail.push_back(Point::MakePoint(chunk, x - (index * 20 + 40) * radius / 20, y - 10 * radius / 20, pointMass, id));
 			tail.push_back(Point::MakePoint(chunk, x - (index * 20 + 40) * radius / 20, y + 10 * radius / 20, pointMass, id));
@@ -69,11 +71,19 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius) {
 	tailJoints.push_back(new Joint(tail[tail.size() - 2], tail.back(), dna->tail.getElementScaled(-1, 0, 0.1, 5), dna->tail.getElementScaled(-1, 1, 0.1, 1), true, 0, id));
 
 	tailCounter = 0;
-	
-	for (int i = 0; i<amountEdges; i++)
+
+	outerMembrane = new Membrane(dna->membrane);
+	temperature = ws->defaultTemperature; //TODO: get this temp from somewhere
+
+	for (int i = 0; i < amountEdges; i++)
 	{
 		connectedCells[i] = nullptr;
 	}
+
+	particles[WorldSettings::p_hydrogen] = 500;
+	particles[WorldSettings::p_carbon] = 40;
+	particles[WorldSettings::p_oxygen] = 10;
+	particles[WorldSettings::p_nitrogen] = 5;
 }
 
 Cell::~Cell(){
@@ -106,6 +116,7 @@ Cell::~Cell(){
 			joint = nullptr;
 		}
 	}
+	delete outerMembrane;
 }
 
 void Cell::calcJointForces(const Vector& flow)
@@ -176,17 +187,18 @@ void Cell::calcJointForces(const Vector& flow)
 
 void Cell::movePoints(double precision, double backgroundFriction)
 {
-	center->applyForces(precision, backgroundFriction);
+	float massPoint = getMass() / (1+amountEdges+tail.size());
+	center->applyForces(precision, backgroundFriction, massPoint);
 	for (auto point : edgePoints)
 	{
 		if (id == point->getBelongsTo()) {
-			point->applyForces(precision, backgroundFriction);
+			point->applyForces(precision, backgroundFriction, massPoint);
 		}
 	}
 	for (auto point : tail)
 	{
 		if (id == point->getBelongsTo()) {
-			point->applyForces(precision, backgroundFriction);
+			point->applyForces(precision, backgroundFriction, massPoint);
 		}
 	}
 }
@@ -321,74 +333,6 @@ void Cell::lineCellForce(Vector&perpendicular1, Vector&perpendicular2)
 	}
 }
 
-void Cell::waterContact() {
-	/*if (inWater(center->getPlace())) {
-		center->addForce(Vector(0.0, -world->c_Gravity*getVolume() / (amountEdges + 1.0)));
-		if (center->getVelocity()->getLength() > 0) {
-			//friction
-			center->addForce(center->getVelocity()->getUnit()*(-2 *radius*center->getVelocity()->getLength()*world->c_WaterFriction));
-		}
-	}
-	for (int i = 0; i < amountEdges; i++) {
-		if (inWater(edgePoints[i]->getPlace())) {
-			edgePoints[i]->addForce(Vector(0.0, -world->c_Gravity*getVolume() / (amountEdges + 1.0)));
-			if (edgePoints[i]->getVelocity()->getLength() > 0) {
-				//friction
-				edgePoints[i]->addForce(edgePoints[i]->getVelocity()->getUnit()*(-2* radius*edgePoints[i]->getVelocity()->getLength()*world->c_WaterFriction));
-			}
-		}
-	}*/
-	throw "Old Code";
-}
-bool Cell::inWater(const Vector*vec)const {
-	if (vec->getY() < world->c_WaterLevel) {
-		return false;
-	}
-	return true;
-}
-
-bool Cell::lineSegementsIntersect(Vector&p, Vector&p2, Vector&q, Vector&q2, Vector&intersection,double precision)
-{
-	Vector r = p2 - p;
-	Vector s = q2 - q;
-	double rxs = r.cross(s);
-	if (rxs > 1e-5 || -rxs > 1e-5)
-	{
-		Vector p_q = q - p;
-		double t = p_q.cross(s) / rxs;
-		double u = p_q.cross(r) / rxs;
-		if ((0+precision < t && t < 1-precision) && (0+precision < u && u < 1-precision))
-		{
-			intersection = p + (r*t);
-			return true;
-		}
-	}
-	return false;
-}
-bool Cell::pointInTriangle(Vector & A, Vector & B, Vector & C, Vector & P)
-{
-	Vector v0 = C - A;
-	Vector v1 = B - A;
-	Vector v2 = P - A;
-
-	double v0v0 = v0.dot(v0);
-	double v0v1 = v0.dot(v1);
-	double v0v2 = v0.dot(v2);
-	double v1v1 = v1.dot(v1);
-	double v1v2 = v1.dot(v2);
-
-	double u = (v1v1*v0v2 - v0v1*v1v2) / (v0v0*v1v1 - v0v1*v0v1);
-	double v = (v0v0*v1v2 - v0v1*v0v2) / (v0v0*v1v1 - v0v1*v0v1);
-	if (u >= 0 && v >= 0 && u <= 1 && v <= 1 && (u + v) <= 1)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
 void Cell::reRefPoints()
 {
 	center = center->getReal();
@@ -398,7 +342,7 @@ void Cell::reRefPoints()
 	}
 }
 
-bool Cell::broken()const {
+bool Cell::isBroken()const {
 	//distance check
 	for (int i = 0; i < amountEdges; i++) {
 		if (Vector(center->getPlace(), edgePoints[i]->getPlace()).getLength() > radius * 3) {
@@ -482,14 +426,9 @@ void Cell::disconnectCells(int i)
 	}
 }
 
-double Cell::getVolume()const
+Membrane* Cell::getOuterMembrane() const
 {
-	return radius*radius*3.1415926535897;
-}
-
-double Cell::getTemperature()const
-{
-	return termalEnergy / (getVolume()*buoyancy);
+	return outerMembrane;
 }
 
 double Cell::getSurface()const
@@ -497,12 +436,9 @@ double Cell::getSurface()const
 	return 2 * radius * 3.1415926535897;
 }
 
-double Cell::calcHeating(const double surounding)
+int Cell::getId() const
 {
-	termalEnergy += world->c_CellHeatProduction*getVolume();
-	double energyDif = getSurface()*(getTemperature() - surounding);
-	termalEnergy -= energyDif;
-	return energyDif;
+	return id;
 }
 
 void Cell::applyForce(Vector& v)

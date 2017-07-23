@@ -22,4 +22,8 @@ private:
 
 	double scale;
 	long simulationTime;
+
+	int mouseX;
+	int mouseY;
+	int selectedID;
 };

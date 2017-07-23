@@ -1,40 +1,33 @@
 #pragma once
-#include <vector>
+#include "Vector.h"
 
 class Reactor;
 
-#include "World.h"
+#include "WorldSettings.h"
 #include "Membrane.h"
 #include "Particle.h"
-#include "ParticleFactory.h"
 
 class Reactor
 {
 public:
-	enum particlesName
-	{
-		p_hydrogen, p_carbon, p_oxygen, p_nitrogen,
-		e_AmountOfParticles
-	};
-
 	static Particle prototypes[];
 
-	Reactor(World* world, float _volume, float _temperature);
+	Reactor(WorldSettings* _ws, float _volume);
 
-	double getTemperature()const;
-	double getPresure()const;
-	double getAmountOfParticles()const;
-	double getMass()const;
-	double getConcentration(const int& particle)const;
+	float getTemperature()const;
+	float getPressure()const;
+	float getAmountOfParticles()const;
+	float getMass()const;
+	float getConcentration(const int& particle)const;
+	float getVolume()const;
+	float getParticle(const int& particle)const;
 
-	void exchange(Reactor*other, double surface, Membrane* membrane);
-	void exchange(Reactor*other, double surface, double flow);
+protected:
+	void exchange(Reactor*other, const float surface, Membrane* membrane);
+	void exchange(Reactor*other, const float surface, double flow);
 
-	void applyFactory(ParticleFactory* factory);
-
-private:
-	World *world;
+	WorldSettings* ws;
 	float temperature;
 	float volume;
-	float particles[e_AmountOfParticles];
+	float particles[WorldSettings::e_AmountOfParticles];
 };

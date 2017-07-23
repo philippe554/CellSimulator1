@@ -37,6 +37,18 @@
     <Filter Include="Source Files\Physics\Math">
       <UniqueIdentifier>{a8bd6e31-28ce-4871-984a-8fa5f71c53c3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Physics\Objects">
+      <UniqueIdentifier>{349abca8-447b-4bd5-b772-3359d6fda661}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Physics\Objects\WorldParts">
+      <UniqueIdentifier>{96594267-a0c8-424d-b883-9e86ceaef8ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Physics\Objects">
+      <UniqueIdentifier>{2e1452aa-4133-499c-ba26-d9a131937891}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Physics\Objects\WorldParts">
+      <UniqueIdentifier>{85735a0b-c595-4d26-a0bc-b42bb802f679}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -44,9 +56,6 @@
     </ClCompile>
     <ClCompile Include="Winapi.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="World.cpp">
-      <Filter>Source Files\Physics</Filter>
     </ClCompile>
     <ClCompile Include="Joint.cpp">
       <Filter>Source Files\Physics</Filter>
@@ -78,12 +87,6 @@
     <ClCompile Include="Water.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
-    <ClCompile Include="Block.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Chunk.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
     <ClCompile Include="Core.cpp">
       <Filter>Source Files\Physics</Filter>
     </ClCompile>
@@ -100,6 +103,21 @@
       <Filter>Source Files\Physics\Math</Filter>
     </ClCompile>
     <ClCompile Include="Particle.cpp">
+      <Filter>Source Files\Physics\Chemical</Filter>
+    </ClCompile>
+    <ClCompile Include="Shapes.cpp">
+      <Filter>Source Files\Physics\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Block.cpp">
+      <Filter>Source Files\Physics\Objects\WorldParts</Filter>
+    </ClCompile>
+    <ClCompile Include="Chunk.cpp">
+      <Filter>Source Files\Physics\Objects\WorldParts</Filter>
+    </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>Source Files\Physics\Objects\WorldParts</Filter>
+    </ClCompile>
+    <ClCompile Include="Membrane.cpp">
       <Filter>Source Files\Physics\Chemical</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,13 +140,7 @@
     <ClInclude Include="Writer.h">
       <Filter>Header Files\App</Filter>
     </ClInclude>
-    <ClInclude Include="Block.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="Cell.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Chunk.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
     <ClInclude Include="Core.h">
@@ -144,9 +156,6 @@
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
     <ClInclude Include="Water.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="World.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
     <ClInclude Include="DNA.h">
@@ -169,6 +178,21 @@
     </ClInclude>
     <ClInclude Include="ParticleFactory.h">
       <Filter>Header Files\Physics\Chemical</Filter>
+    </ClInclude>
+    <ClInclude Include="Shapes.h">
+      <Filter>Header Files\Physics\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldSettings.h">
+      <Filter>Header Files\Physics\Objects\WorldParts</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>Header Files\Physics\Objects\WorldParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Block.h">
+      <Filter>Header Files\Physics\Objects\WorldParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Chunk.h">
+      <Filter>Header Files\Physics\Objects\WorldParts</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 #include "Block.h"
 
 Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int _bx, const int _by)
-	:flow(0.0,0.0)
+	: Reactor(&tWorld->ws, tWorld->c_BlockSize * tWorld->c_BlockSize)
 {
 	world = tWorld;
 	chunk = tChunk;
@@ -10,42 +10,44 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 	by = _by;
 	cx = _cx;
 	cy = _cy;
-	
+
 	linkBlocks(bx + 1, by, 0, 4);
-	linkBlocks(bx + 1, by+1, 1, 5);
-	linkBlocks(bx , by+1, 2, 6);
-	linkBlocks(bx -1, by+1, 3, 7);
+	linkBlocks(bx + 1, by + 1, 1, 5);
+	linkBlocks(bx, by + 1, 2, 6);
+	linkBlocks(bx - 1, by + 1, 3, 7);
 
-	linkBlocks(bx -1, by, 4, 0);
-	linkBlocks(bx -1, by-1, 5, 1);
-	linkBlocks(bx , by-1, 6, 2);
-	linkBlocks(bx + 1, by-1, 7, 3);
+	linkBlocks(bx - 1, by, 4, 0);
+	linkBlocks(bx - 1, by - 1, 5, 1);
+	linkBlocks(bx, by - 1, 6, 2);
+	linkBlocks(bx + 1, by - 1, 7, 3);
 
-	int counter=0;
+	int counter = 0;
 	double sumTemp = 0;
-	for(auto neighbour:neighbours)
+	for (auto neighbour:neighbours)
 	{
-		if(neighbour!=nullptr)
+		if (neighbour != nullptr)
 		{
 			counter++;
 			sumTemp += neighbour->getTemperature();
 		}
 	}
-	if(counter==0)
+	if (counter == 0)
 	{
 		temperature = world->c_DefaultTemperature;
-	}else
+	}
+	else
 	{
 		temperature = sumTemp / counter;
 	}
 
 	//loadDefaultChunk();
 
-	particles[p_hydrogen] = 5000;
-	particles[p_carbon] = 400;
-	particles[p_oxygen] = 100;
-	particles[p_nitrogen] = 50;
+	particles[WorldSettings::p_hydrogen] = 5000;
+	particles[WorldSettings::p_carbon] = 400;
+	particles[WorldSettings::p_oxygen] = 100;
+	particles[WorldSettings::p_nitrogen] = 50;
 }
+
 Block::~Block()
 {
 	for(auto line: lines)
@@ -126,7 +128,7 @@ void Block::doRestructure()
 	for (int i = 0; i < cells.size(); i++)
 	{
 		cells.at(i)->reRefPoints();
-		if (cells.at(i)->broken())
+		if (cells.at(i)->isBroken())
 		{
 			delete cells.at(i);
 			cells.erase(cells.begin() + i);
@@ -213,12 +215,13 @@ void Block::calcFlow()
 {
 	int flowCounter = 0;
 	Vector flowSum(0.0, 0.0);
+	float presure = getPressure();
 	for (int j = 0; j < 8; j+=2) 
 	{
 		if (neighbours[j] != nullptr) 
 		{
 			flowCounter++;
-			double flowRate = (neighbours[j]->getPresure() - getPresure())*world->c_FlowRate;
+			double flowRate = (neighbours[j]->getPressure() - presure)*world->c_FlowRate;
 			Vector flowSub((bx - neighbours[j]->bx)*flowRate, (by - neighbours[j]->by)*flowRate);
 			flowSum += flowSub;
 		}
@@ -247,45 +250,38 @@ void Block::moveFlow()
 	{
 		if(neighbours[0]!=nullptr)
 		{
-			moveFlowHelper(neighbours[0], flow.getX());
+			exchange(neighbours[0], world->c_BlockSize, flow.getX());
 		}
 	}
 	else
 	{
 		if (neighbours[4] != nullptr)
 		{
-			moveFlowHelper(neighbours[4], -flow.getX());
+			exchange(neighbours[4], world->c_BlockSize, -flow.getX());
 		}
 	}
 	if (flow.getY()>0)
 	{
 		if (neighbours[2] != nullptr)
 		{
-			moveFlowHelper(neighbours[2], flow.getY());
+			exchange(neighbours[2], world->c_BlockSize, flow.getY());
 		}
 	}
 	else
 	{
 		if (neighbours[6] != nullptr)
 		{
-			moveFlowHelper(neighbours[6], -flow.getY());
+			exchange(neighbours[6], world->c_BlockSize, -flow.getY());
 		}
 	}
-}
-void Block::moveFlowHelper(Block* neighbour, float amount)
-{
-	float energyLeaving = amount * temperature;
-	float energyNeighbour = neighbour->getAmountOfParticles() * neighbour->temperature;
-	float amountOfParticles = getAmountOfParticles();
-
-	for (int i = 0; i<e_AmountOfParticles; i++)
+	for(auto cell : cells)
 	{
-		float moving = (particles[i] * amount) / amountOfParticles;
-		particles[i] -= moving;
-		neighbour->particles[i] += moving;
+		exchange(cell, cell->getSurface(), cell->getOuterMembrane());
 	}
-
-	neighbour->temperature = (energyLeaving + energyNeighbour) / neighbour->getAmountOfParticles();
+}
+Vector Block::getFlow() const
+{
+	return flow;
 }
 
 void Block::loadDefaultChunk()
@@ -388,49 +384,10 @@ void Block::addLine(const double x1, const double y1, const double x2, const dou
 		lines.push_back(new Line(l1.getX(), l1.getY(), l2.getX(), l2.getY()));
 	}
 }
-bool Block::lineSegementsIntersect(Vector&p, Vector&p2, Vector&q, Vector&q2, Vector&intersection, double precision)
-{
-	Vector r = p2 - p;
-	Vector s = q2 - q;
-	double rxs = r.cross(s);
-	if (rxs > 1e-5 || -rxs > 1e-5)
-	{
-		Vector p_q = q - p;
-		double t = p_q.cross(s) / rxs;
-		double u = p_q.cross(r) / rxs;
-		if ((0 + precision < t && t < 1 - precision) && (0 + precision < u && u < 1 - precision))
-		{
-			intersection = p + (r*t);
-			return true;
-		}
-	}
-	return false;
-}
 
-double Block::getTemperature()const
+float Block::getConcentrationPoint(const int& particle, const Vector& place) const
 {
-	return temperature;
-}
-double Block::getPresure()const
-{
-	return world->c_FlowConstant * getAmountOfParticles() * getTemperature() / (world->c_BlockSize*world->c_BlockSize);
-}
-double Block::getAmountOfParticles() const
-{
-	float total = 0;
-	for(int i=0;i<e_AmountOfParticles;i++)
-	{
-		total += particles[i];
-	}
-	return total;
-}
-double Block::getMass() const
-{
-	return getAmountOfParticles()*world->c_ParticalMass;
-}
-double Block::getConcentration(const int& particle, const Vector& place) const
-{
-	float Q11 = particles[particle] / getAmountOfParticles();
+	float Q11 = getConcentration(particle);
 	float Q21 = getConcentrationHelper(neighbours[0], particle);
 	float Q22 = getConcentrationHelper(neighbours[1], particle);
 	float Q12 = getConcentrationHelper(neighbours[2], particle);
@@ -449,9 +406,9 @@ float Block::getConcentrationHelper(Block* neighbour, const int& particle) const
 {
 	if (neighbours[0] != nullptr) 
 	{
-		return neighbours[0]->particles[particle] / neighbours[0]->getAmountOfParticles();
+		return neighbours[0]->getConcentration(particle);
 	}
-	return particles[particle] / getAmountOfParticles();
+	return getConcentration(particle);
 }
 
 void Block::addFrictionForce(const Vector& force)

@@ -5,10 +5,10 @@
 
 class Chunk;
 
-#include "Point.h"
 #include "World.h"
 #include "Block.h"
 #include "DNA.h"
+#include "Cell.h"
 
 using namespace std;
 

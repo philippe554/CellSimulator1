@@ -30,6 +30,7 @@ public:
 	void addForce(double x,double y);
 	void calcForcesJoints();
 	void applyForces(double precision, double backgroundFriction);
+	void applyForces(double precision, double backgroundFriction, double newMass);
 
 	Vector* getPlace();
 	Vector* getVelocity();

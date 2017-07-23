@@ -117,8 +117,8 @@ void Chunk::run()
 
 	for (int i = 0; i < World::c_ChunkSize*World::c_ChunkSize; i++)
 	{
-		//blocks[i]->calcFlow();
-		//blocks[i]->moveFlow();
+		blocks[i]->calcFlow();
+		blocks[i]->moveFlow();
 		blocks[i]->doRestructure();
 	}
 

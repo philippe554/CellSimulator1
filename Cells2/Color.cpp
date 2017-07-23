@@ -5,6 +5,7 @@ ID2D1HwndRenderTarget* Color::RenderTarget = nullptr;
 ID2D1SolidColorBrush* Color::lightGrayData = nullptr;
 ID2D1SolidColorBrush* Color::grayData = nullptr;
 ID2D1SolidColorBrush* Color::blackData = nullptr;
+ID2D1SolidColorBrush* Color::redData = nullptr;
 map<int, ID2D1SolidColorBrush*> Color::heightMapData= map<int, ID2D1SolidColorBrush*>();
 
 void Color::init(ID2D1HwndRenderTarget* RT)
@@ -50,6 +51,20 @@ ID2D1SolidColorBrush* Color::black()
 	}
 
 	return blackData;
+}
+
+ID2D1SolidColorBrush* Color::red()
+{
+	if (RenderTarget == nullptr)throw "No render target set in Color";
+
+	if (redData == nullptr)
+	{
+		RenderTarget->CreateSolidColorBrush(
+			D2D1::ColorF(D2D1::ColorF::Red),
+			&redData);
+	}
+
+	return redData;
 }
 
 ID2D1SolidColorBrush* Color::heightMap(double x)

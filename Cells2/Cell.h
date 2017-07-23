@@ -8,9 +8,10 @@ class Cell;
 #include "Joint.h"
 #include "Line.h"
 #include "DNA.h"
+#include "Membrane.h"
 
 
-class Cell {
+class Cell : public Reactor, public Shapes{
 public:
 	Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius);
 	~Cell();
@@ -23,21 +24,17 @@ public:
 	void lineCellCollision(Line * line);
 	void lineCellForce(Vector & perpendicular1, Vector & perpendicular2);
 
-	void waterContact();
-	bool inWater(const Vector * vec)const;
-
-	static bool lineSegementsIntersect(Vector & p, Vector & p2, Vector & q, Vector & q2, Vector & intersection, double precision=0.0);
-	static bool pointInTriangle(Vector & A, Vector & B, Vector & C, Vector & P);
-
-	bool broken()const;
+	bool isBroken()const;
 	void reRefPoints();
 
 	bool connectCells(Cell*other);
 	void disconnectCells(int );
 
-	double getVolume()const;
-	double getTemperature()const;
+	Membrane* getOuterMembrane()const;
+
 	double getSurface()const;
+
+	int getId()const;
 
 	double calcHeating(const double surounding);
 	void applyForce(Vector&v);
@@ -60,15 +57,6 @@ public:
 	int getCenterId()const;
 	shared_ptr<Point> getCenterPtr()const;
 
-	//void setID(int t);
-	//int getID();
-
-	//Cell* getConnectedCell(int i);
-
-	/*void setSize(double t);
-	double getSize();
-	void multiplySize(double t);*/
-
 	static const int amountEdges = 6;
 private:
 	shared_ptr<Point> center;
@@ -79,6 +67,8 @@ private:
 	Joint* edgeJoints[amountEdges];
 	vector<Joint*> tailJoints;
 
+	Membrane* outerMembrane;
+
 	shared_ptr<DNA> dna;
 
 	Cell*connectedCells[amountEdges];
@@ -86,8 +76,6 @@ private:
 
 	int id;
 	double radius;
-	double buoyancy = 1;
-	double termalEnergy;
 
 	static int idCounter;
 

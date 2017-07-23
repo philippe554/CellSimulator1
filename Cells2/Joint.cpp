@@ -85,7 +85,6 @@ shared_ptr<Point> Joint::getOther(shared_ptr<Point> p)
 	}
 }
 
-
 double Joint::getLength()
 {
 	return length;

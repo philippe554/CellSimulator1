@@ -246,6 +246,12 @@ void Point::applyForces(double precision, double backgroundFriction)
 	forcesJoints.set(0, 0);
 }
 
+void Point::applyForces(double precision, double backgroundFriction, double newMass)
+{
+	mass = newMass;
+	applyForces(precision, backgroundFriction);
+}
+
 const bool Point::isRefed()
 {
 	return refed;

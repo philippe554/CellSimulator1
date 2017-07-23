@@ -5,14 +5,16 @@
 
 class Block;
 
+#include "Reactor.h"
+#include "Shapes.h"
 #include "Line.h"
 #include "Cell.h"
-#include "Water.h"
 #include "DNA.h"
+#include "Chunk.h"
 
 using namespace std;
 
-class Block
+class Block : public Reactor, public Shapes
 {
 public:
 	Block(World*tWorld,Chunk*tChunk,const int _cx,const int _cy, const int _bx,const int _by);
@@ -27,16 +29,12 @@ public:
 
 	void calcFlow();
 	void moveFlow();
+	Vector getFlow()const;
 
 	void loadDefaultChunk();
 	void addLine(const double x1, const double y1, const double x2, const double y2);
-	bool lineSegementsIntersect(Vector&p, Vector&p2, Vector&q, Vector&q2, Vector&intersection, double precision);
-
-	double getTemperature()const;
-	double getPresure()const;
-	double getAmountOfParticles()const;
-	double getMass()const;
-	double getConcentration(const int& particle, const Vector& place)const;
+	
+	float getConcentrationPoint(const int& particle, const Vector& place)const;
 	void addFrictionForce(const Vector& force);
 
 	vector<shared_ptr<DNA>> getDNA();
@@ -56,7 +54,8 @@ public:
 private:
 	void linkBlocks(int x, int y, int i1, int i2);
 
-	void moveFlowHelper(Block* neighbour, float total);
-
 	float getConcentrationHelper(Block* neighbour, const int& particle)const;
+
+	Vector flow;
+	Vector frictionForce;
 };

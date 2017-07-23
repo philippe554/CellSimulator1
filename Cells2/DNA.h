@@ -15,6 +15,7 @@ public:
 	shared_ptr<DNA> mutate(float rate)const;
 
 	Matrix tail;
+	Matrix membrane;
 
 	float fitness;
 };

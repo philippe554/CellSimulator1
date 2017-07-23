@@ -6,6 +6,7 @@ class World;
 
 #define timers
 
+#include "WorldSettings.h"
 #include "Block.h"
 #include "Chunk.h"
 
@@ -75,6 +76,8 @@ public:
 	long long getTime();
 
 	mutex coutMutex;
+
+	WorldSettings ws;
 
 private:
 	long long time;
