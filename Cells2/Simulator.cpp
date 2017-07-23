@@ -7,7 +7,9 @@
 
 Simulator::Simulator(int x, int y, int xSize, int ySize) :View(x, y, xSize, ySize)
 {
-	scale = 3;
+	scale = 4;
+	xOffset = 0;
+	yOffset = 0;
 	srand(time(NULL));
 	bestDNA.push_back(make_shared<DNA>());
 }
@@ -20,10 +22,8 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		for (int i = 0; i < world.c_ChunkSize*world.c_ChunkSize;i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			RenderTarget->FillRectangle(D2D1::RectF(block->bx*world.c_BlockSize*scale,
-				block->by*world.c_BlockSize*scale,
-				block->bx*world.c_BlockSize*scale + world.c_BlockSize*scale,
-				block->by*world.c_BlockSize*scale + world.c_BlockSize*scale),
+			fillRectrangle(RenderTarget, Vector(block->bx*world.c_BlockSize, block->by*world.c_BlockSize),
+				Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize),
 				Color::heightMap(block->getTemperature() / 500));
 		}
 	}
@@ -31,16 +31,14 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		for (int i = 0; i < world.c_ChunkSize*world.c_ChunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			RenderTarget->DrawLine({ static_cast<float>(block->bx*world.c_BlockSize*scale) ,
-				static_cast<float>(block->by*world.c_BlockSize*scale + world.c_BlockSize*scale) },
-				{ static_cast<float>(block->bx*world.c_BlockSize*scale + world.c_BlockSize*scale),
-				static_cast<float>(block->by*world.c_BlockSize*scale + world.c_BlockSize*scale) }, Color::black());
-			RenderTarget->DrawLine({ static_cast<float>(block->bx*world.c_BlockSize*scale + world.c_BlockSize*scale) ,
-				static_cast<float>(block->by*world.c_BlockSize*scale) },
-				{ static_cast<float>(block->bx*world.c_BlockSize*scale + world.c_BlockSize*scale),
-				static_cast<float>(block->by*world.c_BlockSize*scale + world.c_BlockSize*scale) }, Color::black());
-			drawLine(RenderTarget,Vector(block->bx*world.c_BlockSize*scale + 0.5*world.c_BlockSize*scale, block->by*world.c_BlockSize*scale + 0.5*world.c_BlockSize*scale),
-				Vector(block->bx*world.c_BlockSize*scale + 0.5*world.c_BlockSize*scale, block->by*world.c_BlockSize*scale + 0.5*world.c_BlockSize*scale) + block->getFlow(), Color::black());
+			drawLine(RenderTarget, Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize),
+				Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize), Color::black());
+			drawLine(RenderTarget, Vector(block->bx*world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize),
+				Vector(block->bx*world.c_BlockSize + world.c_BlockSize, block->by*world.c_BlockSize + world.c_BlockSize), Color::black());
+			drawLine(RenderTarget,Vector(block->bx*world.c_BlockSize + 0.5*world.c_BlockSize, 
+				block->by*world.c_BlockSize + 0.5*world.c_BlockSize),
+				Vector(block->bx*world.c_BlockSize + 0.5*world.c_BlockSize, 
+					block->by*world.c_BlockSize + 0.5*world.c_BlockSize) + block->getFlow()*10, Color::black());
 
 		}
 	}
@@ -51,35 +49,20 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		{
 			Block*block = chunk.second->findBlock_N(i);
 			for (auto& line : block->lines) {
-				RenderTarget->DrawLine({ static_cast<float>(line->getV1()->getX()*scale) , static_cast<float>(line->getV1()->getY()*scale) },
-				{ static_cast<float>(line->getV2()->getX()*scale), static_cast<float>(line->getV2()->getY()*scale) }, Color::black());
+				drawLine(RenderTarget, line->getV1(), line->getV2(), Color::black());
 			}
 
 			for (auto& cell : block->cells)
 			{
 				for (int j = 0; j < cell->amountEdges - 1; j++)
 				{
-					RenderTarget->DrawLine({ static_cast<float>(cell->getEdgePoint(j)->getX()*scale) , static_cast<float>(cell->getEdgePoint(j)->getY()*scale) },
-					{ static_cast<float>(cell->getEdgePoint(j + 1)->getX()*scale), static_cast<float>(cell->getEdgePoint(j + 1)->getY()*scale) }, Color::black());
-					
-					RenderTarget->DrawLine({ static_cast<float>(cell->getEdgePoint(j)->getX()*scale) , static_cast<float>(cell->getEdgePoint(j)->getY()*scale) },
-					{ static_cast<float>(cell->getEdgePoint(j + 1)->getX()*scale), static_cast<float>(cell->getEdgePoint(j + 1)->getY()*scale) }, Color::black());
-
-					D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(static_cast<float>(cell->getEdgePoint(j)->getX()*scale), static_cast<float>(cell->getEdgePoint(j)->getY()*scale))
-						, static_cast<float>(cell->getEdgePointPtr(j)->getMass()*scale*0.1), static_cast<float>(cell->getEdgePointPtr(j)->getMass()*scale*0.1));
-					RenderTarget->DrawEllipse(ellipse, Color::black());
+					drawLine(RenderTarget, cell->getEdgePoint(j), cell->getEdgePoint(j+1), Color::black());
 				}
-				RenderTarget->DrawLine({ static_cast<float>(cell->getEdgePoint(cell->amountEdges - 1)->getX()*scale) , static_cast<float>(cell->getEdgePoint(cell->amountEdges - 1)->getY()*scale) },
-				{ static_cast<float>(cell->getEdgePoint(0)->getX()*scale), static_cast<float>(cell->getEdgePoint(0)->getY()*scale) }, Color::black());
-				
-				D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(static_cast<float>(cell->getEdgePoint(cell->amountEdges-1)->getX()*scale), static_cast<float>(cell->getEdgePoint(cell->amountEdges-1)->getY()*scale))
-					, static_cast<float>(cell->getEdgePointPtr(cell->amountEdges-1)->getMass()*scale*0.1), static_cast<float>(cell->getEdgePointPtr(cell->amountEdges-1)->getMass()*scale*0.1));
-				RenderTarget->DrawEllipse(ellipse, Color::black());
+				drawLine(RenderTarget, cell->getEdgePoint(0), cell->getEdgePoint(cell->amountEdges - 1), Color::black());
 
 				for (int j = 0; j < cell->getAmountOfTailEdges(); j++)
 				{
-					RenderTarget->DrawLine({ static_cast<float>(cell->getTailPoint(j,0)->getX()*scale) , static_cast<float>(cell->getTailPoint(j,0)->getY()*scale) },
-					{ static_cast<float>(cell->getTailPoint(j,1)->getX()*scale), static_cast<float>(cell->getTailPoint(j,1)->getY()*scale) }, Color::black());
+					drawLine(RenderTarget, cell->getTailPoint(j, 0), cell->getTailPoint(j, 1), Color::black());
 				}
 
 				for(int j=0;j<cell->getAmountOfEdgeEdges();j++)
@@ -97,9 +80,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				if (selectedID == cell->getId())
 				{
 					selectedCell = cell;
-					D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(static_cast<float>(cell->getCenter()->getX()*scale), static_cast<float>(cell->getCenter()->getY()*scale))
-						, static_cast<float>(15*scale), static_cast<float>(15*scale));
-					RenderTarget->DrawEllipse(ellipse, Color::red());
+					drawCircle(RenderTarget, cell->getCenter(), 15, Color::red());
 				}
 			}
 		}
@@ -144,14 +125,27 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 
 void Simulator::drawLine(ID2D1HwndRenderTarget* RenderTarget, Vector* v1, Vector* v2, ID2D1Brush* c)
 {
-	RenderTarget->DrawLine({ static_cast<float>(v1->getX()*scale) , static_cast<float>(v1->getY()*scale) },
-	{ static_cast<float>(v2->getX()*scale), static_cast<float>(v2->getY()*scale) }, c);
+	RenderTarget->DrawLine({ static_cast<float>(v1->getX()*scale+xOffset) , static_cast<float>(v1->getY()*scale+yOffset) },
+	{ static_cast<float>(v2->getX()*scale+xOffset), static_cast<float>(v2->getY()*scale+yOffset) }, c);
 }
 
 void Simulator::drawLine(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c)
 {
-	RenderTarget->DrawLine({ static_cast<float>(v1.getX()*scale) , static_cast<float>(v1.getY()*scale) },
-	{ static_cast<float>(v2.getX()*scale), static_cast<float>(v2.getY()*scale) }, c);
+	RenderTarget->DrawLine({ static_cast<float>(v1.getX()*scale+xOffset) , static_cast<float>(v1.getY()*scale+yOffset) },
+	{ static_cast<float>(v2.getX()*scale+xOffset), static_cast<float>(v2.getY()*scale+yOffset) }, c);
+}
+
+void Simulator::fillRectrangle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c)
+{
+	RenderTarget->FillRectangle(D2D1::RectF(v1.getX()*scale+xOffset,v1.getY()*scale+yOffset,
+		v2.getX()*scale+xOffset,v2.getY()*scale+yOffset),c);
+}
+
+void Simulator::drawCircle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, float radius, ID2D1Brush* c)
+{
+	D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(static_cast<float>(v1.getX()*scale+xOffset), static_cast<float>(v1.getY()*scale+yOffset))
+		, radius * scale, radius  *scale);
+	RenderTarget->DrawEllipse(ellipse, c);
 }
 
 void Simulator::update()
@@ -223,13 +217,11 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 
 			bestDNA.resize(min(bestDNA.size(),40));
 		}
-		if(wParam == 'P')
-		{
-			scale++;
-		}
-		if(wParam == 'M')
-		{
-			scale--;
-		}
+		if(wParam == 'P')scale *= 2;
+		if(wParam == 'M')scale *= 0.5;
+		if(wParam == VK_LEFT)xOffset += 10;
+		if(wParam == VK_RIGHT)xOffset -= 10;
+		if(wParam == VK_UP)yOffset += 10;
+		if(wParam == VK_DOWN)yOffset -= 10;
 	}
 }

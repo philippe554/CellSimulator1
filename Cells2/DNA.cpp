@@ -3,7 +3,7 @@
 
 DNA::DNA() : 
 tail(4,10),
-membrane(1,WorldSettings::e_AmountOfParticles)
+membrane(WorldSettings::e_AmountOfParticles,1)
 {
 	tail.setRandom();
 	fitness = 0;

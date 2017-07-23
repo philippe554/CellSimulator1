@@ -13,6 +13,8 @@ public:
 	void render(ID2D1HwndRenderTarget* RenderTarget) override;
 	void drawLine(ID2D1HwndRenderTarget* RenderTarget, Vector* v1, Vector* v2, ID2D1Brush* c);
 	void drawLine(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c);
+	void fillRectrangle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c);
+	void drawCircle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, float radius, ID2D1Brush* c);
 	void update() override;
 	void ViewProc(App* app, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) override;
 
@@ -20,7 +22,9 @@ private:
 	World world;
 	vector<shared_ptr<DNA>> bestDNA;
 
-	double scale;
+	float scale;
+	float xOffset;
+	float yOffset;
 	long simulationTime;
 
 	int mouseX;

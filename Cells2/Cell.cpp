@@ -188,17 +188,17 @@ void Cell::calcJointForces(const Vector& flow)
 void Cell::movePoints(double precision, double backgroundFriction)
 {
 	float massPoint = getMass() / (1+amountEdges+tail.size());
-	center->applyForces(precision, backgroundFriction, massPoint);
+	center->applyForces(precision, backgroundFriction);
 	for (auto point : edgePoints)
 	{
 		if (id == point->getBelongsTo()) {
-			point->applyForces(precision, backgroundFriction, massPoint);
+			point->applyForces(precision, backgroundFriction);
 		}
 	}
 	for (auto point : tail)
 	{
 		if (id == point->getBelongsTo()) {
-			point->applyForces(precision, backgroundFriction, massPoint);
+			point->applyForces(precision, backgroundFriction);
 		}
 	}
 }
