@@ -120,6 +120,9 @@
     <ClCompile Include="Membrane.cpp">
       <Filter>Source Files\Physics\Chemical</Filter>
     </ClCompile>
+    <ClCompile Include="WorldSettings.cpp">
+      <Filter>Source Files\Physics\Objects\WorldParts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">

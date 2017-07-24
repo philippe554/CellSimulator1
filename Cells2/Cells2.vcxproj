@@ -132,6 +132,7 @@
     <ClCompile Include="Water.cpp" />
     <ClCompile Include="Winapi.cpp" />
     <ClCompile Include="World.cpp" />
+    <ClCompile Include="WorldSettings.cpp" />
     <ClCompile Include="Writer.cpp" />
   </ItemGroup>
   <ItemGroup>

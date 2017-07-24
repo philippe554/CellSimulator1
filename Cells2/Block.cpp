@@ -1,4 +1,5 @@
 #include "Block.h"
+#include "WorldSettings.h"
 
 Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int _bx, const int _by)
 	: Reactor(&tWorld->ws, tWorld->ws.defaultTemperature)
@@ -33,7 +34,7 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 	}
 	if (counter == 0)
 	{
-		setTemperature(world->c_DefaultTemperature);
+		setTemperature(world->ws.defaultTemperature);
 	}
 	else
 	{
@@ -251,28 +252,28 @@ void Block::moveFlow()
 	{
 		if(neighbours[0]!=nullptr)
 		{
-			//exchange(neighbours[0], world->ws.blockSize, flow.getX());
+			exchange(neighbours[0], world->ws.blockSize, flow.getX());
 		}
 	}
 	else
 	{
 		if (neighbours[4] != nullptr)
 		{
-			//exchange(neighbours[4], world->ws.blockSize, -flow.getX());
+			exchange(neighbours[4], world->ws.blockSize, -flow.getX());
 		}
 	}
 	if (flow.getY()>0)
 	{
 		if (neighbours[2] != nullptr)
 		{
-			//exchange(neighbours[2], world->ws.blockSize, flow.getY());
+			exchange(neighbours[2], world->ws.blockSize, flow.getY());
 		}
 	}
 	else
 	{
 		if (neighbours[6] != nullptr)
 		{
-			//exchange(neighbours[6], world->ws.blockSize, -flow.getY());
+			exchange(neighbours[6], world->ws.blockSize, -flow.getY());
 		}
 	}
 	for(auto cell : cells)

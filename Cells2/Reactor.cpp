@@ -2,7 +2,7 @@
 
 Particle Reactor::prototypes[WorldSettings::e_AmountOfParticles] = {
 	Particle(WorldSettings::p_hydrogen,2,false,0,0),
-	Particle(WorldSettings::p_carbon,20,false,0,0),
+	Particle(WorldSettings::p_carbon,10,false,0,0),
 	Particle(WorldSettings::p_oxygen,22,false,0,0),
 	Particle(WorldSettings::p_nitrogen,24,false,0,0)
 };
@@ -72,70 +72,97 @@ float Reactor::getParticle(const int& particle) const
 void Reactor::exchange(Reactor* other, const float surface, Membrane* membrane)
 {
 	float energyLeaving = 0;
+	float energyEntering = 0;
+
+	float amountOfParticles = getAmountOfParticles();
 	float amountOfParticlesOther = other->getAmountOfParticles();
+
+	float energy = amountOfParticles * temperature;
 	float energyOther = amountOfParticlesOther * other->temperature;
 
+	float pressureDif = getPressure() - other->getPressure();
+
 	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
 	{
+		float movingPump;
 		if(membrane->ports[i]>0)
 		{
-			//float concentrationRatio = getConcentration(i) / other->getConcentration(i);
-			//float moving = particles[i] * concentrationRatio * membrane->ports[i] * surface / amountOfParticles;
-			float moving = 0.0001 * membrane->ports[i] * getConcentration(i) * surface;
-			energyLeaving += moving * temperature;
-			particles[i] -= moving;
-			other->particles[i] += moving;
-		}		
-	}
-	other->temperature = (energyLeaving + energyOther) / other->getAmountOfParticles();
-
-	float energyEntering = 0;
-	float amountOfParticles = getAmountOfParticles();
-	float energy = amountOfParticles * temperature;
-
-	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
-	{
-		if (membrane->ports[i]<0)
+			movingPump = ws->membranePumpStrength * membrane->ports[i] * getConcentration(i);
+		}
+		else
 		{
-			//float concentrationRatio = other->getConcentration(i) / getConcentration(i);
-			//float moving = other->particles[i] * concentrationRatio * -membrane->ports[i] * surface / amountOfParticlesOther;
-			float moving = 0.0001 * -membrane->ports[i] * other->getConcentration(i) * surface;
-			energyEntering += moving * temperature;
-			particles[i] += moving;
-			other->particles[i] -= moving;
+			movingPump = ws->membranePumpStrength * membrane->ports[i] * other->getConcentration(i);
+		}
+		float movingPressure;
+		if(pressureDif>0)
+		{
+			movingPressure = surface * ws->membraneResistance * pressureDif * getConcentration(i);
+		}
+		else
+		{
+			movingPressure = surface * ws->membraneResistance * pressureDif * other->getConcentration(i);
+		}
+		float moving = movingPump + movingPressure;
+		if(moving>0)
+		{
+			energyLeaving += moving * temperature;
+		}
+		else
+		{
+			energyEntering += -moving * other->temperature;
+		}
+		particles[i] -= moving;
+		other->particles[i] += moving;
+		if(particles[i]<0 || other->particles[i]<0)
+		{
+			//throw "ERROR!";
 		}
 	}
-	temperature = (energyEntering + energy) / getAmountOfParticles();
+	other->temperature = (energyOther + energyLeaving - energyEntering) / other->getAmountOfParticles();
+	temperature = (energy - energyLeaving + energyEntering) / getAmountOfParticles();
 }
 
 void Reactor::exchange(Reactor* other, const float surface, double flow)
 {
-	float amount = surface * flow;
-	float energy = getAmountOfParticles() * temperature;
-	float energyNeighbour = other->getAmountOfParticles() * other->temperature;
+	float energyLeaving = 0;
+	float energyEntering = 0;
 
-	if (amount > 0)
+	float amountOfParticles = getAmountOfParticles();
+	float amountOfParticlesOther = other->getAmountOfParticles();
+
+	float energy = amountOfParticles * temperature;
+	float energyOther = amountOfParticlesOther * other->temperature;
+
+	float pressureDif = getPressure() - other->getPressure();
+
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
 	{
-		float amountOfParticles = getAmountOfParticles();
-		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+		float moving;
+		if (pressureDif>0)
 		{
-			float moving = (particles[i] * amount) / amountOfParticles;
-			particles[i] -= moving;
-			other->particles[i] += moving;
+			moving = surface * ws->flowConstant * pressureDif * getConcentration(i);
 		}
-		other->temperature = (amount*temperature + energyNeighbour) / other->getAmountOfParticles();
-	}
-	else
-	{
-		float amountOfParticles = other->getAmountOfParticles();
-		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+		else
 		{
-			float moving = (other->particles[i] * amount) / amountOfParticles;
-			particles[i] -= moving;
-			other->particles[i] += moving;
+			moving = surface * ws->flowConstant * pressureDif * other->getConcentration(i);
 		}
-		temperature = (amount*other->temperature + energy) / getAmountOfParticles();
+		if (moving>0)
+		{
+			energyLeaving += moving * temperature;
+		}
+		else
+		{
+			energyEntering += -moving * other->temperature;
+		}
+		particles[i] -= moving;
+		other->particles[i] += moving;
+		if (particles[i]<0 || other->particles[i]<0)
+		{
+			//throw "ERROR!";
+		}
 	}
+	other->temperature = (energyOther + energyLeaving - energyEntering) / other->getAmountOfParticles();
+	temperature = (energy - energyLeaving + energyEntering) / getAmountOfParticles();
 }
 
 
