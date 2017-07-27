@@ -77,16 +77,11 @@ void Block::linkBlocks(int x, int y, int i1, int i2)
 
 void Block::calcJointForces()
 {
-	float blockPressure = getPressure();
 	for(auto cell:cells)
 	{
-		cell->calcJointForces(flow);
-
-		float pressureDifference = blockPressure - cell->getPressure();
-		cell->applyPressure(pressureDifference*world->ws.surfacePressure);
+		cell->calcJointForces(getFlow());
 	}
 }
-
 void Block::movePoints(double precision, double backgroundFriction)
 {
 	for (auto cell : cells)
@@ -215,14 +210,17 @@ void Block::calcFlow()
 {
 	if (neighbours[0] != nullptr)
 	{
-		calcExchange(neighbours[0], 0, world->ws.blockSize, 0.0);
+		calcExchange(neighbours[0], 0, world->ws.blockSize, 0);
 	}
 	if (neighbours[2] != nullptr)
 	{
-		calcExchange(neighbours[2], 1, world->ws.blockSize, 0.0);
+		calcExchange(neighbours[2], 1, world->ws.blockSize, 1);
 	}
+	float blockPressure = getPressure();
 	for (auto cell : cells)
 	{
+		float pressureDifference = blockPressure - cell->getPressure();
+		cell->applyPressure(pressureDifference*world->ws.surfacePressure);
 		cell->calcExchange(this, 0, cell->getSurface(), cell->getOuterMembrane());
 	}
 }
@@ -230,15 +228,15 @@ void Block::moveFlow()
 {
 	if (neighbours[0] != nullptr)
 	{
-		exchange(neighbours[0], 0);
+		exchange(neighbours[0], 0, world->ws.blockSize);
 	}
 	if (neighbours[2] != nullptr)
 	{
-		exchange(neighbours[2], 1);
+		exchange(neighbours[2], 1, world->ws.blockSize);
 	}
 	for(auto cell : cells)
 	{
-		cell->exchange(this, 0);
+		cell->exchange(this, 0, cell->getSurface());
 	}
 }
 void Block::cacheFlow()
@@ -252,7 +250,19 @@ void Block::cacheFlow()
 
 Vector Block::getFlow() const
 {
-	return flow;
+	float flowx = getFlowIndex(0);
+	float flowy = getFlowIndex(1);
+	if(neighbours[4]!=nullptr)
+	{
+		flowx += neighbours[4]->getFlowIndex(0);
+		flowx /= 2;
+	}
+	if (neighbours[6] != nullptr)
+	{
+		flowy += neighbours[6]->getFlowIndex(1);
+		flowy /= 2;
+	}
+	return Vector(flowx, flowy);
 }
 
 void Block::loadDefaultChunk()

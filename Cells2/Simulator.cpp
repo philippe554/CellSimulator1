@@ -39,7 +39,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 			drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
 				block->by*world.ws.blockSize + 0.5*world.ws.blockSize),
 				Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10, Color::black());
+					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*100, Color::black());
 
 		}
 	}

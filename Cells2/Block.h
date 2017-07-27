@@ -58,6 +58,5 @@ private:
 
 	float getConcentrationHelper(Block* neighbour, const int& particle)const;
 
-	Vector flow;
 	Vector frictionForce;
 };

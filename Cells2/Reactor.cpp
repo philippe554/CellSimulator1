@@ -10,6 +10,10 @@ Particle Reactor::prototypes[WorldSettings::e_AmountOfParticles] = {
 Reactor::Reactor(WorldSettings* _ws)
 {
 	ws = _ws;
+	for(auto f : flow)
+	{
+		f = 0;
+	}
 }
 
 void Reactor::init(float _volume, float _temperature)
@@ -49,7 +53,7 @@ float Reactor::getMass() const
 	return mass;
 }
 
-float Reactor::getConcentration(const int& particle) const
+float Reactor::getConcentration(const int particle) const
 {
 	if (amountOfParticles > 0)
 	{
@@ -58,9 +62,14 @@ float Reactor::getConcentration(const int& particle) const
 	return 0.0;
 }
 
-float Reactor::getParticle(const int& particle) const
+float Reactor::getParticle(const int particle) const
 {
 	return particles[particle];
+}
+
+float Reactor::getFlowIndex(const int index) const
+{
+	return flow[index] * ws->flowConstant;
 }
 
 void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, Membrane* membrane)
@@ -90,15 +99,17 @@ void Reactor::calcExchange(Reactor* other, const int movingCache, const float su
 	}
 }
 
-void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, double flow)
+void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, const int flowIndex)
 {
 	const float pressureDif = getPressure() - other->getPressure();
-	const float sfp = surface * ws->flowConstant * pressureDif;
+	float flowBuildUp = std::pow(ws->flowBuildUp, ws->precision);
+	flow[flowIndex] = flowBuildUp * flow[flowIndex] + flowBuildUp * pressureDif;
+	const float sfp = surface * ws->flowConstant * flow[flowIndex];
 	const int index = movingCache*WorldSettings::e_AmountOfParticles;
 
 	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
 	{
-		if (pressureDif>0)
+		if (flow[flowIndex]>0)
 		{
 			particlesMoving[index + i] = sfp * getConcentration(i);
 		}
@@ -109,29 +120,36 @@ void Reactor::calcExchange(Reactor* other, const int movingCache, const float su
 	}
 }
 
-void Reactor::exchange(Reactor* other, const int movingCache)
+void Reactor::exchange(Reactor* other, const int movingCache, const float surface)
 {
-	float energyLeaving = 0;
-	float energyEntering = 0;
+	exchangeMutex.lock();
 
-	const int index = movingCache*WorldSettings::e_AmountOfParticles;
+	float temperatureDif = temperature - other->getTemperature();
+	float tcs = temperatureDif * ws->temperatureFlowConstant * surface * ws->precision;
+
+	float energyLeaving = tcs;
+	float energyEntering = -tcs;
+
+	const int index = movingCache * WorldSettings::e_AmountOfParticles;
 
 	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
 	{
-		float moving = particlesMoving[index + i];
+		float moving = particlesMoving[index + i] * ws->precision;
 		if (moving>0)
 		{
 			energyLeaving += moving * temperature;
 		}
 		else
 		{
-			energyEntering += -moving * other->temperature;
+			energyEntering += -moving * other->getTemperature();
 		}
 		particles[i] -= moving;
 		other->particles[i] += moving;
 	}
 	other->energy += (energyLeaving - energyEntering);
 	energy += (-energyLeaving + energyEntering);
+
+	exchangeMutex.unlock();
 }
 
 void Reactor::cacheParameters()
@@ -164,37 +182,4 @@ void Reactor::cacheParameters()
 	}
 	pressure = energy / volume;
 }
-
-
-/*int flowCounter = 0;
-Vector flowSum(0.0, 0.0);
-float presure = getPressure();
-for (int j = 0; j < 8; j+=2)
-{
-if (neighbours[j] != nullptr)
-{
-flowCounter++;
-double flowRate = (neighbours[j]->getPressure() - presure)*world->c_FlowRate;
-Vector flowSub((bx - neighbours[j]->bx)*flowRate, (by - neighbours[j]->by)*flowRate);
-flowSum += flowSub;
-}
-}
-if (neighbours[6] != nullptr)
-{
-if(getTemperature()>neighbours[6]->getTemperature())
-{
-flowSum.add(0, (neighbours[6]->getTemperature() - getTemperature())*0.1);
-}
-}
-if(flowCounter>0)
-{
-//flow = (flow*0.25)+(flowSum * (0.75 * world->ws.blockSize / flowCounter));
-}
-else
-{
-//flow.multiply(0.25);
-}
-//flow.add(frictionForce / getMass());
-frictionForce.set(0, 0);*/
-
 
