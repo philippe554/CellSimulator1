@@ -101,11 +101,14 @@ Block* Chunk::findBlock_N(const int input) const
 void Chunk::run()
 {
 	acceptAllCells();
-
+	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	{
+		blocks[i]->cacheFlow();
+	}
 	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
 		blocks[i]->calcJointForces();
-
+		blocks[i]->calcFlow();
 #ifdef S_CellCellCollision
 		blocks[i]->cellCellCollision();
 #endif
@@ -113,19 +116,15 @@ void Chunk::run()
 	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
 		blocks[i]->movePoints(world->c_Precision, world->c_WaterFriction);
+		blocks[i]->moveFlow();
 	}
 
 	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
-		blocks[i]->calcFlow();
-		blocks[i]->moveFlow();
 		blocks[i]->doRestructure();
 	}
 
 	time++;
-	//world->coutMutex.lock();
-	//cout << "run chunk (" << cx << ";" << cy << "): " << time << endl;
-	//world->coutMutex.unlock();
 	runningMutex.lock();
 	running = false;
 	runningMutex.unlock();

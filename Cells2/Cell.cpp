@@ -3,7 +3,7 @@
 int Cell::idCounter = 0;
 
 Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
-: Reactor(&tWorld->ws, tWorld->ws.defaultTemperature)
+: Reactor(&tWorld->ws)
 {
 	dna = tDna;
 	world = tWorld;
@@ -73,7 +73,7 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
 	tailCounter = 0;
 
 	outerMembrane = new Membrane(dna->membrane);
-	setDefaultParticles(Cell::getVolume());
+	init(Cell::getVolume(), tWorld->ws.defaultTemperature);
 
 	for (int i = 0; i < amountEdges; i++)
 	{
@@ -340,7 +340,7 @@ void Cell::reRefPoints()
 bool Cell::isBroken()const {
 	//distance check
 	for (int i = 0; i < amountEdges; i++) {
-		if (Vector(center->getPlace(), edgePoints[i]->getPlace()).getLength() > radius * 3) {
+		if (Vector(center->getPlace(), edgePoints[i]->getPlace()).getLength() > radius * world->ws.maxExpantion) {
 			return true;
 		}
 	}

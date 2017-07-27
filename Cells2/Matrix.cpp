@@ -49,7 +49,7 @@ float Matrix::getElement(int i, int j)const
 	return p[i * cols + j];
 }
 
-float Matrix::getElementScaled(int i, int j, float min, float max)
+float Matrix::getElementScaled(int i, int j, float min, float max)const
 {
 	if (i < 0)i = rows + i;
 	if (j < 0)j = cols + j;

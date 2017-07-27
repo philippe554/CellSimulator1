@@ -1,9 +1,10 @@
 #include "World.h"
 #include "Core.h"
 
-World::World()
+World::World(WorldSettings _ws)
 {
 	time = 0;
+	ws = _ws;
 	Core::setup(c_Cores);
 	for(int i=0;i<c_WorldBoundary;i++)
 	{

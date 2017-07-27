@@ -2,7 +2,7 @@
 #include "WorldSettings.h"
 
 Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int _bx, const int _by)
-	: Reactor(&tWorld->ws, tWorld->ws.defaultTemperature)
+	: Reactor(&tWorld->ws)
 {
 	world = tWorld;
 	chunk = tChunk;
@@ -34,16 +34,14 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 	}
 	if (counter == 0)
 	{
-		setTemperature(world->ws.defaultTemperature);
+		init(world->ws.blockSize*world->ws.blockSize, world->ws.defaultTemperature);
 	}
 	else
 	{
-		setTemperature(sumTemp / counter);
+		init(world->ws.blockSize*world->ws.blockSize, sumTemp / counter);
 	}
 
 	//loadDefaultChunk();
-
-	setDefaultParticles(world->ws.blockSize*world->ws.blockSize);
 }
 
 Block::~Block()
@@ -215,72 +213,43 @@ void Block::calcCollisionChunk(const Block* block, const bool cellCell)
 
 void Block::calcFlow()
 {
-	int flowCounter = 0;
-	Vector flowSum(0.0, 0.0);
-	float presure = getPressure();
-	for (int j = 0; j < 8; j+=2) 
+	if (neighbours[0] != nullptr)
 	{
-		if (neighbours[j] != nullptr) 
-		{
-			flowCounter++;
-			double flowRate = (neighbours[j]->getPressure() - presure)*world->c_FlowRate;
-			Vector flowSub((bx - neighbours[j]->bx)*flowRate, (by - neighbours[j]->by)*flowRate);
-			flowSum += flowSub;
-		}
+		calcExchange(neighbours[0], 0, world->ws.blockSize, 0.0);
 	}
-	if (neighbours[6] != nullptr)
+	if (neighbours[2] != nullptr)
 	{
-		if(getTemperature()>neighbours[6]->getTemperature())
-		{
-			flowSum.add(0, (neighbours[6]->getTemperature() - getTemperature())*0.1);
-		}
+		calcExchange(neighbours[2], 1, world->ws.blockSize, 0.0);
 	}
-	if(flowCounter>0)
+	for (auto cell : cells)
 	{
-		//flow = (flow*0.25)+(flowSum * (0.75 * world->ws.blockSize / flowCounter));
+		cell->calcExchange(this, 0, cell->getSurface(), cell->getOuterMembrane());
 	}
-	else
-	{
-		//flow.multiply(0.25);
-	}
-	//flow.add(frictionForce / getMass());
-	frictionForce.set(0, 0);
 }
 void Block::moveFlow()
 {
-	if(flow.getX()>0)
+	if (neighbours[0] != nullptr)
 	{
-		if(neighbours[0]!=nullptr)
-		{
-			exchange(neighbours[0], world->ws.blockSize, flow.getX());
-		}
+		exchange(neighbours[0], 0);
 	}
-	else
+	if (neighbours[2] != nullptr)
 	{
-		if (neighbours[4] != nullptr)
-		{
-			exchange(neighbours[4], world->ws.blockSize, -flow.getX());
-		}
-	}
-	if (flow.getY()>0)
-	{
-		if (neighbours[2] != nullptr)
-		{
-			exchange(neighbours[2], world->ws.blockSize, flow.getY());
-		}
-	}
-	else
-	{
-		if (neighbours[6] != nullptr)
-		{
-			exchange(neighbours[6], world->ws.blockSize, -flow.getY());
-		}
+		exchange(neighbours[2], 1);
 	}
 	for(auto cell : cells)
 	{
-		exchange(cell, cell->getSurface(), cell->getOuterMembrane());
+		cell->exchange(this, 0);
 	}
 }
+void Block::cacheFlow()
+{
+	cacheParameters();
+	for (auto cell : cells)
+	{
+		cell->cacheParameters();
+	}
+}
+
 Vector Block::getFlow() const
 {
 	return flow;

@@ -39,7 +39,6 @@ public:
 
 	int getId()const;
 
-	double calcHeating(const double surounding);
 	void applyForce(Vector&v);
 
 	shared_ptr<DNA> getDNA();

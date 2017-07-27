@@ -5,7 +5,8 @@
 #include "Writer.h"
 #include <random>
 
-Simulator::Simulator(int x, int y, int xSize, int ySize) :View(x, y, xSize, ySize)
+Simulator::Simulator(int x, int y, int xSize, int ySize) 
+:View(x, y, xSize, ySize), world(WorldSettings())
 {
 	scale = 4;
 	xOffset = 0;
@@ -203,7 +204,8 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	if(message == WM_KEYDOWN)
 	{
 		if (wParam == 'Q') {
-			World testWorld;
+			WorldSettings ws;
+			World testWorld(ws);
 			for (int i = 0; i < 500; i++)
 			{
 				testWorld.addCell(bestDNA[rand() % bestDNA.size()]->mutate(0.1), 500, 100 + rand() % 2000);

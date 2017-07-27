@@ -15,7 +15,7 @@ using namespace std;
 class World
 {
 public:
-	World();
+	World(WorldSettings _ws);
 	~World();
 
 	void jump(long long amount,bool visualReady);

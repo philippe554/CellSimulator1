@@ -18,7 +18,7 @@ public:
 	int getAmountOfRows()const;
 	int getAmountOfCollumns()const;
 	float getElement(int i, int j)const;
-	float getElementScaled(int i, int j, float min, float max);
+	float getElementScaled(int i, int j, float min, float max)const;
 	std::vector<float> getAllElements()const;
 	std::vector<float> getAllElementsScaled(float min, float max)const;
 	Matrix getRow(int i)const;
