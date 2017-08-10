@@ -39,7 +39,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 			drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
 				block->by*world.ws.blockSize + 0.5*world.ws.blockSize),
 				Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*100, Color::black());
+					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10000, Color::black());
 
 		}
 	}
@@ -55,11 +55,11 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 
 			for (auto& cell : block->cells)
 			{
-				for (int j = 0; j < cell->amountEdges - 1; j++)
+				for (int j = 0; j < cell->AmountOfEdges - 1; j++)
 				{
 					drawLine(RenderTarget, cell->getEdgePoint(j), cell->getEdgePoint(j+1), Color::black());
 				}
-				drawLine(RenderTarget, cell->getEdgePoint(0), cell->getEdgePoint(cell->amountEdges - 1), Color::black());
+				drawLine(RenderTarget, cell->getEdgePoint(0), cell->getEdgePoint(cell->AmountOfEdges - 1), Color::black());
 
 				for (int j = 0; j < cell->getAmountOfTailEdges(); j++)
 				{

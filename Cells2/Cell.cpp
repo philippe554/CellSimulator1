@@ -75,7 +75,7 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
 	outerMembrane = new Membrane(dna->membrane);
 	init(Cell::getVolume(), tWorld->ws.defaultTemperature);
 
-	for (int i = 0; i < amountEdges; i++)
+	for (int i = 0; i < AmountOfEdges; i++)
 	{
 		connectedCells[i] = nullptr;
 	}
@@ -83,7 +83,7 @@ Cell::Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius)
 
 Cell::~Cell(){
 	int startDisconnect = -1;
-	for(int i=0;i<amountEdges;i++)
+	for(int i=0;i<AmountOfEdges;i++)
 	{
 		disconnectCells(i);
 	}
@@ -114,8 +114,9 @@ Cell::~Cell(){
 	delete outerMembrane;
 }
 
-void Cell::calcJointForces(const Vector& flow)
+Vector Cell::calcJointForces(const Vector& flow)
 {
+	Vector frictionTotal(0.0, 0.0);
 	center->calcForcesJoints();
 	for (auto point : edgePoints)
 	{
@@ -133,11 +134,11 @@ void Cell::calcJointForces(const Vector& flow)
 	}
 	for (auto joint : edgeJoints)
 	{
-		joint->calcFriction(flow);
+		frictionTotal.add(joint->calcFriction(flow));
 	}
 	for (auto joint : tailJoints)
 	{
-		joint->calcFriction(flow);
+		frictionTotal.add(joint->calcFriction(flow));
 	}
 	tailCounter++;
 	for (int i = 0; i < dna->tail.getAmountOfRows() - 1; i++)
@@ -162,27 +163,12 @@ void Cell::calcJointForces(const Vector& flow)
 	tailJoints[(dna->tail.getAmountOfRows() - 1) * 15]->setLength( c1*sin(tailCounter / c3 + c4) + tailJoints[(dna->tail.getAmountOfRows() - 1) * 15]->originalLength);
 	tailJoints[(dna->tail.getAmountOfRows() - 1) * 15 + 1]->setLength(-c1*sin(tailCounter / c3 + c4) + tailJoints[(dna->tail.getAmountOfRows() - 1) * 15 + 1]->originalLength);
 	
-	/*for (int j = 0; j < 4; j++)
-	{
-		tailJoints[j * 5]->setLength(0.3*cos((tailCounter) / 50.0) + tailJoints[j * 5]->originalLength);
-		tailJoints[j * 5 + 1]->setLength(0.3*cos((tailCounter) / 50.0) + tailJoints[j * 5 + 1]->originalLength);
-		tailJoints[j * 5 + 2]->setLength(-0.3*cos((tailCounter) / 50.0) + tailJoints[j * 5 + 2]->originalLength);
-		tailJoints[j * 5 + 3]->setLength(-0.3*cos((tailCounter) / 50.0) + tailJoints[j * 5 + 3]->originalLength);
-	}
-	for (int j = 0; j < 4; j++)
-	{
-		tailJoints[20 + j * 5]->setLength(0.4*sin((tailCounter) / 50.0) + tailJoints[20 + j * 5]->originalLength);
-		tailJoints[20 + j * 5 + 1]->setLength(0.4*sin((tailCounter) / 50.0) + tailJoints[20 + j * 5 + 1]->originalLength);
-		tailJoints[20 + j * 5 + 2]->setLength(-0.4*sin((tailCounter) / 50.0) + tailJoints[20 + j * 5 + 2]->originalLength);
-		tailJoints[20 + j * 5 + 3]->setLength(-0.4*sin((tailCounter) / 50.0) + tailJoints[20 + j * 5 + 3]->originalLength);
-	}
-	tailJoints[20 + 1 * 5 + 5]->setLength(0.8*sin((tailCounter) / 50.0) + tailJoints[20 + 1 * 5 + 5]->originalLength);
-	tailJoints[20 + 1 * 5 + 6]->setLength(-0.8*sin((tailCounter) / 50.0) + tailJoints[20 + 1 * 5 + 6]->originalLength);*/
+	return frictionTotal;
 }
 
 void Cell::movePoints(double precision, double backgroundFriction)
 {
-	float massPoint = getMass() / (1+amountEdges+tail.size());
+	float massPoint = getMass() / (1+AmountOfEdges+tail.size());
 	center->applyForces(precision, backgroundFriction);
 	for (auto point : edgePoints)
 	{
@@ -213,13 +199,13 @@ void Cell::cellCellCollision(Cell* other)
 
 void Cell::cellCellForce(Cell* other)
 {
-	for (int i = 0; i < Cell::amountEdges; i++)
+	for (int i = 0; i < Cell::AmountOfEdges; i++)
 	{
 		if (connectedCells[i] != other)
 		{
 			if (Vector::getLength(other->center->getPlace(), edgePoints[i]->getPlace()) < other->radius * 2) 
 			{
-				for (int j = 0; j < Cell::amountEdges; j++)
+				for (int j = 0; j < Cell::AmountOfEdges; j++)
 				{
 					Vector intersection(0.0, 0.0);
 					if (this->lineSegementsIntersect(*center->getPlace(), *edgePoints[i]->getPlace(),
@@ -269,7 +255,7 @@ void Cell::lineCellCollision(Line* line){
 }
 void Cell::lineCellForce(Vector&perpendicular1, Vector&perpendicular2)
 {
-	for (int k = 0; k < Cell::amountEdges; k++)
+	for (int k = 0; k < Cell::AmountOfEdges; k++)
 	{
 		//check if the radius of a cell goes through a line
 		Vector intersection(0.0, 0.0);
@@ -331,7 +317,7 @@ void Cell::lineCellForce(Vector&perpendicular1, Vector&perpendicular2)
 void Cell::reRefPoints()
 {
 	center = center->getReal();
-	for(int i =0;i<amountEdges;i++)
+	for(int i =0;i<AmountOfEdges;i++)
 	{
 		edgePoints[i] = edgePoints[i]->getReal();
 	}
@@ -339,14 +325,14 @@ void Cell::reRefPoints()
 
 bool Cell::isBroken()const {
 	//distance check
-	for (int i = 0; i < amountEdges; i++) {
+	for (int i = 0; i < AmountOfEdges; i++) {
 		if (Vector(center->getPlace(), edgePoints[i]->getPlace()).getLength() > radius * world->ws.maxExpantion) {
 			return true;
 		}
 	}
 	//Edge cross check
-	for (int i = 0; i < amountEdges; i++) {
-		for (int j = 0; j < amountEdges-1; j++) {
+	for (int i = 0; i < AmountOfEdges; i++) {
+		for (int j = 0; j < AmountOfEdges-1; j++) {
 			Vector intersection(0.0, 0.0);
 			if (lineSegementsIntersect(*center->getPlace(),*edgePoints[i]->getPlace()
 				,*edgePoints[j]->getPlace(), *edgePoints[j+1]->getPlace()
@@ -356,7 +342,7 @@ bool Cell::isBroken()const {
 		}
 		Vector intersection(0.0, 0.0);
 		if (lineSegementsIntersect(*center->getPlace(), *edgePoints[i]->getPlace()
-			, *edgePoints[0]->getPlace(), *edgePoints[amountEdges - 1]->getPlace()
+			, *edgePoints[0]->getPlace(), *edgePoints[AmountOfEdges - 1]->getPlace()
 			, intersection, 0.001)) {
 			return true;
 		}
@@ -369,9 +355,9 @@ bool Cell::connectCells(Cell*other)
 	int finalIndexOwn = 0;
 	int finalIndexOther = 0;
 	double distance = 10000;
-	for(int i=0;i<amountEdges;i++)
+	for(int i=0;i<AmountOfEdges;i++)
 	{
-		for(int j=0;j<amountEdges;j++)
+		for(int j=0;j<AmountOfEdges;j++)
 		{
 			double d = pow(Vector::getLength(edgePoints[i]->getPlace(), other->edgePoints[j]->getPlace()),2);
 			if(d<distance && connectedCells[i]==nullptr &&  other->connectedCells[j] == nullptr)
@@ -411,7 +397,7 @@ void Cell::disconnectCells(int i)
 		edgePoints[i] = edgePoints[i]->getSubPoint(center->getMass(), id, other->id);
 		connectedCells[i] = nullptr;
 
-		for (int l = 0; l < amountEdges; l++)
+		for (int l = 0; l < AmountOfEdges; l++)
 		{
 			if (other->connectedCells[l] == this)
 			{
@@ -448,15 +434,15 @@ float Cell::getVolume() const
 {
 	float total = 0;
 
-	for(int i=0;i<amountEdges-1;i++)
+	for(int i=0;i<AmountOfEdges-1;i++)
 	{
 		total += surfaceTriangle(Vector::getLength(center->getPlace(),edgePoints[i]->getPlace()),
 			Vector::getLength(center->getPlace(), edgePoints[i+1]->getPlace()),
 			Vector::getLength(edgePoints[i]->getPlace(), edgePoints[i+1]->getPlace()));
 	}
 	total += surfaceTriangle(Vector::getLength(center->getPlace(), edgePoints[0]->getPlace()),
-		Vector::getLength(center->getPlace(), edgePoints[amountEdges - 1]->getPlace()),
-		Vector::getLength(edgePoints[0]->getPlace(), edgePoints[amountEdges - 1]->getPlace()));
+		Vector::getLength(center->getPlace(), edgePoints[AmountOfEdges - 1]->getPlace()),
+		Vector::getLength(edgePoints[0]->getPlace(), edgePoints[AmountOfEdges - 1]->getPlace()));
 
 	return total;
 }
@@ -468,9 +454,9 @@ int Cell::getId() const
 
 void Cell::applyForce(Vector& v)
 {
-	center->addForce(v / (amountEdges + 1.0));
-	for (int i = 0; i < amountEdges; i++) {
-		edgePoints[i]->addForce(v / (amountEdges + 1.0));
+	center->addForce(v / (AmountOfEdges + 1.0));
+	for (int i = 0; i < AmountOfEdges; i++) {
+		edgePoints[i]->addForce(v / (AmountOfEdges + 1.0));
 	}
 }
 
@@ -525,7 +511,7 @@ shared_ptr<Point> Cell::getEdgePointPtr(const int i) const
 
 int Cell::getAmountOfEdgeEdges() const
 {
-	return amountEdges;
+	return AmountOfEdges;
 }
 
 int Cell::getAmountOfTailEdges() const
@@ -573,14 +559,14 @@ void Cell::multiplySize(double t)
 {
 	size *= t;
 	center->multiplyMass(t);
-	for (int i = 0; i < amountEdges; i++)
+	for (int i = 0; i < AmountOfEdges; i++)
 	{
 		for (int j = 0; j < edgePoints[i]->getJointSize(); j++)
 		{
 			edgePoints[i]->getJoint(j)->setUnchanged();
 		}
 	}
-	for (int i = 0; i < amountEdges; i++)
+	for (int i = 0; i < AmountOfEdges; i++)
 	{
 		edgePoints[i]->multiplyMass(t);
 		for (int j = 0; j < edgePoints[i]->getJointSize(); j++)

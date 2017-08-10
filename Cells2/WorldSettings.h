@@ -1,5 +1,7 @@
 #pragma once
 
+#include <math.h>
+
 class WorldSettings
 {
 public: 
@@ -17,8 +19,9 @@ public:
 	float defaultTemperature = 100;
 	float temperatureFlowConstant = 0.001;
 	float surfacePressure = 0.001;
-	float flowConstant = 0.001;
+	float flowConstant = 0.01;
 	float flowBuildUp = 0.8;
+	float flowBuildUpCorrected = pow(flowBuildUp, precision);
 	float membraneResistance = 0.01;
 	float membranePumpStrength = 0.2;
 

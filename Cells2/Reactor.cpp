@@ -69,7 +69,12 @@ float Reactor::getParticle(const int particle) const
 
 float Reactor::getFlowIndex(const int index) const
 {
-	return flow[index] * ws->flowConstant;
+	return flow[index];
+}
+
+void Reactor::applyForce(const int index, const float amount)
+{
+	flow[index] += amount / getMass();
 }
 
 void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, Membrane* membrane)
@@ -101,10 +106,9 @@ void Reactor::calcExchange(Reactor* other, const int movingCache, const float su
 
 void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, const int flowIndex)
 {
-	const float pressureDif = getPressure() - other->getPressure();
-	float flowBuildUp = std::pow(ws->flowBuildUp, ws->precision);
-	flow[flowIndex] = flowBuildUp * flow[flowIndex] + flowBuildUp * pressureDif;
-	const float sfp = surface * ws->flowConstant * flow[flowIndex];
+	const float pressureDif = (getPressure() - other->getPressure()) * ws->flowConstant;
+	flow[flowIndex] = ws->flowBuildUpCorrected * flow[flowIndex] + (1.0-ws->flowBuildUpCorrected) * pressureDif;
+	const float sfp = surface * flow[flowIndex];
 	const int index = movingCache*WorldSettings::e_AmountOfParticles;
 
 	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)

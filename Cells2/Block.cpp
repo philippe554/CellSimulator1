@@ -77,9 +77,32 @@ void Block::linkBlocks(int x, int y, int i1, int i2)
 
 void Block::calcJointForces()
 {
+	Vector frictionTotal(0.0, 0.0);
 	for(auto cell:cells)
 	{
-		cell->calcJointForces(getFlow());
+		frictionTotal.add(cell->calcJointForces(getFlow()));
+	}
+	if(frictionTotal.getX()>0)
+	{
+		if(neighbours[4]!=nullptr)
+		{
+			neighbours[4]->applyForce(0, -frictionForce.getX());
+		}
+	}
+	else
+	{
+		applyForce(0, -frictionForce.getX());
+	}
+	if (frictionTotal.getY()>0)
+	{
+		if (neighbours[6] != nullptr)
+		{
+			neighbours[6]->applyForce(1, -frictionForce.getY());
+		}
+	}
+	else
+	{
+		applyForce(1, -frictionForce.getY());
 	}
 }
 void Block::movePoints(double precision, double backgroundFriction)

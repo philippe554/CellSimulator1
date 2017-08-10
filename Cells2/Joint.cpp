@@ -20,48 +20,48 @@ Joint::~Joint()
 	p2->deleteJointPointer(this);
 }
 
-void Joint::calcFriction(const Vector& flow)
+Vector Joint::calcFriction(const Vector& flow)
 {
 	if (friction) 
-	{
-		frictionForce.set(0, 0);
+{
+		Vector avgVelocity = Vector::getAverage(p1->getVelocity(), p2->getVelocity());
+		Vector diffVelocity = Vector(p1->getVelocity(), p2->getVelocity());
+		Vector base = Vector(p1->getPlace(), p2->getPlace()).getUnit();
+		Vector antiNormal = base.getPerpendicularCounterClockwise();
+		Vector flowPressure = avgVelocity - flow;
+		Vector flowPressureUnit = -flowPressure.getUnit();
+		double impactCooficient = antiNormal.dot(flowPressureUnit);
+		double signCooficient = base.dot(flowPressureUnit);
+
+		if (impactCooficient > 0)
 		{
-			Vector avgVelocity = Vector::getAverage(p1->getVelocity(), p2->getVelocity());
-			Vector diffVelocity = Vector(p1->getVelocity(), p2->getVelocity());
-			Vector base = Vector(p1->getPlace(), p2->getPlace()).getUnit();
-			Vector antiNormal = base.getPerpendicularCounterClockwise();
-			Vector flowPressure = avgVelocity - flow;
-			Vector flowPressureUnit = -flowPressure.getUnit();
-			double impactCooficient = antiNormal.dot(flowPressureUnit);
-			double signCooficient = base.dot(flowPressureUnit);
+			Vector flowResponse = flowPressureUnit;
 
-			if (impactCooficient > 0)
+			Vector rotationCorrectedBase = base -(base.getUnit()*diffVelocity.getLength() * 4);
+			if (signCooficient > 0)
 			{
-				Vector flowResponse = flowPressureUnit;
-
-				Vector rotationCorrectedBase = base -(base.getUnit()*diffVelocity.getLength() * 4);
-				if (signCooficient > 0)
-				{
-					flowResponse = Vector(antiNormal, impactCooficient, rotationCorrectedBase, 1 - impactCooficient).getUnit();
-				}
-				else
-				{
-					flowResponse = Vector(antiNormal, impactCooficient, -rotationCorrectedBase, 1 - impactCooficient).getUnit();
-				}
-
-				double length = Vector::getLength(p1->getPlace(), p2->getPlace());
-				flowResponse.multiply(flowPressure.dot(flowPressure));
-				flowResponse.multiply(0.3 * length * impactCooficient * 0.5);
-				p1->addForce(flowResponse);
-				p2->addForce(flowResponse);
-				//frictionForce += flowResponse * 2; //For output
+				flowResponse = Vector(antiNormal, impactCooficient, rotationCorrectedBase, 1 - impactCooficient).getUnit();
 			}
+			else
+			{
+				flowResponse = Vector(antiNormal, impactCooficient, -rotationCorrectedBase, 1 - impactCooficient).getUnit();
+			}
+
+			double length = Vector::getLength(p1->getPlace(), p2->getPlace());
+			flowResponse.multiply(flowPressure.dot(flowPressure));
+			flowResponse.multiply(0.3 * length * impactCooficient * 0.5);
+			p1->addForce(flowResponse);
+			p2->addForce(flowResponse);
+			flowResponse.multiply(2);
+			frictionForce = flowResponse;
+			return flowResponse;
 		}
 	}
 	else
 	{
 		frictionForce.set(0, 0);
 	}
+	return Vector(0.0, 0.0);
 }
 
 shared_ptr<Point> Joint::getP1()

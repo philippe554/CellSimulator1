@@ -3,6 +3,7 @@
 class Cell;
 
 #include "World.h"
+#include "CellFrame.h"
 #include "Vector.h"
 #include "Point.h"
 #include "Joint.h"
@@ -11,70 +12,35 @@ class Cell;
 #include "Membrane.h"
 
 
-class Cell : public Reactor, public Shapes{
+
+class Cell : public CellFrame{
 public:
 	Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius);
 	~Cell();
-
-	void calcJointForces(const Vector& flow);
-	void movePoints(double precision, double backgroundFriction);
-
-	void cellCellCollision(Cell * other);
-	void cellCellForce(Cell * other );
-	void lineCellCollision(Line * line);
-	void lineCellForce(Vector & perpendicular1, Vector & perpendicular2);
-
-	bool isBroken()const;
-	void reRefPoints();
 
 	bool connectCells(Cell*other);
 	void disconnectCells(int );
 
 	Membrane* getOuterMembrane()const;
 
-	void applyPressure(float p);
-
-	double getSurface()const;
-	float getVolume() const override;
-
 	int getId()const;
 
 	void applyForce(Vector&v);
 
-	shared_ptr<DNA> getDNA();
-
-	//void setEdgePoint(int i,Point*t);
-	Vector*getEdgePoint(const int i)const;
-	Vector*getTailPoint(const int i, const int j)const;
-	int getEdgePointId(const int i)const;
-	shared_ptr<Point> getEdgePointPtr(const int i)const;
-	int getAmountOfEdgeEdges()const;
-	int getAmountOfTailEdges()const;
-
-	Joint* getEdgeEdge(int i)const;
-	Joint* getTailEdge(int i)const;
-
-	//void setCenter(Point*t);
-	Vector* getCenter()const;
-	int getCenterId()const;
-	shared_ptr<Point> getCenterPtr()const;
-
-	static const int amountEdges = 6;
+	shared_ptr<DNA> getDNA();	
 private:
-	shared_ptr<Point> center;
-	shared_ptr<Point> edgePoints[amountEdges];
+
 	vector<shared_ptr<Point>> tail;
 
-	Joint* radiusJoints[amountEdges];
-	Joint* edgeJoints[amountEdges];
+	
 	vector<Joint*> tailJoints;
 
 	Membrane* outerMembrane;
 
 	shared_ptr<DNA> dna;
 
-	Cell*connectedCells[amountEdges];
-	World*world;
+	Cell*connectedCells[AmountOfEdges];
+	
 
 	int id;
 	double radius;

@@ -49,6 +49,9 @@
     <Filter Include="Source Files\Physics\Objects\WorldParts">
       <UniqueIdentifier>{85735a0b-c595-4d26-a0bc-b42bb802f679}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Physics\Objects\CellParts">
+      <UniqueIdentifier>{54da68eb-9a61-4005-a80d-d6551e78d83c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -143,19 +146,7 @@
     <ClInclude Include="Writer.h">
       <Filter>Header Files\App</Filter>
     </ClInclude>
-    <ClInclude Include="Cell.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Core.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Joint.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="Line.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Point.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
     <ClInclude Include="Water.h">
@@ -196,6 +187,27 @@
     </ClInclude>
     <ClInclude Include="Chunk.h">
       <Filter>Header Files\Physics\Objects\WorldParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Cell.h">
+      <Filter>Header Files\Physics\Objects\CellParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Joint.h">
+      <Filter>Header Files\Physics\Objects\CellParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Point.h">
+      <Filter>Header Files\Physics\Objects\CellParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Header Files\Physics\Objects\WorldParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Tail.h">
+      <Filter>Header Files\Physics\Objects\CellParts</Filter>
+    </ClInclude>
+    <ClInclude Include="CellFrame.h">
+      <Filter>Header Files\Physics\Objects\CellParts</Filter>
+    </ClInclude>
+    <ClInclude Include="TailEnd.h">
+      <Filter>Header Files\Physics\Objects\CellParts</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

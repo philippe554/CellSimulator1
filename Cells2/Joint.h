@@ -13,7 +13,7 @@ public:
 	Joint(shared_ptr<Point> tp1, shared_ptr<Point> tp2, double tStrength, double tDamping, bool tfriction, int tid, int tBelongsTo);
 	~Joint();
 
-	void calcFriction(const Vector& flow);
+	Vector calcFriction(const Vector& flow);
 
 	shared_ptr<Point> getP1();
 	shared_ptr<Point> getP2();

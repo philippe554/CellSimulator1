@@ -3,7 +3,6 @@
 
 class Reactor;
 
-#include "Vector.h"
 #include "WorldSettings.h"
 #include "Membrane.h"
 #include "Particle.h"
@@ -11,10 +10,11 @@ class Reactor;
 class Reactor
 {
 public:
-	virtual ~Reactor() = default;
 	static Particle prototypes[];
 
 	Reactor(WorldSettings* _ws);
+
+	virtual ~Reactor() = default;
 
 	void init(float _volume, float _temperature);
 
@@ -26,6 +26,8 @@ public:
 	virtual float getVolume()const =0;
 	float getParticle(const int particle)const;
 	float getFlowIndex(const int index)const;
+
+	void applyForce(const int index, const float amount);
 
 	void calcExchange(Reactor*other, const int movingCache, const float surface, Membrane* membrane);
 	void calcExchange(Reactor*other, const int movingCache, const float surface, const int flowIndex);
