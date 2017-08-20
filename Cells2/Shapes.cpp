@@ -49,3 +49,8 @@ float Shapes::surfaceTriangle(float l1, float l2, float l3)
 	return sqrt(s*(s - l1)*(s - l2)*(s - l3));
 }
 
+float Shapes::surfaceTriangle(const Vector & A, const Vector & B, const Vector & C)
+{
+	return surfaceTriangle(Vector::getLength(A, B), Vector::getLength(B, C), Vector::getLength(A, C));
+}
+

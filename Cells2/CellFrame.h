@@ -8,25 +8,19 @@ class CellFrame;
 #include "TailEnd.h"
 #include "Point.h"
 
-class CellFrame : public Reactor, public Shapes
+class CellFrame
 {
 public:
-	CellFrame(World* _world);
+	CellFrame(World * _world, const Vector& tCenter, const float radius);
+	~CellFrame();
 
 	Vector calcJointForces(const Vector& flow);
-	void movePoints(double precision, double backgroundFriction);
+	void movePoints(float precision, float backgroundFriction);
 
 	void cellCellCollision(Cell * other);
 	void cellCellForce(Cell * other);
-	void lineCellCollision(Line * line);
-	void lineCellForce(Vector & perpendicular1, Vector & perpendicular2);
 
 	bool isBroken()const;
-	void reRefPoints();
-
-	void applyPressure(float p);
-	double getSurface()const;
-	float getVolume() const override;
 
 	Vector*getEdgePoint(const int i)const;
 	Vector*getTailPoint(const int i, const int j)const;
@@ -36,21 +30,35 @@ public:
 	Joint* getTailEdge(int i)const;
 	Vector* getCenter()const;
 
+	long getId()const;
+
 	static const int AmountOfEdges = 6;
+	static const int MaxTailLength = 12;
+
 protected:
-	shared_ptr<Point> center;
-	shared_ptr<Point> edgePoints[AmountOfEdges];
+	Point center;
+	Point edgePoints[AmountOfEdges];
+	Joint radiusJoints[AmountOfEdges];
+	Joint edgeJoints[AmountOfEdges];
 
-	Joint* radiusJoints[AmountOfEdges];
-	Joint* edgeJoints[AmountOfEdges];
-
-	vector<Tail*> tail;
+	int tailLength;
+	Point tailPoints[2 * MaxTailLength];
+	Joint tailJoints[5 * MaxTailLength];
 
 	bool hasTailEnd;
-	shared_ptr<Point> tailEndPoint;
-	Joint* tailEndJoints[2];
+	Point tailEndPoint;
+	Joint tailEndJoints[2];
 
 	CellFrame* connectedCells[AmountOfEdges];
 
 	World*world;
+
+	long id;
+	static long idCounter;
 };
+
+/*
+void lineCellCollision(Line * line);
+void lineCellForce(Vector & perpendicular1, Vector & perpendicular2);
+
+*/

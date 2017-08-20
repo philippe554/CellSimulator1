@@ -1,6 +1,13 @@
 #include "Joint.h"
 
-Joint::Joint(shared_ptr<Point> tp1, shared_ptr<Point> tp2, double tStrength, double tDamping, bool tfriction, int tid, int tBelongsTo)
+long Joint::lastID = 0;
+
+Joint::Joint() 
+{
+
+}
+
+void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction)
 {
 	p1 = tp1;
 	p2 = tp2;
@@ -11,13 +18,8 @@ Joint::Joint(shared_ptr<Point> tp1, shared_ptr<Point> tp2, double tStrength, dou
 	strength = tStrength;
 	damping = tDamping;
 	friction = tfriction;
-	id = tid;
-	belongsTo = tBelongsTo;
-}
-Joint::~Joint()
-{
-	p1->deleteJointPointer(this);
-	p2->deleteJointPointer(this);
+	id = lastID;
+	lastID++;
 }
 
 Vector Joint::calcFriction(const Vector& flow)
@@ -30,8 +32,8 @@ Vector Joint::calcFriction(const Vector& flow)
 		Vector antiNormal = base.getPerpendicularCounterClockwise();
 		Vector flowPressure = avgVelocity - flow;
 		Vector flowPressureUnit = -flowPressure.getUnit();
-		double impactCooficient = antiNormal.dot(flowPressureUnit);
-		double signCooficient = base.dot(flowPressureUnit);
+		float impactCooficient = antiNormal.dot(flowPressureUnit);
+		float signCooficient = base.dot(flowPressureUnit);
 
 		if (impactCooficient > 0)
 		{
@@ -47,7 +49,7 @@ Vector Joint::calcFriction(const Vector& flow)
 				flowResponse = Vector(antiNormal, impactCooficient, -rotationCorrectedBase, 1 - impactCooficient).getUnit();
 			}
 
-			double length = Vector::getLength(p1->getPlace(), p2->getPlace());
+			float length = Vector::getLength(p1->getPlace(), p2->getPlace());
 			flowResponse.multiply(flowPressure.dot(flowPressure));
 			flowResponse.multiply(0.3 * length * impactCooficient * 0.5);
 			p1->addForce(flowResponse);
@@ -64,17 +66,17 @@ Vector Joint::calcFriction(const Vector& flow)
 	return Vector(0.0, 0.0);
 }
 
-shared_ptr<Point> Joint::getP1()
+Point* Joint::getP1()const
 {
 	return p1;
 }
 
-shared_ptr<Point> Joint::getP2()
+Point* Joint::getP2()const
 {
 	return p2;
 }
 
-shared_ptr<Point> Joint::getOther(shared_ptr<Point> p)
+Point* Joint::getOther(Point* p)const
 {
 	if(p->getID()==p1->getID())
 	{
@@ -85,37 +87,37 @@ shared_ptr<Point> Joint::getOther(shared_ptr<Point> p)
 	}
 }
 
-double Joint::getLength()
+float Joint::getLength()
 {
 	return length;
 }
 
-void Joint::setLength(double t)
+void Joint::setLength(float t)
 {
 	length = t;
 }
 
-void Joint::multiplyLength(double t)
+float Joint::getRealLength()const
 {
-	length *= t;
+	return Vector::getLength(p1->getPlace(), p2->getPlace());
 }
 
-double Joint::getStrenth()
+float Joint::getStrenth()
 {
 	return strength;
 }
 
-void Joint::setStrenth(double t)
+void Joint::setStrenth(float t)
 {
 	strength = t;
 }
 
-double Joint::getDamping()
+float Joint::getDamping()
 {
 	return damping;
 }
 
-void Joint::setDamping(double t)
+void Joint::setDamping(float t)
 {
 	damping = t;
 }
@@ -129,14 +131,3 @@ void Joint::setID(int t)
 {
 	id = t;
 }
-
-int Joint::getBelongsTo()
-{
-	return belongsTo;
-}
-
-void Joint::setBelongsTo(int t)
-{
-	belongsTo = t;
-}
-

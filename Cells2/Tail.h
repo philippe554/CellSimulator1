@@ -7,21 +7,34 @@ class Tail;
 #include "TailEnd.h"
 #include "Point.h"
 
-
 class Tail
 {
 public:
 	Tail(Cell* cell, TailEnd* tailEnd);
 
 	Tail* expand();
-	void collapse(Tail* other);
-	void collapseFull(Cell* cell, TailEnd* tailEnd);
+	void collapse();
+	void collapseFull();
 
 	void setLength(float left, float right);
 
 	double getSurface()const;
 	float getVolume()const;
 
-	std::shared_ptr<Point> points[2];
-	Joint* joints[5];
+	virtual shared_ptr<Point> getFrontLeftPoint()const;
+	virtual shared_ptr<Point> getFrontRightPoint()const;
+
+private:
+	
+
+	Tail* front;
+	Tail* back;
+
+	enum PointIndex {
+		p_left, p_right
+	};
+
+	enum JointIndex {
+		j_left, j_leftCross, j_right, j_rightCross, j_back
+	};
 };

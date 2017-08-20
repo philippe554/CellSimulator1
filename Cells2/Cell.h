@@ -11,43 +11,30 @@ class Cell;
 #include "DNA.h"
 #include "Membrane.h"
 
-
-
-class Cell : public CellFrame{
+class Cell : public CellFrame, public Reactor, public Shapes {
 public:
 	Cell(shared_ptr<DNA> tDna, World*tWorld, Vector tCenter, double tRadius);
 	~Cell();
 
+	shared_ptr<DNA> getDNA();
+
 	bool connectCells(Cell*other);
 	void disconnectCells(int );
+
+	void applyPressure(float p);
+	double getSurface()const;
+	float getRadius()const;
+	float getVolume()const override;
 
 	Membrane* getOuterMembrane()const;
 
 	int getId()const;
-
-	void applyForce(Vector&v);
-
-	shared_ptr<DNA> getDNA();	
 private:
-
-	vector<shared_ptr<Point>> tail;
-
-	
-	vector<Joint*> tailJoints;
+	shared_ptr<DNA> dna;
 
 	Membrane* outerMembrane;
 
-	shared_ptr<DNA> dna;
-
 	Cell*connectedCells[AmountOfEdges];
-	
-
-	int id;
-	double radius;
-
-	static int idCounter;
-
-	double tailCounter;
 };
 
 

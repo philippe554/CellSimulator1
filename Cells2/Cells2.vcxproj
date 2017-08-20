@@ -82,6 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <MinimalRebuild>false</MinimalRebuild>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\pmmde\Source\Repos\MyMathLib\MyMathLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -114,6 +115,7 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Cell.cpp" />
     <ClCompile Include="Block.cpp" />
+    <ClCompile Include="CellFrame.cpp" />
     <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="Color.cpp" />
     <ClCompile Include="Core.cpp" />
@@ -128,6 +130,7 @@
     <ClCompile Include="Reactor.cpp" />
     <ClCompile Include="Shapes.cpp" />
     <ClCompile Include="Simulator.cpp" />
+    <ClCompile Include="Tail.cpp" />
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="View.cpp" />
     <ClCompile Include="Water.cpp" />

@@ -52,6 +52,15 @@
     <Filter Include="Header Files\Physics\Objects\CellParts">
       <UniqueIdentifier>{54da68eb-9a61-4005-a80d-d6551e78d83c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Physics\Objects\CellParts">
+      <UniqueIdentifier>{6b422215-a401-4c0c-b981-5df94c84bfb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Physics\Objects\Other">
+      <UniqueIdentifier>{30eb2131-1885-4b53-82f0-1ab9223d5207}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Physics\Objects\Other">
+      <UniqueIdentifier>{7472c5ca-5000-4c36-ad5c-32ea106f011b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -59,18 +68,6 @@
     </ClCompile>
     <ClCompile Include="Winapi.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Joint.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Point.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Cell.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Line.cpp">
-      <Filter>Source Files\Physics</Filter>
     </ClCompile>
     <ClCompile Include="View.cpp">
       <Filter>Source Files\App</Filter>
@@ -86,12 +83,6 @@
     </ClCompile>
     <ClCompile Include="Writer.cpp">
       <Filter>Source Files\App</Filter>
-    </ClCompile>
-    <ClCompile Include="Water.cpp">
-      <Filter>Source Files\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Core.cpp">
-      <Filter>Source Files\Physics</Filter>
     </ClCompile>
     <ClCompile Include="Reactor.cpp">
       <Filter>Source Files\Physics\Chemical</Filter>
@@ -126,6 +117,30 @@
     <ClCompile Include="WorldSettings.cpp">
       <Filter>Source Files\Physics\Objects\WorldParts</Filter>
     </ClCompile>
+    <ClCompile Include="Cell.cpp">
+      <Filter>Source Files\Physics\Objects\CellParts</Filter>
+    </ClCompile>
+    <ClCompile Include="Joint.cpp">
+      <Filter>Source Files\Physics\Objects\CellParts</Filter>
+    </ClCompile>
+    <ClCompile Include="Core.cpp">
+      <Filter>Source Files\Physics\Objects\WorldParts</Filter>
+    </ClCompile>
+    <ClCompile Include="Point.cpp">
+      <Filter>Source Files\Physics\Objects\CellParts</Filter>
+    </ClCompile>
+    <ClCompile Include="Water.cpp">
+      <Filter>Source Files\Physics\Objects\Other</Filter>
+    </ClCompile>
+    <ClCompile Include="Line.cpp">
+      <Filter>Source Files\Physics\Objects\Other</Filter>
+    </ClCompile>
+    <ClCompile Include="CellFrame.cpp">
+      <Filter>Source Files\Physics\Objects\CellParts</Filter>
+    </ClCompile>
+    <ClCompile Include="Tail.cpp">
+      <Filter>Source Files\Physics\Objects\CellParts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -145,12 +160,6 @@
     </ClInclude>
     <ClInclude Include="Writer.h">
       <Filter>Header Files\App</Filter>
-    </ClInclude>
-    <ClInclude Include="Line.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Water.h">
-      <Filter>Header Files\Physics</Filter>
     </ClInclude>
     <ClInclude Include="DNA.h">
       <Filter>Header Files\Physics\Chemical</Filter>
@@ -208,6 +217,12 @@
     </ClInclude>
     <ClInclude Include="TailEnd.h">
       <Filter>Header Files\Physics\Objects\CellParts</Filter>
+    </ClInclude>
+    <ClInclude Include="Line.h">
+      <Filter>Header Files\Physics\Objects\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="Water.h">
+      <Filter>Header Files\Physics\Objects\Other</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
