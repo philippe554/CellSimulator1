@@ -17,7 +17,6 @@ public:
 
 	void addJoint(Joint* joint);
 	void deleteJoint(const long& _id);
-	void clearJoints();
 
 	void addForce(Vector&f);
 	void addForce(Vector*f);

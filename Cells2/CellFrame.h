@@ -20,7 +20,7 @@ public:
 	void cellCellCollisionHelper(CellFrame* other);
 
 	bool connectCells(CellFrame*other);
-	void disconnectCells(int);
+	void disconnectCells(const int i);
 
 	void applyPressure(float p);
 	double getSurface()const;
@@ -55,7 +55,9 @@ protected:
 	Point tailEndPoint;
 	Joint tailEndJoints[2];
 
+	bool connectedCellsMaster[AmountOfEdges];
 	CellFrame* connectedCells[AmountOfEdges];
+	Joint connectedCellsJoints[2 * AmountOfEdges];
 
 	long id;
 	static long idCounter;

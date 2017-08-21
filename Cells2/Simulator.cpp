@@ -157,7 +157,7 @@ void Simulator::update()
 	int r2 = rand() % 30 + 1;
 
 	long start = clock();
-	world.jump(1, true);
+	world.jump(5, true);
 	simulationTime = clock() - start;
 }
 
@@ -186,7 +186,7 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 					float distance = Vector::getLength(cell->getCenter(), Vector(pt.x, pt.y));
 					if(distance<smallestDistance)
 					{
-						if(distance<20/scale)
+						if(distance<5/scale)
 						{
 							found = true;
 							selectedID = cell->getId();

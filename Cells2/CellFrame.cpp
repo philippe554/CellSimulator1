@@ -10,7 +10,7 @@ CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float rad
 	idCounter++;
 
 	float pointMass = 1;//old
-	tailLength = 1;
+	tailLength = 0;
 	hasTailEnd = false;
 
 	float x = tCenter.getX();
@@ -41,6 +41,7 @@ CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float rad
 
 	for (int i = 0; i < AmountOfEdges; i++)
 	{
+		connectedCellsMaster[i] = false;
 		connectedCells[i] = nullptr;
 	}
 
@@ -81,6 +82,24 @@ CellFrame::~CellFrame() {
 	{
 		disconnectCells(i);
 	}
+	/*for (auto& joint : radiusJoints) {
+		joint.deconstruct();
+	}
+	for (auto& joint : edgeJoints) {
+		joint.deconstruct();
+	}
+	for (int i = 0; i < tailLength; i++){
+		tailJoints[i * 5 + 0].deconstruct();
+		tailJoints[i * 5 + 1].deconstruct();
+		tailJoints[i * 5 + 2].deconstruct();
+		tailJoints[i * 5 + 3].deconstruct();
+		tailJoints[i * 5 + 4].deconstruct();
+	}
+	if (hasTailEnd) {
+		for (auto& joint : tailEndJoints) {
+			joint.deconstruct();
+		}
+	}*/
 }
 
 Vector CellFrame::calcJointForces(const Vector& flow)
@@ -195,65 +214,78 @@ void CellFrame::cellCellCollisionHelper(CellFrame * other)
 	edgePoints[i]->addForce(velDif*((-l1Own) / (l1Own + l2Own)));*/
 }
 
-bool CellFrame::connectCells(CellFrame * other)
+bool CellFrame::connectCells(CellFrame * otherCell)
 {
-	return false;
-	/*
-	int finalIndexOwn = 0;
-	int finalIndexOther = 0;
+	int own = 0;
+	int other = 0;
 	float distance = 10000;
 	for (int i = 0; i<AmountOfEdges; i++)
 	{
 		for (int j = 0; j<AmountOfEdges; j++)
 		{
-			float d = pow(Vector::getLength(edgePoints[i]->getPlace(), other->edgePoints[j]->getPlace()), 2);
-			if (d<distance && connectedCells[i] == nullptr &&  other->connectedCells[j] == nullptr)
+			float d = pow(Vector::getLength(edgePoints[i].getPlace(), otherCell->edgePoints[j].getPlace()), 2);
+			if (d<distance && connectedCells[i] == nullptr &&  otherCell->connectedCells[j] == nullptr)
 			{
-				finalIndexOwn = i;
-				finalIndexOther = j;
+				own = i;
+				other = j;
 				distance = d;
 			}
 		}
 	}
 	if (distance<2)
 	{
-		connectedCells[finalIndexOwn] = other;
-		other->connectedCells[finalIndexOther] = this;
+		int ownNext = own + 1 == AmountOfEdges ? 0 : own + 1;
+		int otherNext = other + 1 == AmountOfEdges ? 0 : other + 1;
 
-		if (edgePoints[finalIndexOwn]->getReal()->getID() == other->edgePoints[finalIndexOther]->getReal()->getID())
-		{
-			return false;
-		}
-		shared_ptr<Point> p = Point::MakePoint(edgePoints[finalIndexOwn], other->edgePoints[finalIndexOther]);
-		edgePoints[finalIndexOwn]->setRef(p);
-		other->edgePoints[finalIndexOther]->setRef(p);
-		edgePoints[finalIndexOwn] = p;
-		other->edgePoints[finalIndexOther] = p;
+		connectedCells[own] = otherCell;
+		otherCell->connectedCells[other] = this;
+
+		connectedCellsMaster[own] = true;
+		otherCell->connectedCellsMaster[other] = false;
+		
+		connectedCellsJoints[own * 2].init(&edgePoints[own], &otherCell->edgePoints[otherNext], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+		connectedCellsJoints[own * 2 + 1].init(&edgePoints[ownNext], &otherCell->edgePoints[other], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+
+		connectedCellsJoints[own * 2].setLength(0);
+		connectedCellsJoints[own * 2 + 1].setLength(0);
 
 		return true;
 	}
 	else {
 		return false;
-	}*/
+	}
 }
 
-void CellFrame::disconnectCells(int)
+void CellFrame::disconnectCells(const int i)
 {
-	/*
-	Cell*other = connectedCells[i];
+	CellFrame*other = connectedCells[i];
 
-	if (connectedCells[i] != nullptr) {
-		edgePoints[i] = edgePoints[i]->getSubPoint(center->getMass(), id, other->id);
-		connectedCells[i] = nullptr;
-
+	if (other != nullptr)
+	{
 		for (int l = 0; l < AmountOfEdges; l++)
 		{
-			if (other->connectedCells[l] == this)
+			if (other->connectedCells[l] != nullptr) 
 			{
-				other->connectedCells[l] = nullptr;
+				if (other->connectedCells[l]->getId() == id)
+				{
+					if (other->connectedCellsMaster[l]) 
+					{
+						other->connectedCellsJoints[l * 2].deconstruct();
+						other->connectedCellsJoints[l * 2 + 1].deconstruct();
+					}
+					other->connectedCellsMaster[l] = false;
+					other->connectedCells[l] = nullptr;
+				}
 			}
 		}
-	}*/
+		if (connectedCellsMaster[i]) 
+		{
+			connectedCellsJoints[i * 2].deconstruct();
+			connectedCellsJoints[i * 2 + 1].deconstruct();
+		}
+		connectedCellsMaster[i] = false;
+		connectedCells[i] = nullptr;
+	}
 }
 
 void CellFrame::applyPressure(float p)

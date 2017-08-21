@@ -5,6 +5,7 @@ long Point::lastID = 0;
 
 Point::Point()
 {
+	mass = 0;
 }
 void Point::init(double tx, double ty, double tMass)
 {
@@ -28,13 +29,6 @@ void Point::deleteJoint(const long& _id)
 			joints.erase(joints.begin() + i);
 			i--;
 		}
-	}
-}
-
-void Point::clearJoints()
-{
-	while (joints.size()>0) {
-		delete joints[0];
 	}
 }
 

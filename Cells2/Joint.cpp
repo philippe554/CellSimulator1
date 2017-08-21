@@ -4,7 +4,13 @@ long Joint::lastID = 0;
 
 Joint::Joint() 
 {
-
+	p1 = nullptr;
+	p1 = nullptr;
+	length = 0;
+	originalLength = 0;
+	strength = 0;
+	damping = 0;
+	friction = 0;
 }
 
 void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction)
@@ -20,6 +26,19 @@ void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDam
 	friction = tfriction;
 	id = lastID;
 	lastID++;
+}
+
+void Joint::deconstruct()
+{
+	p1->deleteJoint(id);
+	p2->deleteJoint(id);
+	p1 = nullptr;
+	p1 = nullptr;
+	length = 0;
+	originalLength = 0;
+	strength = 0;
+	damping = 0;
+	friction = 0;
 }
 
 Vector Joint::calcFriction(const Vector& flow)

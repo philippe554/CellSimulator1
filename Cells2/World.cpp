@@ -67,13 +67,12 @@ void World::addCell(shared_ptr<DNA> dna, const double x,const double y)
 		Cell* newCell = new Cell(dna, &ws, Vector(x, y), ws.c_NewCellRadius);
 		block->cells.push_back(newCell);
 
-#ifdef S_CellAutoConnect
 		for (auto cell : block->cells)
 		{
 			if (cell != newCell)
 			{
 				cell->connectCells(newCell);
-				cell->connectCells(newCell);
+				//cell->connectCells(newCell);
 			}
 		}
 		for (auto neighbour : block->neighbours)
@@ -85,12 +84,11 @@ void World::addCell(shared_ptr<DNA> dna, const double x,const double y)
 					if (cell != newCell)
 					{
 						cell->connectCells(newCell);
-						cell->connectCells(newCell);
+						//cell->connectCells(newCell);
 					}
 				}
 			}
 		}
-#endif
 	}
 }
 
