@@ -7,8 +7,6 @@ class Point;
 
 #include "Vector.h"
 #include "Joint.h"
-#include "Chunk.h"
-#include "World.h"
 
 using namespace std;
 
@@ -25,7 +23,9 @@ public:
 	void addForce(Vector*f);
 	void addForce(double x,double y);
 	void calcForcesJoints();
+private:
 	void applyForces(double precision, double backgroundFriction);
+public:
 	void applyForces(double precision, double backgroundFriction, double newMass);
 
 	const Vector& getPlace()const;

@@ -115,7 +115,7 @@ void Chunk::run()
 	}
 	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
-		blocks[i]->movePoints(world->c_Precision, world->c_WaterFriction);
+		blocks[i]->movePoints(world->ws.c_Precision, world->ws.c_WaterFriction);
 		blocks[i]->moveFlow();
 	}
 
@@ -135,8 +135,8 @@ void Chunk::acceptAllCells()
 	acceptedCellsMutex.lock();
 	while (acceptedCells.size()>0)
 	{
-		Block*block = findBlock_B(world->calcBlock(acceptedCells.at(0)->getCenter()->getX()),
-			world->calcBlock(acceptedCells.at(0)->getCenter()->getY()));
+		Block*block = findBlock_B(world->calcBlock(acceptedCells.at(0)->getCenter().getX()),
+			world->calcBlock(acceptedCells.at(0)->getCenter().getY()));
 		if (block != nullptr)
 		{
 			block->cells.push_back(acceptedCells.at(0));

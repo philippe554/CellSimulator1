@@ -2,33 +2,39 @@
 
 class CellFrame;
 
+#include "WorldSettings.h"
+#include "Point.h"
 #include "Reactor.h"
 #include "Shapes.h"
-#include "Tail.h"
-#include "TailEnd.h"
-#include "Point.h"
 
-class CellFrame
+class CellFrame : public Reactor
 {
 public:
-	CellFrame(World * _world, const Vector& tCenter, const float radius);
+	CellFrame(WorldSettings * _ws, const Vector& tCenter, const float radius);
 	~CellFrame();
 
 	Vector calcJointForces(const Vector& flow);
 	void movePoints(float precision, float backgroundFriction);
 
-	void cellCellCollision(Cell * other);
-	void cellCellForce(Cell * other);
+	void cellCellCollision(CellFrame* other);
+	void cellCellCollisionHelper(CellFrame* other);
+
+	bool connectCells(CellFrame*other);
+	void disconnectCells(int);
+
+	void applyPressure(float p);
+	double getSurface()const;
+	float getVolume()const override;
 
 	bool isBroken()const;
 
-	Vector*getEdgePoint(const int i)const;
-	Vector*getTailPoint(const int i, const int j)const;
+	const Vector& getEdgePoint(const int i)const;
+	const Vector& getTailPoint(const int i, const int j)const;
 	int getAmountOfEdgeEdges()const;
 	int getAmountOfTailEdges()const;
-	Joint* getEdgeEdge(int i)const;
-	Joint* getTailEdge(int i)const;
-	Vector* getCenter()const;
+	const Joint& getEdgeEdge(int i)const;
+	const Joint& getTailEdge(int i)const;
+	const Vector& getCenter()const;
 
 	long getId()const;
 
@@ -50,8 +56,6 @@ protected:
 	Joint tailEndJoints[2];
 
 	CellFrame* connectedCells[AmountOfEdges];
-
-	World*world;
 
 	long id;
 	static long idCounter;

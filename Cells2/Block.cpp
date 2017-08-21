@@ -125,7 +125,7 @@ void Block::cellCellCollision()
 			(*i)->cellCellCollision(*j);
 			j++;
 		}
-		vector<Line*>::iterator k = lines.begin();
+		/*vector<Line*>::iterator k = lines.begin();
 		while (k != lines.end())
 		{
 			(*i)->lineCellCollision(*k);
@@ -136,7 +136,7 @@ void Block::cellCellCollision()
 		{
 			(*i)->lineCellCollision(*k);
 			k++;
-		}
+		}*/
 		i++;
 	}
 	calcCollisionBorder();
@@ -145,24 +145,23 @@ void Block::doRestructure()
 {
 	for (int i = 0; i < cells.size(); i++)
 	{
-		cells.at(i)->reRefPoints();
 		if (cells.at(i)->isBroken())
 		{
 			delete cells.at(i);
 			cells.erase(cells.begin() + i);
 			i--;
-			world->stats_CellsBroken++;
+			world->ws.stats_CellsBroken++;
 		}
 		else
 		{
-			int newcx = world->calcChunk(cells.at(i)->getCenter()->getX());
-			int newcy = world->calcChunk(cells.at(i)->getCenter()->getY());
-			if (newcx >= world->c_WorldBoundary || newcx<0 || newcy >= world->c_WorldBoundary || newcy < 0)
+			int newcx = world->calcChunk(cells.at(i)->getCenter().getX());
+			int newcy = world->calcChunk(cells.at(i)->getCenter().getY());
+			if (newcx >= world->ws.c_WorldBoundary || newcx<0 || newcy >= world->ws.c_WorldBoundary || newcy < 0)
 			{
 				delete cells.at(i);
 				cells.erase(cells.begin() + i);
 				i--;
-				world->stats_CellsBroken++;
+				world->ws.stats_CellsBroken++;
 			}
 			else if (newcx != cx || newcy != cy)
 			{
@@ -180,8 +179,8 @@ void Block::doRestructure()
 			}
 			else
 			{
-				int newbx = world->calcBlock(cells.at(i)->getCenter()->getX());
-				int newby = world->calcBlock(cells.at(i)->getCenter()->getY());
+				int newbx = world->calcBlock(cells.at(i)->getCenter().getX());
+				int newby = world->calcBlock(cells.at(i)->getCenter().getY());
 				if (bx != newbx || by != newby)
 				{
 					Block* newBlock = chunk->findBlock_B(newbx, newby);
@@ -222,10 +221,10 @@ void Block::calcCollisionChunk(const Block* block, const bool cellCell)
 				cells.at(i)->cellCellCollision(block->cells.at(j));
 			}
 		}
-		for (int j = 0; j < block->lines.size(); j++)
+		/*for (int j = 0; j < block->lines.size(); j++)
 		{
 			cells.at(i)->lineCellCollision(block->lines.at(j));
-		}
+		}*/
 	}
 }
 

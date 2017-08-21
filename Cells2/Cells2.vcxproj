@@ -130,7 +130,6 @@
     <ClCompile Include="Reactor.cpp" />
     <ClCompile Include="Shapes.cpp" />
     <ClCompile Include="Simulator.cpp" />
-    <ClCompile Include="Tail.cpp" />
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="View.cpp" />
     <ClCompile Include="Water.cpp" />
@@ -159,8 +158,6 @@
     <ClInclude Include="Reactor.h" />
     <ClInclude Include="Shapes.h" />
     <ClInclude Include="Simulator.h" />
-    <ClInclude Include="Tail.h" />
-    <ClInclude Include="TailEnd.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="Water.h" />

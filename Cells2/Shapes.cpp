@@ -1,6 +1,6 @@
 #include "Shapes.h"
 
-bool Shapes::lineSegementsIntersect(Vector&p, Vector&p2, Vector&q, Vector&q2, Vector&intersection, double precision)
+bool Shapes::lineSegementsIntersect(const Vector&p, const Vector&p2, const Vector&q, const Vector&q2, Vector&intersection, double precision)
 {
 	Vector r = p2 - p;
 	Vector s = q2 - q;

@@ -68,14 +68,14 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 
 				for(int j=0;j<cell->getAmountOfEdgeEdges();j++)
 				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j)->getP1()->getPlace(), cell->getEdgeEdge(j)->getP2()->getPlace()),
-						Vector::getAverage(cell->getEdgeEdge(j)->getP1()->getPlace(), cell->getEdgeEdge(j)->getP2()->getPlace())+cell->getEdgeEdge(j)->frictionForce*100, Color::black());
+					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()),
+						Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()) + cell->getEdgeEdge(j).getFrictionForce()*100, Color::black());
 				}
 
 				for (int j = 0; j<cell->getAmountOfTailEdges(); j++)
 				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j)->getP1()->getPlace(), cell->getTailEdge(j)->getP2()->getPlace()),
-						Vector::getAverage(cell->getTailEdge(j)->getP1()->getPlace(), cell->getTailEdge(j)->getP2()->getPlace()) + cell->getTailEdge(j)->frictionForce*100, Color::black());
+					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()),
+						Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()) + cell->getTailEdge(j).getFrictionForce()*100, Color::black());
 				}
 
 				if (selectedID == cell->getId())
@@ -87,12 +87,12 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		}
 	}
 	double ratio = 0;
-	if (world.stats_CellsCreated != 0) {
-		ratio = double(world.stats_PointsCreated - world.stats_PointsDestroyed) / double(world.stats_CellsCreated-world.stats_CellsBroken);
+	if (world.ws.stats_CellsCreated != 0) {
+		ratio = double(world.ws.stats_PointsCreated - world.ws.stats_PointsDestroyed) / double(world.ws.stats_CellsCreated-world.ws.stats_CellsBroken);
 	}
 	Writer::print("Calc time: "+to_string(simulationTime),Color::black(),Writer::normal(),{0,0,400,50});
 	Writer::print("World time: "+ to_string(world.getTime()), Color::black(), Writer::normal(), { 0,50,400,100 });
-	Writer::print("Cells broken: " + to_string(world.stats_CellsBroken), Color::black(), Writer::normal(), { 0,100,400,150 });
+	Writer::print("Cells broken: " + to_string(world.ws.stats_CellsBroken), Color::black(), Writer::normal(), { 0,100,400,150 });
 
 	Block* mouseOnBlock = world.findBlock_B(world.calcBlock((mouseX-xOffset) / scale), world.calcBlock((mouseY-yOffset) / scale));
 	if (mouseOnBlock != nullptr)

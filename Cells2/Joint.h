@@ -30,11 +30,7 @@ public:
 	float getDamping();
 	void setDamping(float t);
 
-	int getID();
-	void setID(int t);
-
-	int getBelongsTo();
-	void setBelongsTo(int t);
+	const Vector& getFrictionForce() const;
 
 	long getId()const;
 

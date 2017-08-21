@@ -1,15 +1,17 @@
 #include "CellFrame.h"
 
-long Cell::idCounter = 0;
+long CellFrame::idCounter = 0;
 
-CellFrame::CellFrame(World * _world, const Vector& tCenter, const float radius)
+CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float radius)
+	: Reactor(_ws)
 {
-	world = _world;
-	world->stats_CellsCreated++;
-	id = Cell::idCounter;
+	ws->stats_CellsCreated++;
+	id = CellFrame::idCounter;
 	idCounter++;
 
 	float pointMass = 1;//old
+	tailLength = 1;
+	hasTailEnd = false;
 
 	float x = tCenter.getX();
 	float y = tCenter.getY();
@@ -23,19 +25,26 @@ CellFrame::CellFrame(World * _world, const Vector& tCenter, const float radius)
 	edgePoints[4].init(x - 17.32 * radius / 20, y + 10 * radius / 20, pointMass);
 	edgePoints[5].init(x - 17.32 * radius / 20, y - 10 * radius / 20, pointMass);
 
-	radiusJoints[0].init(&center, &edgePoints[0], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false);
-	radiusJoints[1].init(&center, &edgePoints[1], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false);
-	radiusJoints[2].init(&center, &edgePoints[2], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false);
-	radiusJoints[3].init(&center, &edgePoints[3], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false);
-	radiusJoints[4].init(&center, &edgePoints[4], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false);
-	radiusJoints[5].init(&center, &edgePoints[5], world->c_NewCellRadiusStrength, world->c_NewCellRadiusDamping, false);
+	radiusJoints[0].init(&center, &edgePoints[0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+	radiusJoints[1].init(&center, &edgePoints[1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+	radiusJoints[2].init(&center, &edgePoints[2], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+	radiusJoints[3].init(&center, &edgePoints[3], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+	radiusJoints[4].init(&center, &edgePoints[4], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+	radiusJoints[5].init(&center, &edgePoints[5], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
 
-	edgeJoints[0].init(&edgePoints[0], &edgePoints[1], world->c_NewCellSideStrength, world->c_NewCellSideDamping, true);
-	edgeJoints[1].init(&edgePoints[1], &edgePoints[2], world->c_NewCellSideStrength, world->c_NewCellSideDamping, true);
-	edgeJoints[2].init(&edgePoints[2], &edgePoints[3], world->c_NewCellSideStrength, world->c_NewCellSideDamping, true);
-	edgeJoints[3].init(&edgePoints[3], &edgePoints[4], world->c_NewCellSideStrength, world->c_NewCellSideDamping, true);
-	edgeJoints[4].init(&edgePoints[4], &edgePoints[5], world->c_NewCellSideStrength, world->c_NewCellSideDamping, false);
-	edgeJoints[5].init(&edgePoints[5], &edgePoints[0], world->c_NewCellSideStrength, world->c_NewCellSideDamping, true);
+	edgeJoints[0].init(&edgePoints[0], &edgePoints[1], ws->c_NewCellSideStrength, ws->c_NewCellSideDamping, true);
+	edgeJoints[1].init(&edgePoints[1], &edgePoints[2], ws->c_NewCellSideStrength, ws->c_NewCellSideDamping, true);
+	edgeJoints[2].init(&edgePoints[2], &edgePoints[3], ws->c_NewCellSideStrength, ws->c_NewCellSideDamping, true);
+	edgeJoints[3].init(&edgePoints[3], &edgePoints[4], ws->c_NewCellSideStrength, ws->c_NewCellSideDamping, true);
+	edgeJoints[4].init(&edgePoints[4], &edgePoints[5], ws->c_NewCellSideStrength, ws->c_NewCellSideDamping, false);
+	edgeJoints[5].init(&edgePoints[5], &edgePoints[0], ws->c_NewCellSideStrength, ws->c_NewCellSideDamping, true);
+
+	for (int i = 0; i < AmountOfEdges; i++)
+	{
+		connectedCells[i] = nullptr;
+	}
+
+	init(CellFrame::getVolume(), ws->defaultTemperature);
 
 	/*for (int i = 0; i < dna->tail.getAmountOfRows() - 1; i++)
 	{
@@ -67,8 +76,7 @@ CellFrame::CellFrame(World * _world, const Vector& tCenter, const float radius)
 	*/
 }
 
-Cell::~Cell() {
-	int startDisconnect = -1;
+CellFrame::~CellFrame() {
 	for (int i = 0; i<AmountOfEdges; i++)
 	{
 		disconnectCells(i);
@@ -82,20 +90,20 @@ Vector CellFrame::calcJointForces(const Vector& flow)
 	{
 		point.calcForcesJoints();
 	}
-	for (auto& point : tailPoints)
-	{
-		point.calcForcesJoints();
-	}
+	//for (auto& point : tailPoints)
+	//{
+	//	point.calcForcesJoints();
+	//}
 
 	Vector frictionTotal(0.0, 0.0);
 	for (auto& joint : edgeJoints)
 	{
 		frictionTotal.add(joint.calcFriction(flow));
 	}
-	for (auto& joint : tailJoints)
-	{
-		frictionTotal.add(joint.calcFriction(flow));
-	}
+	//for (auto& joint : tailJoints)
+	//{
+	//	frictionTotal.add(joint.calcFriction(flow));
+	//}
 	return frictionTotal;
 
 	/*tailCounter++;
@@ -125,172 +133,190 @@ Vector CellFrame::calcJointForces(const Vector& flow)
 
 void CellFrame::movePoints(float precision, float backgroundFriction)
 {
-	float massPoint = getMass() / (1 + AmountOfEdges + tail.size());
-	center->applyForces(precision, backgroundFriction);
-	for (auto point : edgePoints)
+	float massPoint = getMass() / (1 + AmountOfEdges + tailLength*2 + hasTailEnd?1:0);
+	center.applyForces(precision, backgroundFriction, massPoint);
+	for (auto& point : edgePoints)
 	{
-		if (id == point->getBelongsTo()) {
-			point->applyForces(precision, backgroundFriction);
-		}
+		point.applyForces(precision, backgroundFriction, massPoint);
 	}
-	for (auto point : tail)
+	for (auto& point : tailPoints)
 	{
-		if (id == point->getBelongsTo()) {
-			point->applyForces(precision, backgroundFriction);
-		}
+		point.applyForces(precision, backgroundFriction, massPoint);
 	}
-}
-
-void CellFrame::cellCellCollision(Cell* other)
-{
-	//calculate distance between 2 centers, if its shorter than the combined size, start detailed collision
-	Vector connectedLine(center->getPlace(), other->center->getPlace());
-	float distance = connectedLine.getLength();
-	float combinedSize = radius + other->radius;
-	if ((combinedSize * 2) > distance)
+	if (hasTailEnd) 
 	{
-		this->cellCellForce(other);
-		other->cellCellForce(this);
+		tailEndPoint.applyForces(precision, backgroundFriction, massPoint);
 	}
 }
 
-void CellFrame::cellCellForce(Cell* other)
+void CellFrame::cellCellCollision(CellFrame* other)
 {
-	for (int i = 0; i < Cell::AmountOfEdges; i++)
+	cellCellCollisionHelper(other);
+	other->cellCellCollisionHelper(this);
+}
+
+void CellFrame::cellCellCollisionHelper(CellFrame * other)
+{
+	for (int i = 0; i < CellFrame::AmountOfEdges; i++)
 	{
-		if (connectedCells[i] != other)
+		for (int j = 0; j < CellFrame::AmountOfEdges; j++)
 		{
-			if (Vector::getLength(other->center->getPlace(), edgePoints[i]->getPlace()) < other->radius * 2)
+			Vector intersection(0.0, 0.0);
+			if (Shapes::lineSegementsIntersect(center.getPlace(), edgePoints[i].getPlace(),
+				other->edgeJoints[j].getP1()->getPlace(), other->edgeJoints[j].getP2()->getPlace(), intersection))
 			{
-				for (int j = 0; j < Cell::AmountOfEdges; j++)
-				{
-					Vector intersection(0.0, 0.0);
-					if (this->lineSegementsIntersect(*center->getPlace(), *edgePoints[i]->getPlace(),
-						*other->edgeJoints[j]->p1->getPlace(), *other->edgeJoints[j]->p2->getPlace(), intersection))
-					{
-						Vector overlap(intersection, edgePoints[i]->getPlace());
-						Vector force(other->center->getPlace(), edgePoints[i]->getPlace());
-						force.makeUnit();
-						force.multiply(overlap.getLength() * world->c_CellCellCollisionForce * edgePoints[i]->getMass());
-						edgePoints[i]->addForce(force);
+				Vector overlap(intersection, edgePoints[i].getPlace());
+				Vector force(other->center.getPlace(), edgePoints[i].getPlace());
+				force.makeUnit();
+				force.multiply(overlap.getLength() * ws->c_CellCellCollisionForce * edgePoints[i].getMass());
+				edgePoints[i].addForce(force);
 
-						float l1 = Vector::getLength(intersection, other->edgeJoints[j]->p1->getPlace());
-						float l2 = Vector::getLength(intersection, other->edgeJoints[j]->p2->getPlace());
+				float l1 = Vector::getLength(intersection, other->edgeJoints[j].getP1()->getPlace());
+				float l2 = Vector::getLength(intersection, other->edgeJoints[j].getP2()->getPlace());
 
-						other->edgeJoints[j]->p1->addForce(force*((-l2) / (l1 + l2)));
-						other->edgeJoints[j]->p2->addForce(force*((-l1) / (l1 + l2)));
-
-						//friction
-						/*Vector otherVel = Vector::getAverage(other->edgeJoints[j]->p1->getVelocity(), other->edgeJoints[j]->p2->getVelocity());
-						Vector velDif(otherVel, edgePoints[i]->getVelocity());
-
-						velDif.multiply(world->c_CellCellFriction * edgePoints[i]->getMass() * overlap.getLength());
-
-						other->edgeJoints[j]->p1->addForce(velDif*((l2) / (l1 + l2)));
-						other->edgeJoints[j]->p2->addForce(velDif*((l1) / (l1 + l2)));
-
-						float l1Own = Vector::getLength(intersection, center->getPlace());
-						float l2Own = Vector::getLength(intersection, edgePoints[i]->getPlace());
-
-						center->addForce       (velDif*((-l2Own) / (l1Own + l2Own)));
-						edgePoints[i]->addForce(velDif*((-l1Own) / (l1Own + l2Own)));*/
-					}
-				}
+				other->edgeJoints[j].getP1()->addForce(force*((-l2) / (l1 + l2)));
+				other->edgeJoints[j].getP2()->addForce(force*((-l1) / (l1 + l2)));
 			}
 		}
 	}
+	//friction
+	/*Vector otherVel = Vector::getAverage(other->edgeJoints[j]->p1->getVelocity(), other->edgeJoints[j]->p2->getVelocity());
+	Vector velDif(otherVel, edgePoints[i]->getVelocity());
+
+	velDif.multiply(world->c_CellCellFriction * edgePoints[i]->getMass() * overlap.getLength());
+
+	other->edgeJoints[j]->p1->addForce(velDif*((l2) / (l1 + l2)));
+	other->edgeJoints[j]->p2->addForce(velDif*((l1) / (l1 + l2)));
+
+	float l1Own = Vector::getLength(intersection, center->getPlace());
+	float l2Own = Vector::getLength(intersection, edgePoints[i]->getPlace());
+
+	center->addForce       (velDif*((-l2Own) / (l1Own + l2Own)));
+	edgePoints[i]->addForce(velDif*((-l1Own) / (l1Own + l2Own)));*/
 }
 
-void CellFrame::lineCellCollision(Line* line) {
-	//check if its around the box of the line, otherwise dont check
-	if (center->getPlace()->getX() + (radius * 3) > line->getLeft() && center->getPlace()->getX() - (radius * 3) < line->getRight() &&
-		center->getPlace()->getY() + (radius * 3) > line->getTop() && center->getPlace()->getY() - (radius * 3) < line->getBottom())
-	{
-		//normal collision handeling
-		lineCellForce(*line->getV1(), *line->getV2());
-	}
-}
-void CellFrame::lineCellForce(Vector&perpendicular1, Vector&perpendicular2)
+bool CellFrame::connectCells(CellFrame * other)
 {
-	for (int k = 0; k < Cell::AmountOfEdges; k++)
+	return false;
+	/*
+	int finalIndexOwn = 0;
+	int finalIndexOther = 0;
+	float distance = 10000;
+	for (int i = 0; i<AmountOfEdges; i++)
 	{
-		//check if the radius of a cell goes through a line
-		Vector intersection(0.0, 0.0);
-		if (this->lineSegementsIntersect(perpendicular1, perpendicular2, *center->getPlace(), *edgePoints[k]->getPlace(), intersection))
+		for (int j = 0; j<AmountOfEdges; j++)
 		{
-			Vector line(perpendicular1, perpendicular2); //vector of line
-			Vector perpendicular = line.getPerpendicularClockwise().makeUnit(); //perpendicular to line
-
-																				//make a line through the place of the cell-corner and perpendicular to the line
-			Vector p1(*edgePoints[k]->getPlace() + (perpendicular * 1000));
-			Vector p2(*edgePoints[k]->getPlace() - (perpendicular * 1000));
-
-			//calculate the intersection and set it as the new place of the cell-corner
-			Vector correctedIntersection(0.0, 0.0);
-			lineSegementsIntersect(p1, p2, perpendicular1 - (line * 1000), perpendicular2 + (line * 1000), correctedIntersection);
-			float moveDistance = Vector::getLength(&correctedIntersection, edgePoints[k]->getPlace());
-			//c->edgePoints[k]->setPlace(correctedIntersection);
-
-			//calculate the radius so you can calculate the angle between the perpendicular and the radius. Required to determain on which side of the line the center is
-			Vector radius(center->getPlace(), edgePoints[k]->getPlace());
-			radius.makeUnit();
-			float angle = acos(radius.dot(perpendicular))*180.0 / 3.1415926535897;
-
-			//calculate the normal force and add it
-			if (abs(angle) < 90)
+			float d = pow(Vector::getLength(edgePoints[i]->getPlace(), other->edgePoints[j]->getPlace()), 2);
+			if (d<distance && connectedCells[i] == nullptr &&  other->connectedCells[j] == nullptr)
 			{
-				perpendicular.multiply(moveDistance * -world->c_LineCellCollisionForce * edgePoints[k]->getMass() * 4);
-			}
-			else
-			{
-				perpendicular.multiply(moveDistance * world->c_LineCellCollisionForce * edgePoints[k]->getMass() * 4);
-			}
-			edgePoints[k]->addForce(perpendicular);
-
-			// ### Friction with sides ###
-			Vector velocity(edgePoints[k]->getVelocity());
-			if (velocity.getLength() != 0) {
-				Vector velocityUnit = velocity.getUnit();
-				line.makeUnit();
-
-				//calculate the direction
-				angle = acos(velocityUnit.dot(line))*180.0 / 3.1415926535897;
-				if (abs(angle) > 90)
-				{
-					line.multiply(-1);
-				}
-
-				//calculate the component of the velocity with the line as baseline
-				Vector velocityComponent(line*velocity.dot(line));
-
-				//calculate friction based on the velocity and the moveDistance
-				velocityComponent.multiply(-world->c_LineCellFriction * moveDistance);
-				edgePoints[k]->addForce(velocityComponent);
+				finalIndexOwn = i;
+				finalIndexOther = j;
+				distance = d;
 			}
 		}
 	}
+	if (distance<2)
+	{
+		connectedCells[finalIndexOwn] = other;
+		other->connectedCells[finalIndexOther] = this;
+
+		if (edgePoints[finalIndexOwn]->getReal()->getID() == other->edgePoints[finalIndexOther]->getReal()->getID())
+		{
+			return false;
+		}
+		shared_ptr<Point> p = Point::MakePoint(edgePoints[finalIndexOwn], other->edgePoints[finalIndexOther]);
+		edgePoints[finalIndexOwn]->setRef(p);
+		other->edgePoints[finalIndexOther]->setRef(p);
+		edgePoints[finalIndexOwn] = p;
+		other->edgePoints[finalIndexOther] = p;
+
+		return true;
+	}
+	else {
+		return false;
+	}*/
 }
+
+void CellFrame::disconnectCells(int)
+{
+	/*
+	Cell*other = connectedCells[i];
+
+	if (connectedCells[i] != nullptr) {
+		edgePoints[i] = edgePoints[i]->getSubPoint(center->getMass(), id, other->id);
+		connectedCells[i] = nullptr;
+
+		for (int l = 0; l < AmountOfEdges; l++)
+		{
+			if (other->connectedCells[l] == this)
+			{
+				other->connectedCells[l] = nullptr;
+			}
+		}
+	}*/
+}
+
+void CellFrame::applyPressure(float p)
+{
+	for (auto& joint : edgeJoints)
+	{
+		Vector jointLine = Vector(joint.getP1()->getPlace(), joint.getP2()->getPlace());
+		float surface = jointLine.getLength();
+		Vector normal = jointLine.getPerpendicularCounterClockwise().getUnit();
+		normal.multiply(0.5*surface*p);
+		joint.getP1()->addForce(normal);
+		joint.getP2()->addForce(normal);
+	}
+}
+
+double CellFrame::getSurface() const
+{
+	float total = 0.0;
+	for (auto& joint : edgeJoints)
+	{
+		total+=Vector::getLength(joint.getP1()->getPlace(), joint.getP2()->getPlace()); 
+	}
+	return total;
+}
+
+float CellFrame::getVolume() const
+{
+	float total = 0;
+
+	for (int i = 0; i<AmountOfEdges - 1; i++)
+	{
+		total += Shapes::surfaceTriangle(Vector::getLength(center.getPlace(), edgePoints[i].getPlace()),
+			Vector::getLength(center.getPlace(), edgePoints[i + 1].getPlace()),
+			Vector::getLength(edgePoints[i].getPlace(), edgePoints[i + 1].getPlace()));
+	}
+	total += Shapes::surfaceTriangle(Vector::getLength(center.getPlace(), edgePoints[0].getPlace()),
+		Vector::getLength(center.getPlace(), edgePoints[AmountOfEdges - 1].getPlace()),
+		Vector::getLength(edgePoints[0].getPlace(), edgePoints[AmountOfEdges - 1].getPlace()));
+
+	return total;
+}
+
 
 bool CellFrame::isBroken()const {
 	//distance check
-	for (int i = 0; i < AmountOfEdges; i++) {
-		if (Vector(center->getPlace(), edgePoints[i]->getPlace()).getLength() > radius * world->ws.maxExpantion) {
-			return true;
-		}
-	}
+	//for (int i = 0; i < AmountOfEdges; i++) {
+	//	if (Vector(center.getPlace(), edgePoints[i]->getPlace()).getLength() > radius * world->ws.maxExpantion) {
+	//		return true;
+	//	}
+	//}
 	//Edge cross check
 	for (int i = 0; i < AmountOfEdges; i++) {
 		for (int j = 0; j < AmountOfEdges - 1; j++) {
 			Vector intersection(0.0, 0.0);
-			if (lineSegementsIntersect(*center->getPlace(), *edgePoints[i]->getPlace()
-				, *edgePoints[j]->getPlace(), *edgePoints[j + 1]->getPlace()
+			if (Shapes::lineSegementsIntersect(center.getPlace(), edgePoints[i].getPlace()
+				, edgePoints[j].getPlace(), edgePoints[j + 1].getPlace()
 				, intersection, 0.001)) {
 				return true;
 			}
 		}
 		Vector intersection(0.0, 0.0);
-		if (lineSegementsIntersect(*center->getPlace(), *edgePoints[i]->getPlace()
-			, *edgePoints[0]->getPlace(), *edgePoints[AmountOfEdges - 1]->getPlace()
+		if (Shapes::lineSegementsIntersect(center.getPlace(), edgePoints[i].getPlace()
+			, edgePoints[0].getPlace(), edgePoints[AmountOfEdges - 1].getPlace()
 			, intersection, 0.001)) {
 			return true;
 		}
@@ -300,28 +326,18 @@ bool CellFrame::isBroken()const {
 
 
 
-Vector* CellFrame::getEdgePoint(const int i)const
+const Vector& CellFrame::getEdgePoint(const int i)const
 {
-	return edgePoints[i]->getPlace();
+	return edgePoints[i].getPlace();
 }
 
-Vector* CellFrame::getTailPoint(const int i, const int j) const
+const Vector& CellFrame::getTailPoint(const int i, const int j) const
 {
 	if (j)
 	{
-		return tailJoints[i]->getP1()->getPlace();
+		return tailJoints[i].getP1()->getPlace();
 	}
-	return tailJoints[i]->getP2()->getPlace();
-}
-
-int CellFrame::getEdgePointId(const int i) const
-{
-	return edgePoints[i]->getID();
-}
-
-shared_ptr<Point> CellFrame::getEdgePointPtr(const int i) const
-{
-	return edgePoints[i];
+	return tailJoints[i].getP2()->getPlace();
 }
 
 int CellFrame::getAmountOfEdgeEdges() const
@@ -331,35 +347,98 @@ int CellFrame::getAmountOfEdgeEdges() const
 
 int CellFrame::getAmountOfTailEdges() const
 {
-	return tailJoints.size();
+	return tailLength*5;
 }
 
-Joint* CellFrame::getEdgeEdge(int i) const
+const Joint& CellFrame::getEdgeEdge(int i) const
 {
 	return edgeJoints[i];
 }
 
-Joint* CellFrame::getTailEdge(int i) const
+const Joint& CellFrame::getTailEdge(int i) const
 {
 	return tailJoints[i];
 }
 
-Vector* CellFrame::getCenter()const
+const Vector& CellFrame::getCenter()const
 {
-	return center->getPlace();
-}
-
-int CellFrame::getCenterId() const
-{
-	return center->getID();
-}
-
-shared_ptr<Point> CellFrame::getCenterPtr() const
-{
-	return center;
+	return center.getPlace();
 }
 
 long CellFrame::getId() const
 {
 	return id;
 }
+
+/*
+
+void CellFrame::lineCellCollision(Line* line) {
+//check if its around the box of the line, otherwise dont check
+if (center->getPlace()->getX() + (radius * 3) > line->getLeft() && center->getPlace()->getX() - (radius * 3) < line->getRight() &&
+center->getPlace()->getY() + (radius * 3) > line->getTop() && center->getPlace()->getY() - (radius * 3) < line->getBottom())
+{
+//normal collision handeling
+lineCellForce(*line->getV1(), *line->getV2());
+}
+}
+void CellFrame::lineCellForce(Vector&perpendicular1, Vector&perpendicular2)
+{
+for (int k = 0; k < Cell::AmountOfEdges; k++)
+{
+//check if the radius of a cell goes through a line
+Vector intersection(0.0, 0.0);
+if (this->lineSegementsIntersect(perpendicular1, perpendicular2, *center->getPlace(), *edgePoints[k]->getPlace(), intersection))
+{
+Vector line(perpendicular1, perpendicular2); //vector of line
+Vector perpendicular = line.getPerpendicularClockwise().makeUnit(); //perpendicular to line
+
+//make a line through the place of the cell-corner and perpendicular to the line
+Vector p1(*edgePoints[k]->getPlace() + (perpendicular * 1000));
+Vector p2(*edgePoints[k]->getPlace() - (perpendicular * 1000));
+
+//calculate the intersection and set it as the new place of the cell-corner
+Vector correctedIntersection(0.0, 0.0);
+lineSegementsIntersect(p1, p2, perpendicular1 - (line * 1000), perpendicular2 + (line * 1000), correctedIntersection);
+float moveDistance = Vector::getLength(&correctedIntersection, edgePoints[k]->getPlace());
+//c->edgePoints[k]->setPlace(correctedIntersection);
+
+//calculate the radius so you can calculate the angle between the perpendicular and the radius. Required to determain on which side of the line the center is
+Vector radius(center->getPlace(), edgePoints[k]->getPlace());
+radius.makeUnit();
+float angle = acos(radius.dot(perpendicular))*180.0 / 3.1415926535897;
+
+//calculate the normal force and add it
+if (abs(angle) < 90)
+{
+perpendicular.multiply(moveDistance * -world->c_LineCellCollisionForce * edgePoints[k]->getMass() * 4);
+}
+else
+{
+perpendicular.multiply(moveDistance * world->c_LineCellCollisionForce * edgePoints[k]->getMass() * 4);
+}
+edgePoints[k]->addForce(perpendicular);
+
+// ### Friction with sides ###
+Vector velocity(edgePoints[k]->getVelocity());
+if (velocity.getLength() != 0) {
+Vector velocityUnit = velocity.getUnit();
+line.makeUnit();
+
+//calculate the direction
+angle = acos(velocityUnit.dot(line))*180.0 / 3.1415926535897;
+if (abs(angle) > 90)
+{
+line.multiply(-1);
+}
+
+//calculate the component of the velocity with the line as baseline
+Vector velocityComponent(line*velocity.dot(line));
+
+//calculate friction based on the velocity and the moveDistance
+velocityComponent.multiply(-world->c_LineCellFriction * moveDistance);
+edgePoints[k]->addForce(velocityComponent);
+}
+}
+}
+}
+*/

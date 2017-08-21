@@ -5,10 +5,10 @@ World::World(WorldSettings _ws)
 {
 	time = 0;
 	ws = _ws;
-	Core::setup(c_Cores);
-	for(int i=0;i<c_WorldBoundary;i++)
+	Core::setup(ws.c_Cores);
+	for(int i=0;i<ws.c_WorldBoundary;i++)
 	{
-		for(int j=0;j<c_WorldBoundary;j++)
+		for(int j=0;j<ws.c_WorldBoundary;j++)
 		{
 			chunks[make_pair(i, j)] = new Chunk(this, i, j,time);
 		}
@@ -64,7 +64,7 @@ void World::addCell(shared_ptr<DNA> dna, const double x,const double y)
 
 	if (block != nullptr)
 	{
-		Cell* newCell = new Cell(dna, this, Vector(x, y), c_NewCellRadius);
+		Cell* newCell = new Cell(dna, &ws, Vector(x, y), ws.c_NewCellRadius);
 		block->cells.push_back(newCell);
 
 #ifdef S_CellAutoConnect

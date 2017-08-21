@@ -122,12 +122,12 @@ void Joint::setDamping(float t)
 	damping = t;
 }
 
-int Joint::getID()
+const Vector & Joint::getFrictionForce()const
 {
-	return id;
+	return frictionForce;
 }
 
-void Joint::setID(int t)
+long Joint::getId()const
 {
-	id = t;
+	return id;
 }

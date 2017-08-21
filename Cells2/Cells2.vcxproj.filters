@@ -138,9 +138,6 @@
     <ClCompile Include="CellFrame.cpp">
       <Filter>Source Files\Physics\Objects\CellParts</Filter>
     </ClCompile>
-    <ClCompile Include="Tail.cpp">
-      <Filter>Source Files\Physics\Objects\CellParts</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -209,13 +206,7 @@
     <ClInclude Include="Core.h">
       <Filter>Header Files\Physics\Objects\WorldParts</Filter>
     </ClInclude>
-    <ClInclude Include="Tail.h">
-      <Filter>Header Files\Physics\Objects\CellParts</Filter>
-    </ClInclude>
     <ClInclude Include="CellFrame.h">
-      <Filter>Header Files\Physics\Objects\CellParts</Filter>
-    </ClInclude>
-    <ClInclude Include="TailEnd.h">
       <Filter>Header Files\Physics\Objects\CellParts</Filter>
     </ClInclude>
     <ClInclude Include="Line.h">

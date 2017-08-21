@@ -83,7 +83,7 @@ void Point::calcForcesJoints()
 
 		//dampening
 		Vector unitVel(0.0, 0.0);
-		if (id == joints[i]->getP1->getID())
+		if (id == joints[i]->getP1()->getID())
 		{
 			unitVel = Vector(joints[i]->getP1()->getVelocity(), joints[i]->getP2()->getVelocity());
 		}
