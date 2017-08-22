@@ -190,6 +190,17 @@ void Block::doRestructure()
 					cells.erase(cells.begin() + i);
 					i--;
 				}
+				else
+				{
+					if (cells.at(i)->getStage() == 5)
+					{
+						vector<Cell*> newCells = cells.at(i)->split();
+						cells.erase(cells.begin() + i);
+						i--;
+						cells.push_back(newCells[0]);
+						cells.push_back(newCells[1]);
+					}
+				}
 			}
 		}
 	}
@@ -261,11 +272,12 @@ void Block::moveFlow()
 		cell->exchange(this, 0, cell->getSurface());
 	}
 }
-void Block::cacheFlow()
+void Block::prep()
 {
 	cacheParameters();
 	for (auto cell : cells)
 	{
+		cell->growJoints();
 		cell->cacheParameters();
 	}
 }

@@ -55,24 +55,31 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 
 			for (auto& cell : block->cells)
 			{
-				for (int j = 0; j < cell->AmountOfEdges - 1; j++)
+				for (int j = 0; j < cell->getAmountOfEdgeJoints(); j++)
 				{
-					drawLine(RenderTarget, cell->getEdgePoint(j), cell->getEdgePoint(j+1), Color::black());
+					drawLine(RenderTarget, cell->getEdgeJoint(j,true), cell->getEdgeJoint(j,false), Color::black());
 				}
-				drawLine(RenderTarget, cell->getEdgePoint(0), cell->getEdgePoint(cell->AmountOfEdges - 1), Color::black());
+				for (int j = 0; j < cell->getAmountOfradiusJoints(); j++)
+				{
+					drawLine(RenderTarget, cell->getRadiusJoint(j, true), cell->getRadiusJoint(j, false), Color::black());
+				}
+				for (int j = 0; j < cell->getAmountOfSplitJoints(); j++)
+				{
+					drawLine(RenderTarget, cell->getSplitJoint(j, true), cell->getSplitJoint(j, false), Color::black());
+				}
 
-				for (int j = 0; j < cell->getAmountOfTailEdges(); j++)
+				for (int j = 0; j < cell->getAmountOfTailJoints(); j++)
 				{
 					drawLine(RenderTarget, cell->getTailPoint(j, 0), cell->getTailPoint(j, 1), Color::black());
 				}
 
-				for(int j=0;j<cell->getAmountOfEdgeEdges();j++)
+				for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
 				{
 					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()),
 						Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()) + cell->getEdgeEdge(j).getFrictionForce()*100, Color::black());
 				}
 
-				for (int j = 0; j<cell->getAmountOfTailEdges(); j++)
+				for (int j = 0; j<cell->getAmountOfTailJoints(); j++)
 				{
 					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()),
 						Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()) + cell->getTailEdge(j).getFrictionForce()*100, Color::black());
@@ -176,6 +183,8 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		pt.x = (pt.x-place.left-xOffset)/scale;
 		pt.y = (pt.y-place.top-yOffset)/scale;
 		float smallestDistance = 10000;
+		long newSelectedID;
+		Cell* cellPtr = nullptr;
 		for (auto& chunk : world.chunks)
 		{
 			for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
@@ -186,10 +195,11 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 					float distance = Vector::getLength(cell->getCenter(), Vector(pt.x, pt.y));
 					if(distance<smallestDistance)
 					{
-						if(distance<5/scale)
+						if(distance<4)
 						{
 							found = true;
-							selectedID = cell->getId();
+							newSelectedID = cell->getId();
+							cellPtr = cell;
 						}
 					}
 				}
@@ -199,6 +209,17 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		if (!found) 
 		{
 			world.addCell(bestDNA[rand() % bestDNA.size()], pt.x, pt.y);
+		}
+		else
+		{
+			if (selectedID == newSelectedID) 
+			{
+				cellPtr->nextStage();
+			}
+			else
+			{
+				selectedID = newSelectedID;
+			}
 		}
 	}
 	if(message == WM_KEYDOWN)

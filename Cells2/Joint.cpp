@@ -4,10 +4,12 @@ long Joint::lastID = 0;
 
 Joint::Joint() 
 {
+	active = false;
 	p1 = nullptr;
 	p1 = nullptr;
 	length = 0;
-	originalLength = 0;
+	targetLength = 0;
+	growFactor = 0;
 	strength = 0;
 	damping = 0;
 	friction = 0;
@@ -15,12 +17,14 @@ Joint::Joint()
 
 void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction)
 {
+	active = true;
 	p1 = tp1;
 	p2 = tp2;
 	p1->addJoint(this);
 	p2->addJoint(this);
 	length = Vector::getLength(tp1->getPlace(),tp2->getPlace());
-	originalLength = length;
+	targetLength = length;
+	growFactor = 0;
 	strength = tStrength;
 	damping = tDamping;
 	friction = tfriction;
@@ -30,12 +34,14 @@ void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDam
 
 void Joint::deconstruct()
 {
+	active = false;
 	p1->deleteJoint(id);
 	p2->deleteJoint(id);
 	p1 = nullptr;
 	p1 = nullptr;
 	length = 0;
-	originalLength = 0;
+	targetLength = 0;
+	growFactor = 0;
 	strength = 0;
 	damping = 0;
 	friction = 0;
@@ -119,6 +125,46 @@ void Joint::setLength(float t)
 float Joint::getRealLength()const
 {
 	return Vector::getLength(p1->getPlace(), p2->getPlace());
+}
+
+void Joint::setTarget(const float _targetLength, const float _growFactor)
+{
+	targetLength = _targetLength;
+	growFactor = _growFactor;
+}
+
+bool Joint::grow(const float precision)
+{
+	if (growFactor > 0 && targetLength != length)
+	{
+		float gf = growFactor * precision;
+		if (targetLength > length)
+		{
+			if (targetLength - length <= gf)
+			{
+				length = targetLength;
+				return true;
+			}
+			else
+			{
+				length += gf;
+				return false;
+			}
+		}
+		else
+		{
+			if (length - targetLength <= gf)
+			{
+				length = targetLength;
+				return true;
+			}
+			else
+			{
+				length -= gf;
+				return false;
+			}
+		}
+	}
 }
 
 float Joint::getStrenth()

@@ -13,6 +13,7 @@ public:
 	CellFrame(WorldSettings * _ws, const Vector& tCenter, const float radius);
 	~CellFrame();
 
+	void growJoints();
 	Vector calcJointForces(const Vector& flow);
 	void movePoints(float precision, float backgroundFriction);
 
@@ -22,16 +23,26 @@ public:
 	bool connectCells(CellFrame*other);
 	void disconnectCells(const int i);
 
+	bool nextStage();
+	int getStage();
+	void splitFrame(CellFrame* cell1, CellFrame* cell2);
+
 	void applyPressure(float p);
 	double getSurface()const;
 	float getVolume()const override;
 
 	bool isBroken()const;
 
-	const Vector& getEdgePoint(const int i)const;
+	const Vector& getEdgeJoint(const int i, const bool p1)const;
+	const Vector& getRadiusJoint(const int i, const bool p1)const;
+	const Vector& getSplitJoint(const int i, const bool p1)const;
+	int getAmountOfEdgeJoints()const;
+	int getAmountOfradiusJoints()const;
+	int getAmountOfSplitJoints()const;
+
+	int getAmountOfTailJoints()const;
 	const Vector& getTailPoint(const int i, const int j)const;
-	int getAmountOfEdgeEdges()const;
-	int getAmountOfTailEdges()const;
+
 	const Joint& getEdgeEdge(int i)const;
 	const Joint& getTailEdge(int i)const;
 	const Vector& getCenter()const;
@@ -43,9 +54,13 @@ public:
 
 protected:
 	Point center;
+	Point splitPoints[3];
 	Point edgePoints[AmountOfEdges];
 	Joint radiusJoints[AmountOfEdges];
 	Joint edgeJoints[AmountOfEdges];
+	Joint splitJoints[11];
+	int splitPointsLength;
+	int splitJointsLength;
 
 	int tailLength;
 	Point tailPoints[2 * MaxTailLength];
@@ -58,6 +73,9 @@ protected:
 	bool connectedCellsMaster[AmountOfEdges];
 	CellFrame* connectedCells[AmountOfEdges];
 	Joint connectedCellsJoints[2 * AmountOfEdges];
+
+	int stage;
+	float unit;
 
 	long id;
 	static long idCounter;

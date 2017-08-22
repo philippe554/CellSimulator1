@@ -25,6 +25,9 @@ public:
 
 	float getRealLength() const;
 
+	void setTarget(const float _targetLength, const float _growFactor);
+	bool grow(const float precision);
+
 	float getStrenth();
 	void setStrenth(float t);
 
@@ -36,11 +39,12 @@ public:
 	long getId()const;
 
 private:
-
+	bool active;
 	Point*  p1;
 	Point*  p2;
 	float length;
-	float originalLength;
+	float targetLength;
+	float growFactor;
 	float strength;
 	float damping;
 	bool friction;

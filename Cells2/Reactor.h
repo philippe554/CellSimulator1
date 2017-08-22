@@ -39,7 +39,6 @@ public:
 protected:
 	WorldSettings* ws;
 
-private:
 	//basic variables
 	float energy;
 	float particles[WorldSettings::e_AmountOfParticles];

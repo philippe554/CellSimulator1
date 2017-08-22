@@ -29,7 +29,7 @@ public:
 
 	void calcFlow();
 	void moveFlow();
-	void cacheFlow();
+	void prep();
 	Vector getFlow()const;
 
 	void loadDefaultChunk();

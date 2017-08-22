@@ -30,8 +30,8 @@ public:
 	const Vector& getPlace()const;
 	const Vector& getVelocity()const;
 
-	void setPlace(Vector&v);
-	void setVelocity(Vector&v);
+	void setPlace(const Vector&v);
+	void setVelocity(const Vector&v);
 
 	double getMass()const;
 	void setMass(double t);

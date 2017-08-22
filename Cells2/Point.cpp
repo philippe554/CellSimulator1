@@ -133,12 +133,12 @@ const Vector& Point::getVelocity()const
 	return velocity;
 }
 
-void Point::setPlace(Vector & v)
+void Point::setPlace(const Vector & v)
 {
 	place.set(v);
 }
 
-void Point::setVelocity(Vector & v)
+void Point::setVelocity(const Vector & v)
 {
 	velocity.set(v);
 }

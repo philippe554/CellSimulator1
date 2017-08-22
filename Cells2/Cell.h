@@ -15,6 +15,9 @@ public:
 	shared_ptr<DNA> getDNA();
 
 	Membrane* getOuterMembrane()const;
+
+	vector<Cell*> split();
+
 private:
 	shared_ptr<DNA> dna;
 

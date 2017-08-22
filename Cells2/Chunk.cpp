@@ -103,7 +103,7 @@ void Chunk::run()
 	acceptAllCells();
 	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
-		blocks[i]->cacheFlow();
+		blocks[i]->prep();
 	}
 	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
