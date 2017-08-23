@@ -192,7 +192,7 @@ void Block::doRestructure()
 				}
 				else
 				{
-					if (cells.at(i)->getStage() == 5)
+					if (cells.at(i)->getStage() == 6)
 					{
 						vector<Cell*> newCells = cells.at(i)->split();
 						cells.erase(cells.begin() + i);

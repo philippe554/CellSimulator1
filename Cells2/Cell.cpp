@@ -19,7 +19,7 @@ Membrane* Cell::getOuterMembrane() const
 
 vector<Cell*> Cell::split()
 {
-	if (stage == 5)
+	if (stage == 6)
 	{
 		Cell* cell1 = new Cell(dna->mutate(0.1), ws, center.getPlace(), unit);
 		Cell* cell2 = new Cell(dna->mutate(0.1), ws, splitPoints[0].getPlace(), unit);

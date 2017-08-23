@@ -195,7 +195,7 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 					float distance = Vector::getLength(cell->getCenter(), Vector(pt.x, pt.y));
 					if(distance<smallestDistance)
 					{
-						if(distance<4)
+						if(distance<2)
 						{
 							found = true;
 							newSelectedID = cell->getId();
@@ -214,7 +214,14 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		{
 			if (selectedID == newSelectedID) 
 			{
-				cellPtr->nextStage();
+				if (cellPtr->getStage() == 0)
+				{
+					cellPtr->startSplit(rand()%6);
+				}
+				else
+				{
+					cellPtr->nextStage();
+				}
 			}
 			else
 			{

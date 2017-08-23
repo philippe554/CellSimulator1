@@ -23,9 +23,11 @@ public:
 	bool connectCells(CellFrame*other);
 	void disconnectCells(const int i);
 
+	void startSplit(const int location);
 	bool nextStage();
 	int getStage();
 	void splitFrame(CellFrame* cell1, CellFrame* cell2);
+	void splitFrameHelper(CellFrame* newCell, int own);
 
 	void applyPressure(float p);
 	double getSurface()const;
@@ -75,6 +77,7 @@ protected:
 	Joint connectedCellsJoints[2 * AmountOfEdges];
 
 	int stage;
+	int splitLocation;
 	float unit;
 
 	long id;
