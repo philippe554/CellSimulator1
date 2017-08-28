@@ -109,7 +109,7 @@ void Chunk::run()
 	{
 		blocks[i]->calcJointForces();
 		blocks[i]->calcFlow();
-		//blocks[i]->cellCellCollision();
+		blocks[i]->cellCellCollision();
 	}
 	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
 	{
