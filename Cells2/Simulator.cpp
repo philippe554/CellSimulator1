@@ -157,7 +157,7 @@ void Simulator::update()
 	int r2 = rand() % 30 + 1;
 
 	long start = clock();
-	world.jump(1, true);
+	world.jump(1000, true);
 	simulationTime = clock() - start;
 }
 
