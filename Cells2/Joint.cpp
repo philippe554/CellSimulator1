@@ -32,6 +32,23 @@ void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDam
 	lastID++;
 }
 
+void Joint::init(Point* tp1, Point* tp2, const Joint& other)
+{
+	active = true;
+	p1 = tp1;
+	p2 = tp2;
+	p1->addJoint(this);
+	p2->addJoint(this);
+	length = other.length;
+	targetLength = other.targetLength;
+	growFactor = other.growFactor;
+	strength = other.strength;
+	damping = other.damping;
+	friction = other.friction;
+	id = lastID;
+	lastID++;
+}
+
 void Joint::deconstruct()
 {
 	active = false;

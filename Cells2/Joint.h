@@ -12,6 +12,7 @@ class Joint {
 public:
 	Joint();
 	void init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction);
+	void init(Point * tp1, Point * tp2, const Joint & other);
 	void deconstruct();
 
 	Vector calcFriction(const Vector& flow);
