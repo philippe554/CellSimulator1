@@ -91,6 +91,21 @@ Vector Joint::calcFriction(const Vector& flow)
 	return Vector(0.0, 0.0);
 }
 
+void Joint::applyPresureForce(float p)
+{
+	Vector jointLine = Vector(p1->getPlace(), p2->getPlace());
+	float surface = jointLine.getLength();
+	Vector normal = jointLine.getPerpendicularCounterClockwise().getUnit();
+	normal.multiply(0.5*surface*p);
+	p1->addForce(normal);
+	p2->addForce(normal);
+}
+
+void Joint::setFriction(bool _friction)
+{
+	friction = _friction;
+}
+
 Point* Joint::getP1()const
 {
 	return p1;

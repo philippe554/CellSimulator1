@@ -138,6 +138,9 @@
     <ClCompile Include="CellFrame.cpp">
       <Filter>Source Files\Physics\Objects\CellParts</Filter>
     </ClCompile>
+    <ClCompile Include="Vector2DAVX.cpp">
+      <Filter>Source Files\Physics\Math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -214,6 +217,9 @@
     </ClInclude>
     <ClInclude Include="Water.h">
       <Filter>Header Files\Physics\Objects\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector2DAVX.h">
+      <Filter>Header Files\Physics\Math</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

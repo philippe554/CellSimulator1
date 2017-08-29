@@ -3,6 +3,7 @@
 class Shapes;
 
 #include "Vector.h"
+#include "Vector2DAVX.h"
 
 class Shapes
 {

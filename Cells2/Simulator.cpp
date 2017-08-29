@@ -67,13 +67,12 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				{
 					drawLine(RenderTarget, cell->getSplitJoint(j, true), cell->getSplitJoint(j, false), Color::black());
 				}
-
 				for (int j = 0; j < cell->getAmountOfTailJoints(); j++)
 				{
-					drawLine(RenderTarget, cell->getTailPoint(j, 0), cell->getTailPoint(j, 1), Color::black());
+					drawLine(RenderTarget, cell->getTailJoint(j, true), cell->getTailJoint(j, false), Color::black());
 				}
 
-				for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
+				/*for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
 				{
 					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()),
 						Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()) + cell->getEdgeEdge(j).getFrictionForce()*100, Color::black());
@@ -83,7 +82,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				{
 					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()),
 						Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()) + cell->getTailEdge(j).getFrictionForce()*100, Color::black());
-				}
+				}*/
 
 				if (selectedID == cell->getId())
 				{
@@ -164,7 +163,7 @@ void Simulator::update()
 	int r2 = rand() % 30 + 1;
 
 	long start = clock();
-	world.jump(1000, true);
+	world.jump(5, true);
 	simulationTime = clock() - start;
 }
 

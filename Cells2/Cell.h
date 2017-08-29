@@ -12,6 +12,8 @@ public:
 	Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const double tRadius);
 	~Cell();
 
+	void cellLogic();
+
 	shared_ptr<DNA> getDNA();
 
 	Membrane* getOuterMembrane()const;
@@ -22,6 +24,8 @@ private:
 	shared_ptr<DNA> dna;
 
 	Membrane* outerMembrane;
+
+	long age;
 };
 
 

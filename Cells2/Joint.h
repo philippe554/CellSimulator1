@@ -15,6 +15,8 @@ public:
 	void deconstruct();
 
 	Vector calcFriction(const Vector& flow);
+	void applyPresureForce(float p);
+	void setFriction(bool _friction);
 
 	Point* getP1()const;
 	Point* getP2()const;

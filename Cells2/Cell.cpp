@@ -3,6 +3,7 @@
 Cell::Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const double tRadius)
 	: CellFrame(_ws,tCenter,tRadius)
 {
+	age = 0;
 	dna = tDna;
 	outerMembrane = new Membrane(dna->membrane);
 }
@@ -10,6 +11,15 @@ Cell::Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const
 Cell::~Cell()
 {
 	delete outerMembrane;
+}
+
+void Cell::cellLogic()
+{
+	age++;
+	if (age % 500 == 0)
+	{
+		growTail();
+	}
 }
 
 Membrane* Cell::getOuterMembrane() const

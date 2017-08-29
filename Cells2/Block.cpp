@@ -277,6 +277,7 @@ void Block::prep()
 	cacheParameters();
 	for (auto cell : cells)
 	{
+		cell->cellLogic();
 		cell->growJoints();
 		cell->cacheParameters();
 	}

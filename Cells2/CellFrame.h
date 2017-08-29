@@ -27,7 +27,10 @@ public:
 	bool nextStage();
 	int getStage();
 	void splitFrame(CellFrame* cell1, CellFrame* cell2);
-	void splitFrameHelper(CellFrame* newCell, int own);
+	void splitFrameHelperCopyTail(CellFrame * newCell);
+	void splitFrameHelperConnectCells(CellFrame* newCell, int own);
+
+	void growTail();
 
 	void applyPressure(float p);
 	double getSurface()const;
@@ -38,12 +41,11 @@ public:
 	const Vector& getEdgeJoint(const int i, const bool p1)const;
 	const Vector& getRadiusJoint(const int i, const bool p1)const;
 	const Vector& getSplitJoint(const int i, const bool p1)const;
+	const Vector & getTailJoint(const int i, const bool p1) const;
 	int getAmountOfEdgeJoints()const;
 	int getAmountOfradiusJoints()const;
 	int getAmountOfSplitJoints()const;
-
 	int getAmountOfTailJoints()const;
-	const Vector& getTailPoint(const int i, const int j)const;
 
 	const Joint& getEdgeEdge(int i)const;
 	const Joint& getTailEdge(int i)const;
@@ -52,7 +54,7 @@ public:
 	long getId()const;
 
 	static const int AmountOfEdges = 6;
-	static const int MaxTailLength = 12;
+	static const int MaxTailLength = 8;
 
 protected:
 	Point center;
@@ -65,12 +67,12 @@ protected:
 	int splitJointsLength;
 
 	int tailLength;
+	int tailLocation;
 	Point tailPoints[2 * MaxTailLength];
 	Joint tailJoints[5 * MaxTailLength];
-
 	bool hasTailEnd;
 	Point tailEndPoint;
-	Joint tailEndJoints[2];
+	Joint tailEndJoints[4];
 
 	bool connectedCellsMaster[AmountOfEdges];
 	CellFrame* connectedCells[AmountOfEdges];

@@ -131,6 +131,7 @@
     <ClCompile Include="Shapes.cpp" />
     <ClCompile Include="Simulator.cpp" />
     <ClCompile Include="Vector.cpp" />
+    <ClCompile Include="Vector2DAVX.cpp" />
     <ClCompile Include="View.cpp" />
     <ClCompile Include="Water.cpp" />
     <ClCompile Include="Winapi.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Shapes.h" />
     <ClInclude Include="Simulator.h" />
     <ClInclude Include="Vector.h" />
+    <ClInclude Include="Vector2DAVX.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="Water.h" />
     <ClInclude Include="World.h" />

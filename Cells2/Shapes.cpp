@@ -46,7 +46,9 @@ bool Shapes::pointInTriangle(Vector & A, Vector & B, Vector & C, Vector & P)
 float Shapes::surfaceTriangle(float l1, float l2, float l3)
 {
 	float s = 0.5*(l1+l2+l3);
-	return sqrt(s*(s - l1)*(s - l2)*(s - l3));
+	float t = s*(s - l1)*(s - l2)*(s - l3);
+	if (t <= 0) return 0;
+	return sqrt(t);
 }
 
 float Shapes::surfaceTriangle(const Vector & A, const Vector & B, const Vector & C)

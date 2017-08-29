@@ -41,7 +41,7 @@ public:
 
 	int c_Cores = 3;
 
-	int c_WorldBoundary = 6;
+	int c_WorldBoundary = 2;
 
 	double c_WaterLevel = 0;
 	double c_WaterFriction = 0.00;//2;
