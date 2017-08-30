@@ -19,18 +19,18 @@ public:
 
 	void cellCellCollision(CellFrame* other);
 	void cellCellCollisionHelper(CellFrame* other);
-
+	
 	bool connectCells(CellFrame*other);
 	void disconnectCells(const int i);
 
 	void startSplit(const int location);
 	bool nextStage();
 	int getStage();
+	void growTail();
+
 	void splitFrame(CellFrame* cell1, CellFrame* cell2);
 	void splitFrameHelperCopyTail(CellFrame * newCell);
 	void splitFrameHelperConnectCells(CellFrame* newCell, int own);
-
-	void growTail();
 
 	void applyPressure(float p);
 	double getSurface()const;

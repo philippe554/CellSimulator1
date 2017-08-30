@@ -82,7 +82,6 @@ CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float rad
 	tailJoints.push_back(new Joint(tail[tail.size() - 2], tail.back(), dna->tail.getElementScaled(-1, 0, 0.1, 5), dna->tail.getElementScaled(-1, 1, 0.1, 1), true, 0, id));	
 	*/
 }
-
 CellFrame::~CellFrame() {
 	for (int i = 0; i < AmountOfEdges; i++)
 	{
@@ -212,10 +211,135 @@ void CellFrame::movePoints(float precision, float backgroundFriction)
 
 void CellFrame::cellCellCollision(CellFrame* other)
 {
-	cellCellCollisionHelper(other);
-	other->cellCellCollisionHelper(this);
+	for (int i = 0; i < AmountOfEdges; i++)
+	{
+		if (i != tailLocation || (!hasTailEnd && tailLength == 0)) 
+		{
+			for (int j = 0; j < AmountOfEdges; j++)
+			{
+				if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
+				{
+					edgeJoints[i].jointJointCollision(&other->edgeJoints[j]);
+				}
+			}
+			for (int j = 0; j < other->tailLength; j++)
+			{
+				edgeJoints[i].jointJointCollision(&other->tailJoints[j * 5 + 0]);
+				edgeJoints[i].jointJointCollision(&other->tailJoints[j * 5 + 1]);
+			}
+			if (other->hasTailEnd)
+			{
+				edgeJoints[i].jointJointCollision(&other->tailEndJoints[0]);
+				edgeJoints[i].jointJointCollision(&other->tailEndJoints[1]);
+			}
+			else
+			{
+				if (other->tailLength > 0)
+				{
+					edgeJoints[i].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
+				}
+			}
+		}
+	}
+	for (int i = 0; i < tailLength; i++)
+	{
+		for (int j = 0; j < AmountOfEdges; j++)
+		{
+			if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
+			{
+				tailJoints[i * 5].jointJointCollision(&other->edgeJoints[j]);
+				tailJoints[i * 5 + 1].jointJointCollision(&other->edgeJoints[j]);
+			}
+		}
+		for (int j = 0; j < other->tailLength; j++)
+		{
+			tailJoints[i*5].jointJointCollision(&other->tailJoints[j * 5 + 0]);
+			tailJoints[i*5].jointJointCollision(&other->tailJoints[j * 5 + 1]);
+			tailJoints[i*5+1].jointJointCollision(&other->tailJoints[j * 5 + 0]);
+			tailJoints[i*5+1].jointJointCollision(&other->tailJoints[j * 5 + 1]);
+		}
+		if (other->hasTailEnd)
+		{
+			tailJoints[i*5].jointJointCollision(&other->tailEndJoints[0]);
+			tailJoints[i*5].jointJointCollision(&other->tailEndJoints[1]);
+			tailJoints[i*5+1].jointJointCollision(&other->tailEndJoints[0]);
+			tailJoints[i*5+1].jointJointCollision(&other->tailEndJoints[1]);
+		}
+		else
+		{
+			if (other->tailLength > 0)
+			{
+				tailJoints[i*5].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
+				tailJoints[i*5+1].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
+			}
+		}
+	}
+	if (hasTailEnd)
+	{
+		for (int j = 0; j < AmountOfEdges; j++)
+		{
+			if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
+			{
+				tailEndJoints[0].jointJointCollision(&other->edgeJoints[j]);
+				tailEndJoints[1].jointJointCollision(&other->edgeJoints[j]);
+			}
+		}
+		for (int j = 0; j < other->tailLength; j++)
+		{
+			tailEndJoints[0].jointJointCollision(&other->tailJoints[j * 5 + 0]);
+			tailEndJoints[0].jointJointCollision(&other->tailJoints[j * 5 + 1]);
+			tailEndJoints[1].jointJointCollision(&other->tailJoints[j * 5 + 0]);
+			tailEndJoints[1].jointJointCollision(&other->tailJoints[j * 5 + 1]);
+		}
+		if (other->hasTailEnd)
+		{
+			tailEndJoints[0].jointJointCollision(&other->tailEndJoints[0]);
+			tailEndJoints[0].jointJointCollision(&other->tailEndJoints[1]);
+			tailEndJoints[1].jointJointCollision(&other->tailEndJoints[0]);
+			tailEndJoints[1].jointJointCollision(&other->tailEndJoints[1]);
+		}
+		else
+		{
+			if (other->tailLength > 0)
+			{
+				tailEndJoints[0].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
+				tailEndJoints[1].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
+			}
+		}
+	}
+	else
+	{
+		if (tailLength > 0)
+		{
+			for (int j = 0; j < AmountOfEdges; j++)
+			{
+				if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
+				{
+					tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->edgeJoints[j]);
+				}
+			}
+			for (int j = 0; j < other->tailLength; j++)
+			{
+				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailJoints[j * 5 + 0]);
+				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailJoints[j * 5 + 1]);
+			}
+			if (other->hasTailEnd)
+			{
+				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailEndJoints[0]);
+				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailEndJoints[1]);
+			}
+			else
+			{
+				if (other->tailLength > 0)
+				{
+					tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
+				}
+			}
+		}
+	}
+	//cellCellCollisionHelper(other);
+	//other->cellCellCollisionHelper(this);
 }
-
 void CellFrame::cellCellCollisionHelper(CellFrame * other)
 {
 	for (int i = 0; i < CellFrame::AmountOfEdges; i++)
@@ -265,7 +389,8 @@ bool CellFrame::connectCells(CellFrame * otherCell)
 	{
 		for (int j = 0; j<AmountOfEdges; j++)
 		{
-			float d = pow(Vector::getLength(edgePoints[i].getPlace(), otherCell->edgePoints[j].getPlace()), 2);
+			float d = Vector::getLength(edgePoints[i].getPlace(), otherCell->edgePoints[(j+1)%AmountOfEdges].getPlace()) 
+				* Vector::getLength(edgePoints[(i+1)%AmountOfEdges].getPlace(), otherCell->edgePoints[j].getPlace());
 			if (d<distance && connectedCells[i] == nullptr &&  otherCell->connectedCells[j] == nullptr)
 			{
 				if (i != tailLocation || (!hasTailEnd && tailLength == 0))
@@ -303,7 +428,6 @@ bool CellFrame::connectCells(CellFrame * otherCell)
 		return false;
 	}
 }
-
 void CellFrame::disconnectCells(const int i)
 {
 	CellFrame*other = connectedCells[i];
@@ -344,7 +468,6 @@ void CellFrame::startSplit(const int location)
 		stage = 1;
 	}
 }
-
 bool CellFrame::nextStage()
 {
 	if (stage == 1) 
@@ -373,15 +496,15 @@ bool CellFrame::nextStage()
 
 		radiusJoints[(0 + splitLocation) % AmountOfEdges].deconstruct();
 		radiusJoints[(1 + splitLocation) % AmountOfEdges].deconstruct();
-radiusJoints[(0 + splitLocation) % AmountOfEdges].init(&splitPoints[0], &edgePoints[(0 + splitLocation) % AmountOfEdges], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-radiusJoints[(0 + splitLocation) % AmountOfEdges].setTarget(unit, 0.01);
-radiusJoints[(1 + splitLocation) % AmountOfEdges].init(&splitPoints[0], &edgePoints[(1 + splitLocation) % AmountOfEdges], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-radiusJoints[(1 + splitLocation) % AmountOfEdges].setTarget(unit, 0.01);
+		radiusJoints[(0 + splitLocation) % AmountOfEdges].init(&splitPoints[0], &edgePoints[(0 + splitLocation) % AmountOfEdges], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+		radiusJoints[(0 + splitLocation) % AmountOfEdges].setTarget(unit, 0.01);
+		radiusJoints[(1 + splitLocation) % AmountOfEdges].init(&splitPoints[0], &edgePoints[(1 + splitLocation) % AmountOfEdges], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+		radiusJoints[(1 + splitLocation) % AmountOfEdges].setTarget(unit, 0.01);
 
-splitPointsLength = 1;
-splitJointsLength = 4;
-stage = 3;
-return false;
+		splitPointsLength = 1;
+		splitJointsLength = 4;
+		stage = 3;
+		return false;
 	}
 	else if (stage == 3)
 	{
@@ -434,10 +557,103 @@ return false;
 	}
 	return false;
 }
-
 int CellFrame::getStage()
 {
 	return stage;
+}
+void CellFrame::growTail()
+{
+	if (connectedCells[tailLocation] == nullptr)
+	{
+		if (hasTailEnd)
+		{
+			if (tailLength < MaxTailLength)
+			{
+				hasTailEnd = false;
+				tailLength++;
+				tailPoints[(tailLength - 1) * 2].init(tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 0.0);
+				tailPoints[(tailLength - 1) * 2 + 1].init(tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 0.0);
+				tailEndJoints[0].deconstruct();
+				tailEndJoints[1].deconstruct();
+				tailEndJoints[2].deconstruct();
+				tailEndJoints[3].deconstruct();
+				if (tailLength == 1)
+				{
+					tailJoints[0].init(&tailPoints[0], &edgePoints[(tailLocation + 1) % AmountOfEdges], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+					tailJoints[1].init(&edgePoints[tailLocation], &tailPoints[1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+					tailJoints[2].init(&edgePoints[tailLocation], &tailPoints[0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+					tailJoints[3].init(&edgePoints[(tailLocation + 1) % AmountOfEdges], &tailPoints[1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+					tailJoints[4].init(&tailPoints[1], &tailPoints[0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				}
+				else
+				{
+					tailJoints[(tailLength - 1) * 5 + 0].init(&tailPoints[(tailLength - 1) * 2 + 0], &tailPoints[(tailLength - 2) * 2 + 0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+					tailJoints[(tailLength - 1) * 5 + 1].init(&tailPoints[(tailLength - 2) * 2 + 1], &tailPoints[(tailLength - 1) * 2 + 1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+					tailJoints[(tailLength - 1) * 5 + 2].init(&tailPoints[(tailLength - 1) * 2 + 0], &tailPoints[(tailLength - 2) * 2 + 1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+					tailJoints[(tailLength - 1) * 5 + 3].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailPoints[(tailLength - 2) * 2 + 0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+					tailJoints[(tailLength - 1) * 5 + 4].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailPoints[(tailLength - 1) * 2 + 0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				}
+				tailJoints[(tailLength - 1) * 5 + 0].setTarget(1 * unit, 0.01);
+				tailJoints[(tailLength - 1) * 5 + 1].setTarget(1 * unit, 0.01);
+				tailJoints[(tailLength - 1) * 5 + 2].setTarget(1.5 * unit, 0.05);
+				tailJoints[(tailLength - 1) * 5 + 3].setTarget(1.5 * unit, 0.05);
+				tailJoints[(tailLength - 1) * 5 + 4].setTarget(0.5 * unit, 0.01);
+			}
+		}
+		else
+		{
+			hasTailEnd = true;
+			if (tailLength == 0)
+			{
+				Vector place = Vector::getAverage(edgePoints[tailLocation].getPlace(), edgePoints[(tailLocation + 1) % AmountOfEdges].getPlace());
+				tailEndPoint.init(place.getX(), place.getY(), 0.0);
+				tailEndJoints[0].init(&tailEndPoint, &edgePoints[tailLocation], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				tailEndJoints[1].init(&edgePoints[(tailLocation + 1) % AmountOfEdges], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				if (splitLocation == tailLocation || (splitLocation + 1) % AmountOfEdges == tailLocation || (splitLocation + 5) % AmountOfEdges == tailLocation)
+				{
+					if (stage > 1)
+					{
+						tailEndJoints[2].init(&splitPoints[0], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+						tailEndJoints[3].init(&splitPoints[0], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+					}
+					else
+					{
+						tailEndJoints[2].init(&center, &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+						tailEndJoints[3].init(&center, &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+					}
+				}
+				else
+				{
+					tailEndJoints[2].init(&center, &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+					tailEndJoints[3].init(&center, &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+				}
+			}
+			else if (tailLength == 1)
+			{
+				Vector place = Vector::getAverage(tailPoints[(tailLength - 1) * 2].getPlace(), tailPoints[(tailLength - 1) * 2 + 1].getPlace());
+				tailEndPoint.init(place.getX(), place.getY(), 0.0);
+				tailEndJoints[0].init(&tailEndPoint, &tailPoints[(tailLength - 1) * 2], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				tailEndJoints[1].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				tailEndJoints[2].init(&edgePoints[tailLocation], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+				tailEndJoints[3].init(&edgePoints[(tailLocation + 1) % AmountOfEdges], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+				tailJoints[4].setFriction(false);
+			}
+			else
+			{
+				Vector place = Vector::getAverage(tailPoints[(tailLength - 1) * 2].getPlace(), tailPoints[(tailLength - 1) * 2 + 1].getPlace());
+				tailEndPoint.init(place.getX(), place.getY(), 0.0);
+				tailEndJoints[0].init(&tailEndPoint, &tailPoints[(tailLength - 1) * 2], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				tailEndJoints[1].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
+				tailEndJoints[2].init(&tailPoints[(tailLength - 2) * 2], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+				tailEndJoints[3].init(&tailPoints[(tailLength - 2) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
+				tailJoints[(tailLength - 1) * 5 + 4].setFriction(false);
+			}
+			tailEndJoints[0].setTarget(1.5 * unit, 0.01);
+			tailEndJoints[1].setTarget(1.5 * unit, 0.01);
+			tailEndJoints[2].setTarget(2.5 * unit, 0.01);
+			tailEndJoints[3].setTarget(2.5 * unit, 0.01);
+		}
+	}
 }
 
 void CellFrame::splitFrame(CellFrame* cell1, CellFrame* cell2)
@@ -507,7 +723,6 @@ void CellFrame::splitFrame(CellFrame* cell1, CellFrame* cell2)
 		splitFrameHelperConnectCells(cell1, (splitLocation + 4) % AmountOfEdges);
 	}
 }
-
 void CellFrame::splitFrameHelperCopyTail(CellFrame * newCell)
 {
 	newCell->tailLength = tailLength;
@@ -569,7 +784,6 @@ void CellFrame::splitFrameHelperCopyTail(CellFrame * newCell)
 		}
 	}
 }
-
 void CellFrame::splitFrameHelperConnectCells(CellFrame * newCell, int own)
 {
 	if (connectedCells[own] != nullptr)
@@ -607,85 +821,6 @@ void CellFrame::splitFrameHelperConnectCells(CellFrame * newCell, int own)
 					newCell->connectedCellsJoints[own * 2 + 1].setTarget(0, 0.1);
 				}
 			}
-		}
-	}
-}
-
-void CellFrame::growTail()
-{
-	if (connectedCells[tailLocation] == nullptr)
-	{
-		if (hasTailEnd)
-		{
-			if (tailLength < MaxTailLength)
-			{
-				hasTailEnd = false;
-				tailLength++;
-				tailPoints[(tailLength - 1) * 2].init(tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 0.0);
-				tailPoints[(tailLength - 1) * 2 + 1].init(tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 0.0);
-				tailEndJoints[0].deconstruct();
-				tailEndJoints[1].deconstruct();
-				tailEndJoints[2].deconstruct();
-				tailEndJoints[3].deconstruct();
-				if (tailLength == 1)
-				{
-					tailJoints[0].init(&tailPoints[0], &edgePoints[(tailLocation + 1) % AmountOfEdges], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-					tailJoints[1].init(&edgePoints[tailLocation], &tailPoints[1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-					tailJoints[2].init(&edgePoints[tailLocation], &tailPoints[0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-					tailJoints[3].init(&edgePoints[(tailLocation + 1) % AmountOfEdges], &tailPoints[1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-					tailJoints[4].init(&tailPoints[1], &tailPoints[0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				}
-				else
-				{
-					tailJoints[(tailLength - 1) * 5 + 0].init(&tailPoints[(tailLength - 1) * 2 + 0], &tailPoints[(tailLength - 2) * 2 + 0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-					tailJoints[(tailLength - 1) * 5 + 1].init(&tailPoints[(tailLength - 2) * 2 + 1], &tailPoints[(tailLength - 1) * 2 + 1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-					tailJoints[(tailLength - 1) * 5 + 2].init(&tailPoints[(tailLength - 1) * 2 + 0], &tailPoints[(tailLength - 2) * 2 + 1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-					tailJoints[(tailLength - 1) * 5 + 3].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailPoints[(tailLength - 2) * 2 + 0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-					tailJoints[(tailLength - 1) * 5 + 4].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailPoints[(tailLength - 1) * 2 + 0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				}
-				tailJoints[(tailLength - 1) * 5 + 0].setTarget(1 * unit, 0.01);
-				tailJoints[(tailLength - 1) * 5 + 1].setTarget(1 * unit, 0.01);
-				tailJoints[(tailLength - 1) * 5 + 2].setTarget(1.5 * unit, 0.05);
-				tailJoints[(tailLength - 1) * 5 + 3].setTarget(1.5 * unit, 0.05);
-				tailJoints[(tailLength - 1) * 5 + 4].setTarget(0.5 * unit, 0.01);
-			}
-		}
-		else
-		{
-			hasTailEnd = true;
-			if (tailLength == 0)
-			{
-				Vector place = Vector::getAverage(edgePoints[tailLocation].getPlace(), edgePoints[(tailLocation + 1) % AmountOfEdges].getPlace());
-				tailEndPoint.init(place.getX(), place.getY(), 0.0);
-				tailEndJoints[0].init(&tailEndPoint, &edgePoints[tailLocation], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				tailEndJoints[1].init(&edgePoints[(tailLocation + 1) % AmountOfEdges], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				tailEndJoints[2].init(&center, &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-				tailEndJoints[3].init(&center, &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-			}
-			else if (tailLength == 1)
-			{
-				Vector place = Vector::getAverage(tailPoints[(tailLength - 1) * 2].getPlace(), tailPoints[(tailLength - 1) * 2 + 1].getPlace());
-				tailEndPoint.init(place.getX(), place.getY(), 0.0);
-				tailEndJoints[0].init(&tailEndPoint, &tailPoints[(tailLength - 1) * 2], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				tailEndJoints[1].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				tailEndJoints[2].init(&edgePoints[tailLocation], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-				tailEndJoints[3].init(&edgePoints[(tailLocation + 1) % AmountOfEdges], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-				tailJoints[4].setFriction(false);
-			}
-			else
-			{
-				Vector place = Vector::getAverage(tailPoints[(tailLength - 1) * 2].getPlace(), tailPoints[(tailLength - 1) * 2 + 1].getPlace());
-				tailEndPoint.init(place.getX(), place.getY(), 0.0);
-				tailEndJoints[0].init(&tailEndPoint, &tailPoints[(tailLength - 1) * 2], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				tailEndJoints[1].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
-				tailEndJoints[2].init(&tailPoints[(tailLength - 2) * 2], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-				tailEndJoints[3].init(&tailPoints[(tailLength - 2) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
-				tailJoints[(tailLength - 1) * 5 + 4].setFriction(false);
-			}
-			tailEndJoints[0].setTarget(1.5 * unit, 0.01);
-			tailEndJoints[1].setTarget(1.5 * unit, 0.01);
-			tailEndJoints[2].setTarget(2.5 * unit, 0.01);
-			tailEndJoints[3].setTarget(2.5 * unit, 0.01);
 		}
 	}
 }
@@ -894,12 +1029,10 @@ const Joint& CellFrame::getEdgeEdge(int i) const
 {
 	return edgeJoints[i];
 }
-
 const Joint& CellFrame::getTailEdge(int i) const
 {
 	return tailJoints[i];
 }
-
 const Vector& CellFrame::getCenter()const
 {
 	return center.getPlace();

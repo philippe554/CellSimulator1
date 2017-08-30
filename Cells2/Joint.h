@@ -17,6 +17,7 @@ public:
 
 	Vector calcFriction(const Vector& flow);
 	void applyPresureForce(float p);
+	void jointJointCollision(Joint * other);
 	void setFriction(bool _friction);
 
 	Point* getP1()const;

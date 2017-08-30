@@ -1,4 +1,5 @@
 #include "Joint.h"
+#include "Shapes.h"
 
 long Joint::lastID = 0;
 
@@ -116,6 +117,33 @@ void Joint::applyPresureForce(float p)
 	normal.multiply(0.5*surface*p);
 	p1->addForce(normal);
 	p2->addForce(normal);
+}
+
+void Joint::jointJointCollision(Joint* other)
+{
+	Vector intersection(0.0, 0.0);
+	if (Shapes::lineSegementsIntersect(p1->getPlace(), p2->getPlace(), other->p1->getPlace(), other->p2->getPlace(), intersection))
+	{
+		Vector jointLine1 = Vector(p1->getPlace(), p2->getPlace());
+		Vector normal1 = jointLine1.getPerpendicularCounterClockwise().getUnit();
+		Vector jointLine2 = Vector(other->p1->getPlace(), other->p2->getPlace());
+		Vector normal2 = jointLine2.getPerpendicularCounterClockwise().getUnit();
+		float size = Vector::getLength(p1->getPlace(), other->p2->getPlace()) + Vector::getLength(other->p1->getPlace(), p2->getPlace());
+		Vector force1 = Vector::getAverage(normal1, -normal2).getUnit();
+		force1.multiply(size * 0.5);
+		Vector force2 = -force1;
+
+		float j1l1 = Vector::getLength(p1->getPlace(), intersection);
+		float j1l2 = Vector::getLength(p2->getPlace(), intersection);
+		float j2l1 = Vector::getLength(other->p1->getPlace(), intersection);
+		float j2l2 = Vector::getLength(other->p2->getPlace(), intersection);
+
+		p1->addForce(force1*((j1l2) / (j1l1 + j1l2)));
+		p2->addForce(force1*((j1l1) / (j1l1 + j1l2)));
+
+		other->p1->addForce(force2*((j2l2) / (j2l1 + j2l2)));
+		other->p2->addForce(force2*((j2l1) / (j2l1 + j2l2)));
+	}
 }
 
 void Joint::setFriction(bool _friction)
