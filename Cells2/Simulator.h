@@ -29,5 +29,5 @@ private:
 
 	int mouseX;
 	int mouseY;
-	int selectedID;
+	long selectedID;
 };

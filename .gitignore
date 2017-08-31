@@ -259,3 +259,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/Report20170828-2136 (2).vsps
+/Report20170828-2136 (2).vsps
+*.vsps

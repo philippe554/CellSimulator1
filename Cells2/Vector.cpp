@@ -160,12 +160,12 @@ Vector Vector::operator-() const
 	return Vector(-x, -y);
 }
 
-Vector Vector::operator*(double r)
+Vector Vector::operator*(double r)const
 {
 	return Vector(x*r, y*r);
 }
 
-Vector Vector::operator/(double r)
+Vector Vector::operator/(double r)const
 {
 	if (r == 0)r = 0.001;
 	return Vector(x / r, y / r);

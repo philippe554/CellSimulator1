@@ -10,40 +10,50 @@ using namespace std;
 
 class Joint {
 public:
-	Joint(shared_ptr<Point> tp1, shared_ptr<Point> tp2, double tStrength, double tDamping, bool tfriction, int tid, int tBelongsTo);
-	~Joint();
+	Joint();
+	void init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction);
+	void init(Point * tp1, Point * tp2, const Joint & other);
+	void deconstruct();
 
-	void calcFriction(const Vector& flow);
+	Vector calcFriction(const Vector& flow);
+	void applyPresureForce(float p);
+	void jointJointCollision(Joint * other);
+	void setFriction(bool _friction);
 
-	shared_ptr<Point> getP1();
-	shared_ptr<Point> getP2();
-	shared_ptr<Point> getOther(shared_ptr<Point> p);
+	Point* getP1()const;
+	Point* getP2()const;
+	Point* getOther(Point* p)const;
 
-	double getLength();
-	void setLength(double t);
-	void multiplyLength(double t);
+	float getLength();
+	void setLength(float t);
 
-	double getStrenth();
-	void setStrenth(double t);
+	float getRealLength() const;
 
-	double getDamping();
-	void setDamping(double t);
+	void setTarget(const float _targetLength, const float _growFactor);
+	bool grow(const float precision);
 
-	int getID();
-	void setID(int t);
+	float getStrenth();
+	void setStrenth(float t);
 
-	int getBelongsTo();
-	void setBelongsTo(int t);
+	float getDamping();
+	void setDamping(float t);
 
-	shared_ptr<Point>  p1;
-	shared_ptr<Point>  p2;
-	double length;
-	double originalLength;
-	double strength;
-	double damping;
+	const Vector& getFrictionForce() const;
+
+	long getId()const;
+
+private:
+	bool active;
+	Point*  p1;
+	Point*  p2;
+	float length;
+	float targetLength;
+	float growFactor;
+	float strength;
+	float damping;
 	bool friction;
 	Vector frictionForce;
 	int id;
-	int belongsTo;
+	static long lastID;
 };
 

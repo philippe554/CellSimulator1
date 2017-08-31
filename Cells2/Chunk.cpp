@@ -101,27 +101,22 @@ Block* Chunk::findBlock_N(const int input) const
 void Chunk::run()
 {
 	acceptAllCells();
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	const int size = world->ws.chunkSize*world->ws.chunkSize;
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->cacheFlow();
+		blocks[i]->stage1();
 	}
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->calcJointForces();
-		blocks[i]->calcFlow();
-#ifdef S_CellCellCollision
-		blocks[i]->cellCellCollision();
-#endif
+		blocks[i]->stage2();
 	}
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->movePoints(world->c_Precision, world->c_WaterFriction);
-		blocks[i]->moveFlow();
+		blocks[i]->stage3();
 	}
-
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->doRestructure();
+		blocks[i]->stage4();
 	}
 
 	time++;
@@ -135,8 +130,8 @@ void Chunk::acceptAllCells()
 	acceptedCellsMutex.lock();
 	while (acceptedCells.size()>0)
 	{
-		Block*block = findBlock_B(world->calcBlock(acceptedCells.at(0)->getCenter()->getX()),
-			world->calcBlock(acceptedCells.at(0)->getCenter()->getY()));
+		Block*block = findBlock_B(world->calcBlock(acceptedCells.at(0)->getCenter().getX()),
+			world->calcBlock(acceptedCells.at(0)->getCenter().getY()));
 		if (block != nullptr)
 		{
 			block->cells.push_back(acceptedCells.at(0));
@@ -196,6 +191,17 @@ void Chunk::schedule()
 }
 bool Chunk::isRunning()const
 {
+	for (int i = 0; i < 8; ++i)
+	{
+		if (neighbours[i] != nullptr)
+		{
+			if (neighbours[i]->running)
+			{
+				return true;
+			}
+		}
+	}
+
 	return running;
 }
 

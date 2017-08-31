@@ -14,22 +14,23 @@ class Block;
 
 using namespace std;
 
-class Block : public Reactor, public Shapes
+class Block : public Reactor
 {
 public:
-	Block(World*tWorld,Chunk*tChunk,const int _cx,const int _cy, const int _bx,const int _by);
+	Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int _bx, const int _by);
 	~Block();
 
+	void createCell(shared_ptr<DNA> _dna, Vector& place, float radius);
+
+	void stage1();
+	void stage2();
+	void stage3();
+	void stage4();
+
 	void calcJointForces();
-	void movePoints(double precision, double backgroundFriction);
 	void cellCellCollision();
-	void doRestructure();
-	void calcCollisionBorder();
-	void calcCollisionChunk(const Block* chunk, const bool cellCell);
 
 	void calcFlow();
-	void moveFlow();
-	void cacheFlow();
 	Vector getFlow()const;
 
 	void loadDefaultChunk();
@@ -37,7 +38,7 @@ public:
 	
 	float getConcentrationPoint(const int& particle, const Vector& place)const;
 	void addFrictionForce(const Vector& force);
-	float getVolume() const override;
+	float calcVolume() const override;
 
 	vector<shared_ptr<DNA>> getDNA();
 

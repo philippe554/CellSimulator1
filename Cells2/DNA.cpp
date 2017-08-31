@@ -2,7 +2,7 @@
 #include "WorldSettings.h"
 
 DNA::DNA() : 
-tail(4,10),
+tail(8,4),
 membrane(WorldSettings::e_AmountOfParticles,1)
 {
 	tail.setRandom();

@@ -39,7 +39,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 			drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
 				block->by*world.ws.blockSize + 0.5*world.ws.blockSize),
 				Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*100, Color::black());
+					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10000, Color::black());
 
 		}
 	}
@@ -55,27 +55,33 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 
 			for (auto& cell : block->cells)
 			{
-				for (int j = 0; j < cell->amountEdges - 1; j++)
+				for (int j = 0; j < cell->getAmountOfEdgeJoints(); j++)
 				{
-					drawLine(RenderTarget, cell->getEdgePoint(j), cell->getEdgePoint(j+1), Color::black());
+					drawLine(RenderTarget, cell->getEdgeJoint(j,true), cell->getEdgeJoint(j,false), Color::black());
 				}
-				drawLine(RenderTarget, cell->getEdgePoint(0), cell->getEdgePoint(cell->amountEdges - 1), Color::black());
-
-				for (int j = 0; j < cell->getAmountOfTailEdges(); j++)
+				for (int j = 0; j < cell->getAmountOfradiusJoints(); j++)
 				{
-					drawLine(RenderTarget, cell->getTailPoint(j, 0), cell->getTailPoint(j, 1), Color::black());
+					drawLine(RenderTarget, cell->getRadiusJoint(j, true), cell->getRadiusJoint(j, false), Color::black());
+				}
+				for (int j = 0; j < cell->getAmountOfSplitJoints(); j++)
+				{
+					drawLine(RenderTarget, cell->getSplitJoint(j, true), cell->getSplitJoint(j, false), Color::black());
+				}
+				for (int j = 0; j < cell->getAmountOfTailJoints(); j++)
+				{
+					drawLine(RenderTarget, cell->getTailJoint(j, true), cell->getTailJoint(j, false), Color::black());
 				}
 
-				for(int j=0;j<cell->getAmountOfEdgeEdges();j++)
+				for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
 				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j)->getP1()->getPlace(), cell->getEdgeEdge(j)->getP2()->getPlace()),
-						Vector::getAverage(cell->getEdgeEdge(j)->getP1()->getPlace(), cell->getEdgeEdge(j)->getP2()->getPlace())+cell->getEdgeEdge(j)->frictionForce*100, Color::black());
+					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()),
+						Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()) + cell->getEdgeEdge(j).getFrictionForce()*100, Color::black());
 				}
 
-				for (int j = 0; j<cell->getAmountOfTailEdges(); j++)
+				for (int j = 0; j<cell->getAmountOfTailJoints(); j++)
 				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j)->getP1()->getPlace(), cell->getTailEdge(j)->getP2()->getPlace()),
-						Vector::getAverage(cell->getTailEdge(j)->getP1()->getPlace(), cell->getTailEdge(j)->getP2()->getPlace()) + cell->getTailEdge(j)->frictionForce*100, Color::black());
+					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()),
+						Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()) + cell->getTailEdge(j).getFrictionForce()*100, Color::black());
 				}
 
 				if (selectedID == cell->getId())
@@ -87,12 +93,12 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		}
 	}
 	double ratio = 0;
-	if (world.stats_CellsCreated != 0) {
-		ratio = double(world.stats_PointsCreated - world.stats_PointsDestroyed) / double(world.stats_CellsCreated-world.stats_CellsBroken);
+	if (world.ws.stats_CellsCreated != 0) {
+		ratio = double(world.ws.stats_PointsCreated - world.ws.stats_PointsDestroyed) / double(world.ws.stats_CellsCreated-world.ws.stats_CellsBroken);
 	}
 	Writer::print("Calc time: "+to_string(simulationTime),Color::black(),Writer::normal(),{0,0,400,50});
 	Writer::print("World time: "+ to_string(world.getTime()), Color::black(), Writer::normal(), { 0,50,400,100 });
-	Writer::print("Cells broken: " + to_string(world.stats_CellsBroken), Color::black(), Writer::normal(), { 0,100,400,150 });
+	Writer::print("Cells broken: " + to_string(world.ws.stats_CellsBroken), Color::black(), Writer::normal(), { 0,100,400,150 });
 
 	Block* mouseOnBlock = world.findBlock_B(world.calcBlock((mouseX-xOffset) / scale), world.calcBlock((mouseY-yOffset) / scale));
 	if (mouseOnBlock != nullptr)
@@ -176,6 +182,8 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		pt.x = (pt.x-place.left-xOffset)/scale;
 		pt.y = (pt.y-place.top-yOffset)/scale;
 		float smallestDistance = 10000;
+		long newSelectedID;
+		Cell* cellPtr = nullptr;
 		for (auto& chunk : world.chunks)
 		{
 			for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
@@ -186,10 +194,11 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 					float distance = Vector::getLength(cell->getCenter(), Vector(pt.x, pt.y));
 					if(distance<smallestDistance)
 					{
-						if(distance<20/scale)
+						if(distance<2)
 						{
 							found = true;
-							selectedID = cell->getId();
+							newSelectedID = cell->getId();
+							cellPtr = cell;
 						}
 					}
 				}
@@ -200,17 +209,35 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		{
 			world.addCell(bestDNA[rand() % bestDNA.size()], pt.x, pt.y);
 		}
+		else
+		{
+			if (selectedID == newSelectedID) 
+			{
+				if (cellPtr->getStage() == 0)
+				{
+					cellPtr->startSplit(rand()%6);
+				}
+				else
+				{
+					cellPtr->nextStage();
+				}
+			}
+			else
+			{
+				selectedID = newSelectedID;
+			}
+		}
 	}
 	if(message == WM_KEYDOWN)
 	{
 		if (wParam == 'Q') {
 			WorldSettings ws;
 			World testWorld(ws);
-			for (int i = 0; i < 500; i++)
+			for (int i = 0; i < 50; i++)
 			{
-				testWorld.addCell(bestDNA[rand() % bestDNA.size()]->mutate(0.1), 500, 100 + rand() % 2000);
+				testWorld.addCell(bestDNA[rand() % bestDNA.size()]->mutate(0.1), 50, 10 + rand() % 200);
 			}
-			testWorld.jump(2000, true);
+			testWorld.jump(10000, true);
 			bestDNA = testWorld.getDNA();
 
 			sort(bestDNA.begin(), bestDNA.end(),
@@ -219,7 +246,7 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 				return a->fitness > b->fitness;
 			});
 
-			bestDNA.resize(min(bestDNA.size(),40));
+			bestDNA.resize(min(bestDNA.size(),10));
 		}
 		if(wParam == 'P')scale *= 2;
 		if(wParam == 'M')scale *= 0.5;

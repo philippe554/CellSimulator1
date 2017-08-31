@@ -52,8 +52,8 @@ public:
 	void operator-=(const Vector& v);
 	Vector operator-()const;
 
-	Vector operator*(const double r);
-	Vector operator/(const double r);
+	Vector operator*(const double r)const;
+	Vector operator/(const double r)const;
 
 	double dot(const Vector&v)const;
 	double dot(const Vector*v)const;

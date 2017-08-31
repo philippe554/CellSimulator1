@@ -3,29 +3,34 @@
 
 class Reactor;
 
-#include "Vector.h"
+#include "Mixture.h"
 #include "WorldSettings.h"
 #include "Membrane.h"
 #include "Particle.h"
 
-class Reactor
+
+class Reactor : public Mixture
 {
 public:
-	virtual ~Reactor() = default;
 	static Particle prototypes[];
 
-	Reactor(WorldSettings* _ws);
+	Reactor();
+	virtual ~Reactor() = default;
 
-	void init(float _volume, float _temperature);
+	void init(WorldSettings* _ws, float _volume, float _temperature);
 
 	float getTemperature()const;
 	float getPressure()const;
 	float getAmountOfParticles()const;
 	float getMass()const;
 	float getConcentration(const int particle)const;
-	virtual float getVolume()const =0;
+	virtual float calcVolume()const =0;
+	float getVolume()const;
+	float getEnergy()const;
 	float getParticle(const int particle)const;
 	float getFlowIndex(const int index)const;
+
+	void applyForce(const int index, const float amount);
 
 	void calcExchange(Reactor*other, const int movingCache, const float surface, Membrane* membrane);
 	void calcExchange(Reactor*other, const int movingCache, const float surface, const int flowIndex);
@@ -37,10 +42,7 @@ public:
 protected:
 	WorldSettings* ws;
 
-private:
 	//basic variables
-	float energy;
-	float particles[WorldSettings::e_AmountOfParticles];
 	float particlesMoving[2*WorldSettings::e_AmountOfParticles];
 
 	//cache

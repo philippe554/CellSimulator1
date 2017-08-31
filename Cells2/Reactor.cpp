@@ -7,17 +7,18 @@ Particle Reactor::prototypes[WorldSettings::e_AmountOfParticles] = {
 	Particle(WorldSettings::p_nitrogen,24,false,0,0)
 };
 
-Reactor::Reactor(WorldSettings* _ws)
+Reactor::Reactor()
+{
+}
+
+void Reactor::init(WorldSettings* _ws, float _volume, float _temperature)
 {
 	ws = _ws;
-	for(auto f : flow)
+	for (auto f : flow)
 	{
 		f = 0;
 	}
-}
 
-void Reactor::init(float _volume, float _temperature)
-{
 	volume = _volume;
 
 	particles[WorldSettings::p_hydrogen] = 0.5 * volume;
@@ -43,7 +44,6 @@ float Reactor::getPressure()const
 {
 	return pressure;
 }
-
 float Reactor::getAmountOfParticles() const
 {
 	return amountOfParticles;
@@ -62,6 +62,16 @@ float Reactor::getConcentration(const int particle) const
 	return 0.0;
 }
 
+float Reactor::getVolume() const
+{
+	return volume;
+}
+
+float Reactor::getEnergy() const
+{
+	return energy;
+}
+
 float Reactor::getParticle(const int particle) const
 {
 	return particles[particle];
@@ -69,7 +79,12 @@ float Reactor::getParticle(const int particle) const
 
 float Reactor::getFlowIndex(const int index) const
 {
-	return flow[index] * ws->flowConstant;
+	return flow[index];
+}
+
+void Reactor::applyForce(const int index, const float amount)
+{
+	flow[index] += amount / getMass();
 }
 
 void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, Membrane* membrane)
@@ -101,10 +116,9 @@ void Reactor::calcExchange(Reactor* other, const int movingCache, const float su
 
 void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, const int flowIndex)
 {
-	const float pressureDif = getPressure() - other->getPressure();
-	float flowBuildUp = std::pow(ws->flowBuildUp, ws->precision);
-	flow[flowIndex] = flowBuildUp * flow[flowIndex] + flowBuildUp * pressureDif;
-	const float sfp = surface * ws->flowConstant * flow[flowIndex];
+	const float pressureDif = (getPressure() - other->getPressure()) * ws->flowConstant;
+	flow[flowIndex] = ws->flowBuildUpCorrected * flow[flowIndex] + (1.0-ws->flowBuildUpCorrected) * pressureDif;
+	const float sfp = surface * flow[flowIndex];
 	const int index = movingCache*WorldSettings::e_AmountOfParticles;
 
 	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
@@ -154,7 +168,7 @@ void Reactor::exchange(Reactor* other, const int movingCache, const float surfac
 
 void Reactor::cacheParameters()
 {
-	volume = getVolume();
+	volume = calcVolume();
 
 	amountOfParticles = 0;
 	mass = 0;

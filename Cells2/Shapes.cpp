@@ -1,8 +1,9 @@
 #include "Shapes.h"
 
-bool Shapes::lineSegementsIntersect(Vector&p, Vector&p2, Vector&q, Vector&q2, Vector&intersection, double precision)
+bool Shapes::lineSegementsIntersect(const Vector&p, const Vector&p2, const Vector&q, const Vector&q2, Vector&intersection, double precision)
 {
 	Vector r = p2 - p;
+	Vector X(0, 1);
 	Vector s = q2 - q;
 	double rxs = r.cross(s);
 	if (rxs > 1e-5 || -rxs > 1e-5)
@@ -46,6 +47,13 @@ bool Shapes::pointInTriangle(Vector & A, Vector & B, Vector & C, Vector & P)
 float Shapes::surfaceTriangle(float l1, float l2, float l3)
 {
 	float s = 0.5*(l1+l2+l3);
-	return sqrt(s*(s - l1)*(s - l2)*(s - l3));
+	float t = s*(s - l1)*(s - l2)*(s - l3);
+	if (t <= 0) return 0;
+	return sqrt(t);
+}
+
+float Shapes::surfaceTriangle(const Vector & A, const Vector & B, const Vector & C)
+{
+	return surfaceTriangle(Vector::getLength(A, B), Vector::getLength(B, C), Vector::getLength(A, C));
 }
 
