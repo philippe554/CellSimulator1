@@ -7,7 +7,21 @@ Point::Point()
 {
 	mass = 0;
 }
-void Point::init(double tx, double ty, double tMass)
+Point::Point(const Point & other)
+{
+	forcesExtern.set(other.forcesExtern);
+	forcesJoints.set(other.forcesJoints);
+	place.set(other.place);
+	velocity.set(other.velocity);
+	mass = other.mass;
+	id = other.id;
+	for (auto joint : other.joints)
+	{
+		joints.push_back(joint);
+	}
+}
+
+void Point::init(float tx, float ty, float tMass)
 {
 	place.set(tx, ty);
 	mass = tMass;
@@ -34,24 +48,18 @@ void Point::deleteJoint(const long& _id)
 
 void Point::addForce(Vector & f)
 {
-	forceAddLock.lock();
 	forcesExtern += f;
-	forceAddLock.unlock();
 }
 
 void Point::addForce(Vector * f)
 {
-	forceAddLock.lock();
 	forcesExtern += f;
-	forceAddLock.unlock();
 }
 
-void Point::addForce(double x, double y)
+void Point::addForce(float x, float y)
 {
-	forceAddLock.lock();
 	forcesExtern.addX(x);
 	forcesExtern.addY(y);
-	forceAddLock.unlock();
 }
 
 void Point::calcForcesJoints()
@@ -67,10 +75,10 @@ void Point::calcForcesJoints()
 		{
 			unitPos = Vector(joints[i]->getP1()->getPlace(), joints[i]->getP2()->getPlace());
 		}
-		double currentLength = unitPos.getLength();
+		float currentLength = unitPos.getLength();
 		if (currentLength != 0) {
 			unitPos.devide(currentLength);
-			double difference = joints[i]->getLength() - currentLength;
+			float difference = joints[i]->getLength() - currentLength;
 			unitPos.multiply(difference*joints[i]->getStrenth());
 			forcesJoints.add(unitPos);
 		}
@@ -90,12 +98,10 @@ void Point::calcForcesJoints()
 	}
 }
 
-void Point::applyForces(double precision, double backgroundFriction)
+void Point::applyForces(float precision, float backgroundFriction)
 {
-	forceAddLock.lock();
 	Vector sum = forcesExtern;
 	forcesExtern.set(0, 0);
-	forceAddLock.unlock();
 
 	sum += forcesJoints;
 	//sum.addY(0.05*mass); // Gravity
@@ -117,7 +123,7 @@ void Point::applyForces(double precision, double backgroundFriction)
 	forcesJoints.set(0, 0);
 }
 
-void Point::applyForces(double precision, double backgroundFriction, double newMass)
+void Point::applyForces(float precision, float backgroundFriction, float newMass)
 {
 	mass = newMass;
 	applyForces(precision, backgroundFriction);
@@ -143,12 +149,12 @@ void Point::setVelocity(const Vector & v)
 	velocity.set(v);
 }
 
-double Point::getMass()const
+float Point::getMass()const
 {
 	return mass;
 }
 
-void Point::setMass(double t)
+void Point::setMass(float t)
 {
 	mass = t;
 }

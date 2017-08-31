@@ -14,7 +14,7 @@ class Block;
 
 using namespace std;
 
-class Block : public Reactor
+class Block
 {
 public:
 	Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int _bx, const int _by);
@@ -28,22 +28,26 @@ public:
 	void stage4();
 
 	void calcJointForces();
+	void calcParticlesForce();
+	void pointLineForce(Point & point, Line & line, float radius)const;
+	void pointPointForce(Point & p1, Point & p2, float radiusSum)const;
 	void cellCellCollision();
 
 	void calcFlow();
-	Vector getFlow()const;
+	//Vector getFlow()const;
 
 	void loadDefaultChunk();
 	void addLine(const double x1, const double y1, const double x2, const double y2);
 	
-	float getConcentrationPoint(const int& particle, const Vector& place)const;
+	//float getConcentrationPoint(const int& particle, const Vector& place)const;
 	void addFrictionForce(const Vector& force);
-	float calcVolume() const override;
+	//float calcVolume() const override;
 
 	vector<shared_ptr<DNA>> getDNA();
 
 	vector<Cell*> cells;
-	vector<Line*> lines;
+	vector<Point> points;
+	vector<Line> lines;
 
 	Block* neighbours[8];
 	bool neighboursSameChunk[8];
@@ -57,7 +61,7 @@ public:
 private:
 	void linkBlocks(int x, int y, int i1, int i2);
 
-	float getConcentrationHelper(Block* neighbour, const int& particle)const;
+	//float getConcentrationHelper(Block* neighbour, const int& particle)const;
 
 	Vector frictionForce;
 };

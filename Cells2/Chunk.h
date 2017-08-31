@@ -33,6 +33,8 @@ public:
 	void schedule();
 	bool isRunning()const;
 
+	void addLine(const double x1, const double y1, const double x2, const double y2);
+
 	World* world;
 private:
 	void linkChunk(int x, int y, int i1, int i2);

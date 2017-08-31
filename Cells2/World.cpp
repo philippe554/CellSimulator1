@@ -11,6 +11,13 @@ World::World(WorldSettings _ws)
 		for(int j=0;j<ws.c_WorldBoundary;j++)
 		{
 			chunks[make_pair(i, j)] = new Chunk(this, i, j,time);
+
+			float product = (ws.c_WorldBoundary * ws.blockSize * ws.chunkSize) - 2;
+
+			chunks[make_pair(i, j)]->addLine(1, 1, 1, product);
+			chunks[make_pair(i, j)]->addLine(1, 1, product, 1);
+			chunks[make_pair(i, j)]->addLine(1, product, product, product);
+			chunks[make_pair(i, j)]->addLine(product, 1, product, product);
 		}
 	}
 }

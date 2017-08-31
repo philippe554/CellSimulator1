@@ -14,9 +14,12 @@ public:
 	~CellFrame();
 
 	void growJoints();
-	Vector calcJointForces(const Vector& flow);
+	//Vector calcJointForces(const Vector& flow);
+	void calcJointForces();
 	void movePoints(float precision, float backgroundFriction);
 
+	void pointCellCollision(Point& point, float radius);
+	void pointPointForce(Point & p1, Point & p2, float radiusSum)const;
 	void cellCellCollision(CellFrame* other);
 	void cellCellCollisionHelper(CellFrame * other, Joint & thisJoint);
 	void cellCellCollisionHelper(CellFrame* other);

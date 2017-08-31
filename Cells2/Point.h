@@ -10,22 +10,21 @@ class Point;
 
 using namespace std;
 
-class Point : public std::enable_shared_from_this<Point> {
+class Point{
 public:
 	Point();
-	void init(double tx, double ty, double tMass);
+	Point(const Point& other);
+	void init(float tx, float ty, float tMass);
 
 	void addJoint(Joint* joint);
 	void deleteJoint(const long& _id);
 
 	void addForce(Vector&f);
 	void addForce(Vector*f);
-	void addForce(double x,double y);
+	void addForce(float x,float y);
 	void calcForcesJoints();
-private:
-	void applyForces(double precision, double backgroundFriction);
-public:
-	void applyForces(double precision, double backgroundFriction, double newMass);
+	void applyForces(float precision, float backgroundFriction);
+	void applyForces(float precision, float backgroundFriction, float newMass);
 
 	const Vector& getPlace()const;
 	const Vector& getVelocity()const;
@@ -33,8 +32,8 @@ public:
 	void setPlace(const Vector&v);
 	void setVelocity(const Vector&v);
 
-	double getMass()const;
-	void setMass(double t);
+	float getMass()const;
+	void setMass(float t);
 
 	int getJointSize()const;
 	Joint* getJoint(int i)const;
@@ -49,10 +48,8 @@ private:
 	Vector place;
 	Vector velocity;
 
-	double mass;
+	float mass;
 
 	long id;
 	static long lastID;
-
-	mutex forceAddLock;
 };

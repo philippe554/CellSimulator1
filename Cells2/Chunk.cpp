@@ -205,3 +205,78 @@ bool Chunk::isRunning()const
 	return running;
 }
 
+void Chunk::addLine(const double x1, const double y1, const double x2, const double y2)
+{
+	const double left = cx*world->ws.blockSize * world->ws.chunkSize;
+	const double top = cy*world->ws.blockSize * world->ws.chunkSize;
+	const double right = left + world->ws.blockSize * world->ws.chunkSize;
+	const double bottom = top + world->ws.blockSize * world->ws.chunkSize;
+	Vector p1(left, top);
+	Vector p2(right, top);
+	Vector p3(right, bottom);
+	Vector p4(left, bottom);
+	Vector l1(x1, y1);
+	Vector l2(x2, y2);
+	bool intersectionFound = false;
+	if ((left < x1&&x1 <= right&&top < y1&&y1 <= bottom) || (left < x2&&x2 <= right&&top < y2&&y2 <= bottom))
+	{
+		intersectionFound = true;
+	}
+	Vector intersection(0.0, 0.0);
+	if (Shapes::lineSegementsIntersect(l1, l2, p1, p2, intersection, 0))
+	{
+		if (l1.getY() < l2.getY())
+		{
+			l1 = intersection;
+		}
+		else
+		{
+			l2 = intersection;
+		}
+		intersectionFound = true;
+	}
+	if (Shapes::lineSegementsIntersect(l1, l2, p2, p3, intersection, 0))
+	{
+		if (l1.getX() > l2.getX())
+		{
+			l1 = intersection;
+		}
+		else
+		{
+			l2 = intersection;
+		}
+		intersectionFound = true;
+	}
+	if (Shapes::lineSegementsIntersect(l1, l2, p3, p4, intersection, 0))
+	{
+		if (l1.getY() > l2.getY())
+		{
+			l1 = intersection;
+		}
+		else
+		{
+			l2 = intersection;
+		}
+		intersectionFound = true;
+	}
+	if (Shapes::lineSegementsIntersect(l1, l2, p4, p1, intersection, 0))
+	{
+		if (l1.getX() < l2.getX())
+		{
+			l1 = intersection;
+		}
+		else
+		{
+			l2 = intersection;
+		}
+		intersectionFound = true;
+	}
+	if (intersectionFound)
+	{
+		for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+		{
+			blocks[i]->addLine(l1.getX(), l1.getY(), l2.getX(), l2.getY());
+		}
+	}
+}
+

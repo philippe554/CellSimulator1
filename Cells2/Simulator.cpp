@@ -19,7 +19,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 {
 	Cell* selectedCell = nullptr;
 
-	for (auto& chunk : world.chunks) {
+	/*for (auto& chunk : world.chunks) {
 		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize;i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
@@ -27,7 +27,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
 				Color::heightMap(block->getTemperature() / 500));
 		}
-	}
+	}*/
 	for (auto& chunk : world.chunks) {
 		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
@@ -36,10 +36,15 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
 			drawLine(RenderTarget, Vector(block->bx*world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
 				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
-			drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
+			for (int i=0;i<block->points.size();i++)
+			{
+				drawCircle(RenderTarget, block->points[i].getPlace(), block->points[i].getMass(), Color::gray());
+			}
+			
+			/*drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
 				block->by*world.ws.blockSize + 0.5*world.ws.blockSize),
 				Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10000, Color::black());
+					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10000, Color::black());*/
 
 		}
 	}
@@ -50,7 +55,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		{
 			Block*block = chunk.second->findBlock_N(i);
 			for (auto& line : block->lines) {
-				drawLine(RenderTarget, line->getV1(), line->getV2(), Color::black());
+				drawLine(RenderTarget, line.getV1(), line.getV2(), Color::red());
 			}
 
 			for (auto& cell : block->cells)
@@ -104,7 +109,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 	if (mouseOnBlock != nullptr)
 	{
 		Writer::print("Block: (" + to_string(mouseOnBlock->bx) + ","+to_string(mouseOnBlock->by)+")", Color::black(), Writer::normal(), { 0,400,400,50 });
-		Writer::print("Temperature: " + to_string(mouseOnBlock->getTemperature()), Color::black(), Writer::normal(), { 0,440,400,50 });
+		/*Writer::print("Temperature: " + to_string(mouseOnBlock->getTemperature()), Color::black(), Writer::normal(), { 0,440,400,50 });
 		Writer::print("Mass: " + to_string(mouseOnBlock->getMass()), Color::black(), Writer::normal(), { 0,480,400,50 });
 		Writer::print("Presure: " + to_string(mouseOnBlock->getPressure()), Color::black(), Writer::normal(), { 0,520,400,50 });
 		Writer::print("Volume: " + to_string(mouseOnBlock->getVolume()), Color::black(), Writer::normal(), { 0,560,400,50 });
@@ -113,7 +118,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 			Writer::print(to_string(i)+": M = " + to_string(mouseOnBlock->getParticle(i)) +
 				", C = " + to_string(mouseOnBlock->getConcentrationPoint(i, Vector(mouseX / scale, mouseY / scale)))
 				, Color::black(), Writer::normal(), { 0,float(600+i*40),600,50 });
-		}
+		}*/
 	}
 
 	if (selectedCell != nullptr)

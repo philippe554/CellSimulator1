@@ -126,7 +126,7 @@ void CellFrame::growJoints()
 	}
 }
 
-Vector CellFrame::calcJointForces(const Vector& flow)
+/*Vector CellFrame::calcJointForces(const Vector& flow)
 {
 	center.calcForcesJoints();
 	for (auto& point : edgePoints)
@@ -187,6 +187,27 @@ Vector CellFrame::calcJointForces(const Vector& flow)
 	tailJoints[(dna->tail.getAmountOfRows() - 1) * 15]->setLength(c1*sin(tailCounter / c3 + c4) + tailJoints[(dna->tail.getAmountOfRows() - 1) * 15]->originalLength);
 	tailJoints[(dna->tail.getAmountOfRows() - 1) * 15 + 1]->setLength(-c1*sin(tailCounter / c3 + c4) + tailJoints[(dna->tail.getAmountOfRows() - 1) * 15 + 1]->originalLength);
 	*/
+//}*/
+
+void CellFrame::calcJointForces()
+{
+	center.calcForcesJoints();
+	for (auto& point : edgePoints)
+	{
+		point.calcForcesJoints();
+	}
+	for (int i = 0; i < splitPointsLength; i++)
+	{
+		splitPoints[i].calcForcesJoints();
+	}
+	for (int i = 0; i < tailLength * 2; i++)
+	{
+		tailPoints[i].calcForcesJoints();
+	}
+	if (hasTailEnd)
+	{
+		tailEndPoint.calcForcesJoints();
+	}
 }
 
 void CellFrame::movePoints(float precision, float backgroundFriction)
@@ -209,6 +230,33 @@ void CellFrame::movePoints(float precision, float backgroundFriction)
 	}
 }
 
+void CellFrame::pointCellCollision(Point & point, float radius)
+{
+	for (int i = 0; i < AmountOfEdges; i++)
+	{
+		pointPointForce(point, edgePoints[i], radius + unit/2.0);
+	}
+	for (int i = 0; i < tailLength; i++)
+	{
+		pointPointForce(point, tailPoints[i * 2], radius + unit/2.0);
+		pointPointForce(point, tailPoints[i * 2 + 1], radius + unit/2.0);
+	}
+	if (hasTailEnd)
+	{
+		pointPointForce(point, tailEndPoint, radius + unit/2.0);
+	}
+}
+
+void CellFrame::pointPointForce(Point & p1, Point & p2, float radiusSum) const
+{
+	Vector line(p1.getPlace(), p2.getPlace());
+	if (line.isSmallerThenSquared(radiusSum * radiusSum))
+	{
+		Vector force = line.getUnit() * radiusSum - line;
+		p1.addForce(force*-0.1);
+		p2.addForce(force*0.1);
+	}
+}
 void CellFrame::cellCellCollision(CellFrame* other)
 {
 	for (int i = 0; i < AmountOfEdges; i++)
