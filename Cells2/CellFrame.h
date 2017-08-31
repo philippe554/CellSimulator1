@@ -18,6 +18,7 @@ public:
 	void movePoints(float precision, float backgroundFriction);
 
 	void cellCellCollision(CellFrame* other);
+	void cellCellCollisionHelper(CellFrame * other, Joint & thisJoint);
 	void cellCellCollisionHelper(CellFrame* other);
 	
 	bool connectCells(CellFrame*other);
@@ -32,9 +33,11 @@ public:
 	void splitFrameHelperCopyTail(CellFrame * newCell);
 	void splitFrameHelperConnectCells(CellFrame* newCell, int own);
 
+	void setTailFibers(int i, float left, float right, float cross);
+
 	void applyPressure(float p);
 	double getSurface()const;
-	float getVolume()const override;
+	float calcVolume()const override;
 
 	bool isBroken()const;
 

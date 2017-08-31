@@ -153,6 +153,7 @@
     <ClInclude Include="MainBar.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Membrane.h" />
+    <ClInclude Include="Mixture.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleFactory.h" />
     <ClInclude Include="Point.h" />

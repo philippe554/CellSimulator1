@@ -3,6 +3,7 @@
 bool Shapes::lineSegementsIntersect(const Vector&p, const Vector&p2, const Vector&q, const Vector&q2, Vector&intersection, double precision)
 {
 	Vector r = p2 - p;
+	Vector X(0, 1);
 	Vector s = q2 - q;
 	double rxs = r.cross(s);
 	if (rxs > 1e-5 || -rxs > 1e-5)

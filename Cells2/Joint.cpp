@@ -94,7 +94,7 @@ Vector Joint::calcFriction(const Vector& flow)
 
 			float length = Vector::getLength(p1->getPlace(), p2->getPlace());
 			flowResponse.multiply(flowPressure.dot(flowPressure));
-			flowResponse.multiply(0.3 * length * impactCooficient * 0.5);
+			flowResponse.multiply(length * impactCooficient * 0.5 * 0.3);
 			p1->addForce(flowResponse);
 			p2->addForce(flowResponse);
 			flowResponse.multiply(2);

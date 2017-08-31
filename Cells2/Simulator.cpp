@@ -72,7 +72,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 					drawLine(RenderTarget, cell->getTailJoint(j, true), cell->getTailJoint(j, false), Color::black());
 				}
 
-				/*for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
+				for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
 				{
 					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()),
 						Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()) + cell->getEdgeEdge(j).getFrictionForce()*100, Color::black());
@@ -82,7 +82,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				{
 					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()),
 						Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()) + cell->getTailEdge(j).getFrictionForce()*100, Color::black());
-				}*/
+				}
 
 				if (selectedID == cell->getId())
 				{
@@ -233,11 +233,11 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		if (wParam == 'Q') {
 			WorldSettings ws;
 			World testWorld(ws);
-			for (int i = 0; i < 500; i++)
+			for (int i = 0; i < 50; i++)
 			{
-				testWorld.addCell(bestDNA[rand() % bestDNA.size()]->mutate(0.1), 500, 100 + rand() % 2000);
+				testWorld.addCell(bestDNA[rand() % bestDNA.size()]->mutate(0.1), 50, 10 + rand() % 200);
 			}
-			testWorld.jump(2000, true);
+			testWorld.jump(10000, true);
 			bestDNA = testWorld.getDNA();
 
 			sort(bestDNA.begin(), bestDNA.end(),
@@ -246,7 +246,7 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 				return a->fitness > b->fitness;
 			});
 
-			bestDNA.resize(min(bestDNA.size(),40));
+			bestDNA.resize(min(bestDNA.size(),10));
 		}
 		if(wParam == 'P')scale *= 2;
 		if(wParam == 'M')scale *= 0.5;

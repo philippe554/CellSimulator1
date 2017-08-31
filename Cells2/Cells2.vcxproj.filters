@@ -221,5 +221,8 @@
     <ClInclude Include="Vector2DAVX.h">
       <Filter>Header Files\Physics\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Mixture.h">
+      <Filter>Header Files\Physics\Chemical</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

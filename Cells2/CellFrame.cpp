@@ -3,8 +3,8 @@
 long CellFrame::idCounter = 0;
 
 CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float radius)
-	: Reactor(_ws)
 {
+	ws = _ws;
 	ws->stats_CellsCreated++;
 	id = CellFrame::idCounter;
 	idCounter++;
@@ -51,7 +51,7 @@ CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float rad
 		connectedCells[i] = nullptr;
 	}
 
-	init(CellFrame::getVolume(), ws->defaultTemperature);
+	init(_ws, CellFrame::calcVolume(), ws->defaultTemperature);
 
 	/*for (int i = 0; i < dna->tail.getAmountOfRows() - 1; i++)
 	{
@@ -215,130 +215,55 @@ void CellFrame::cellCellCollision(CellFrame* other)
 	{
 		if (i != tailLocation || (!hasTailEnd && tailLength == 0)) 
 		{
-			for (int j = 0; j < AmountOfEdges; j++)
-			{
-				if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
-				{
-					edgeJoints[i].jointJointCollision(&other->edgeJoints[j]);
-				}
-			}
-			for (int j = 0; j < other->tailLength; j++)
-			{
-				edgeJoints[i].jointJointCollision(&other->tailJoints[j * 5 + 0]);
-				edgeJoints[i].jointJointCollision(&other->tailJoints[j * 5 + 1]);
-			}
-			if (other->hasTailEnd)
-			{
-				edgeJoints[i].jointJointCollision(&other->tailEndJoints[0]);
-				edgeJoints[i].jointJointCollision(&other->tailEndJoints[1]);
-			}
-			else
-			{
-				if (other->tailLength > 0)
-				{
-					edgeJoints[i].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
-				}
-			}
+			cellCellCollisionHelper(other, edgeJoints[i]);
 		}
 	}
 	for (int i = 0; i < tailLength; i++)
 	{
-		for (int j = 0; j < AmountOfEdges; j++)
-		{
-			if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
-			{
-				tailJoints[i * 5].jointJointCollision(&other->edgeJoints[j]);
-				tailJoints[i * 5 + 1].jointJointCollision(&other->edgeJoints[j]);
-			}
-		}
-		for (int j = 0; j < other->tailLength; j++)
-		{
-			tailJoints[i*5].jointJointCollision(&other->tailJoints[j * 5 + 0]);
-			tailJoints[i*5].jointJointCollision(&other->tailJoints[j * 5 + 1]);
-			tailJoints[i*5+1].jointJointCollision(&other->tailJoints[j * 5 + 0]);
-			tailJoints[i*5+1].jointJointCollision(&other->tailJoints[j * 5 + 1]);
-		}
-		if (other->hasTailEnd)
-		{
-			tailJoints[i*5].jointJointCollision(&other->tailEndJoints[0]);
-			tailJoints[i*5].jointJointCollision(&other->tailEndJoints[1]);
-			tailJoints[i*5+1].jointJointCollision(&other->tailEndJoints[0]);
-			tailJoints[i*5+1].jointJointCollision(&other->tailEndJoints[1]);
-		}
-		else
-		{
-			if (other->tailLength > 0)
-			{
-				tailJoints[i*5].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
-				tailJoints[i*5+1].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
-			}
-		}
+		cellCellCollisionHelper(other, tailJoints[i * 5]);
+		cellCellCollisionHelper(other, tailJoints[i * 5 + 1]);
 	}
 	if (hasTailEnd)
 	{
-		for (int j = 0; j < AmountOfEdges; j++)
-		{
-			if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
-			{
-				tailEndJoints[0].jointJointCollision(&other->edgeJoints[j]);
-				tailEndJoints[1].jointJointCollision(&other->edgeJoints[j]);
-			}
-		}
-		for (int j = 0; j < other->tailLength; j++)
-		{
-			tailEndJoints[0].jointJointCollision(&other->tailJoints[j * 5 + 0]);
-			tailEndJoints[0].jointJointCollision(&other->tailJoints[j * 5 + 1]);
-			tailEndJoints[1].jointJointCollision(&other->tailJoints[j * 5 + 0]);
-			tailEndJoints[1].jointJointCollision(&other->tailJoints[j * 5 + 1]);
-		}
-		if (other->hasTailEnd)
-		{
-			tailEndJoints[0].jointJointCollision(&other->tailEndJoints[0]);
-			tailEndJoints[0].jointJointCollision(&other->tailEndJoints[1]);
-			tailEndJoints[1].jointJointCollision(&other->tailEndJoints[0]);
-			tailEndJoints[1].jointJointCollision(&other->tailEndJoints[1]);
-		}
-		else
-		{
-			if (other->tailLength > 0)
-			{
-				tailEndJoints[0].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
-				tailEndJoints[1].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
-			}
-		}
+		cellCellCollisionHelper(other, tailEndJoints[0]);
+		cellCellCollisionHelper(other, tailEndJoints[1]);
 	}
 	else
 	{
 		if (tailLength > 0)
 		{
-			for (int j = 0; j < AmountOfEdges; j++)
-			{
-				if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
-				{
-					tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->edgeJoints[j]);
-				}
-			}
-			for (int j = 0; j < other->tailLength; j++)
-			{
-				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailJoints[j * 5 + 0]);
-				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailJoints[j * 5 + 1]);
-			}
-			if (other->hasTailEnd)
-			{
-				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailEndJoints[0]);
-				tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailEndJoints[1]);
-			}
-			else
-			{
-				if (other->tailLength > 0)
-				{
-					tailJoints[(tailLength - 1) * 5 + 4].jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
-				}
-			}
+			cellCellCollisionHelper(other, tailJoints[(tailLength - 1) * 5 + 4]);
 		}
 	}
 	//cellCellCollisionHelper(other);
 	//other->cellCellCollisionHelper(this);
+}
+void CellFrame::cellCellCollisionHelper(CellFrame* other, Joint& ownJoint)
+{
+	for (int j = 0; j < AmountOfEdges; j++)
+	{
+		if (j != other->tailLocation || (!other->hasTailEnd && other->tailLength == 0))
+		{
+			ownJoint.jointJointCollision(&other->edgeJoints[j]);
+		}
+	}
+	for (int j = 0; j < other->tailLength; j++)
+	{
+		ownJoint.jointJointCollision(&other->tailJoints[j * 5 + 0]);
+		ownJoint.jointJointCollision(&other->tailJoints[j * 5 + 1]);
+	}
+	if (other->hasTailEnd)
+	{
+		ownJoint.jointJointCollision(&other->tailEndJoints[0]);
+		ownJoint.jointJointCollision(&other->tailEndJoints[1]);
+	}
+	else
+	{
+		if (other->tailLength > 0)
+		{
+			ownJoint.jointJointCollision(&other->tailJoints[(other->tailLength - 1) * 5 + 4]);
+		}
+	}
 }
 void CellFrame::cellCellCollisionHelper(CellFrame * other)
 {
@@ -825,6 +750,15 @@ void CellFrame::splitFrameHelperConnectCells(CellFrame * newCell, int own)
 	}
 }
 
+void CellFrame::setTailFibers(int i, float left, float right, float cross)
+{
+	tailJoints[i * 5 + 0].setTarget((1+left) * unit, 0.01);
+	tailJoints[i * 5 + 1].setTarget((1+right) * unit, 0.01);
+	tailJoints[i * 5 + 2].setTarget((1.5+left) * unit, 0.05);
+	tailJoints[i * 5 + 3].setTarget((1.5+right) * unit, 0.05);
+	tailJoints[i * 5 + 4].setTarget((0.5+cross) * unit, 0.01);
+}
+
 void CellFrame::applyPressure(float p)
 {
 	for (int i=0;i<AmountOfEdges;i++)
@@ -874,7 +808,7 @@ double CellFrame::getSurface() const
 	}
 	return total;
 }
-float CellFrame::getVolume() const
+float CellFrame::calcVolume() const
 {
 	float total = 0;
 
@@ -1031,7 +965,14 @@ const Joint& CellFrame::getEdgeEdge(int i) const
 }
 const Joint& CellFrame::getTailEdge(int i) const
 {
-	return tailJoints[i];
+	if (i < tailLength * 5)
+	{
+		return tailJoints[i];
+	}
+	else
+	{
+		return tailEndJoints[i - 5 * tailLength];
+	}
 }
 const Vector& CellFrame::getCenter()const
 {

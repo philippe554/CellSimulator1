@@ -101,25 +101,22 @@ Block* Chunk::findBlock_N(const int input) const
 void Chunk::run()
 {
 	acceptAllCells();
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	const int size = world->ws.chunkSize*world->ws.chunkSize;
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->prep();
+		blocks[i]->stage1();
 	}
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->calcJointForces();
-		blocks[i]->calcFlow();
-		blocks[i]->cellCellCollision();
+		blocks[i]->stage2();
 	}
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->movePoints(world->ws.c_Precision, world->ws.c_WaterFriction);
-		blocks[i]->moveFlow();
+		blocks[i]->stage3();
 	}
-
-	for (int i = 0; i < world->ws.chunkSize*world->ws.chunkSize; i++)
+	for (int i = 0; i < size; ++i)
 	{
-		blocks[i]->doRestructure();
+		blocks[i]->stage4();
 	}
 
 	time++;
@@ -194,6 +191,17 @@ void Chunk::schedule()
 }
 bool Chunk::isRunning()const
 {
+	for (int i = 0; i < 8; ++i)
+	{
+		if (neighbours[i] != nullptr)
+		{
+			if (neighbours[i]->running)
+			{
+				return true;
+			}
+		}
+	}
+
 	return running;
 }
 
