@@ -21,6 +21,9 @@ public:
 	~Block();
 
 	void createCell(shared_ptr<DNA> _dna, Vector& place, float radius);
+	void giveCell(Cell* _cell);
+
+	void searchAndDeregisterPoint(Point* point);
 
 	void stage1();
 	void stage2();
@@ -29,8 +32,7 @@ public:
 
 	void calcJointForces();
 	void calcParticlesForce();
-	void pointLineForce(Point & point, Line & line, float radius)const;
-	void pointPointForce(Point & p1, Point & p2, float radiusSum)const;
+	void pointLineForce(Point * point, Line * line)const;
 	void cellCellCollision();
 
 	void calcFlow();
@@ -45,9 +47,23 @@ public:
 
 	vector<shared_ptr<DNA>> getDNA();
 
+	const int getAmountOfCells()const;
+	const int getAmountOfPoints()const;
+	const int getAmountOfLines()const;
+
+	Cell* getCell(int i)const;
+	Point* getPoint(int i)const;
+	Line* getLine(int i)const;
+
+	int getbx()const;
+	int getby()const;
+	int getcx()const;
+	int getcy()const;
+
+private:
 	vector<Cell*> cells;
-	vector<Point> points;
-	vector<Line> lines;
+	vector<Point*> points;
+	vector<Line*> lines;
 
 	Block* neighbours[8];
 	bool neighboursSameChunk[8];
@@ -58,7 +74,6 @@ public:
 	int cx;
 	int cy;
 
-private:
 	void linkBlocks(int x, int y, int i1, int i2);
 
 	//float getConcentrationHelper(Block* neighbour, const int& particle)const;

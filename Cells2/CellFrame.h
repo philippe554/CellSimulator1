@@ -18,8 +18,6 @@ public:
 	void calcJointForces();
 	void movePoints(float precision, float backgroundFriction);
 
-	void pointCellCollision(Point& point, float radius);
-	void pointPointForce(Point & p1, Point & p2, float radiusSum)const;
 	void cellCellCollision(CellFrame* other);
 	void cellCellCollisionHelper(CellFrame * other, Joint & thisJoint);
 	void cellCellCollisionHelper(CellFrame* other);
@@ -44,10 +42,15 @@ public:
 
 	bool isBroken()const;
 
+	Point* getPoint(int i);
+	const Vector& getPointPlace(int i);
+	const float getRadius(int i);
+	const int getAmountOfPoints()const;
+
 	const Vector& getEdgeJoint(const int i, const bool p1)const;
 	const Vector& getRadiusJoint(const int i, const bool p1)const;
 	const Vector& getSplitJoint(const int i, const bool p1)const;
-	const Vector & getTailJoint(const int i, const bool p1) const;
+	const Vector& getTailJoint(const int i, const bool p1) const;
 	int getAmountOfEdgeJoints()const;
 	int getAmountOfradiusJoints()const;
 	int getAmountOfSplitJoints()const;

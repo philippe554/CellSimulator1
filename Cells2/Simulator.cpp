@@ -32,13 +32,13 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			drawLine(RenderTarget, Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
-			drawLine(RenderTarget, Vector(block->bx*world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
-			for (int i=0;i<block->points.size();i++)
+			drawLine(RenderTarget, Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize),
+				Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize), Color::black());
+			drawLine(RenderTarget, Vector(block->getbx()*world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize),
+				Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize), Color::black());
+			for (int i=0;i<block->getAmountOfPoints();i++)
 			{
-				drawCircle(RenderTarget, block->points[i].getPlace(), block->points[i].getMass(), Color::gray());
+				drawCircle(RenderTarget, block->getPoint(i)->getPlace(), block->getPoint(i)->getRadius(), Color::gray());
 			}
 			
 			/*drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
@@ -54,12 +54,18 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			for (auto& line : block->lines) {
-				drawLine(RenderTarget, line.getV1(), line.getV2(), Color::red());
+			for (int j = 0; j < block->getAmountOfLines(); j++)
+			{
+				drawLine(RenderTarget, block->getLine(j)->getV1(), block->getLine(j)->getV2(), Color::red());
 			}
 
-			for (auto& cell : block->cells)
+			for (int k = 0; k < block->getAmountOfCells(); k++)
 			{
+				Cell* cell = block->getCell(k);
+				for (int j = 0; j < cell->getAmountOfPoints(); j++)
+				{
+					drawCircle(RenderTarget, cell->getPointPlace(j), cell->getRadius(j), Color::black());
+				}
 				for (int j = 0; j < cell->getAmountOfEdgeJoints(); j++)
 				{
 					drawLine(RenderTarget, cell->getEdgeJoint(j,true), cell->getEdgeJoint(j,false), Color::black());
@@ -108,7 +114,7 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 	Block* mouseOnBlock = world.findBlock_B(world.calcBlock((mouseX-xOffset) / scale), world.calcBlock((mouseY-yOffset) / scale));
 	if (mouseOnBlock != nullptr)
 	{
-		Writer::print("Block: (" + to_string(mouseOnBlock->bx) + ","+to_string(mouseOnBlock->by)+")", Color::black(), Writer::normal(), { 0,400,400,50 });
+		Writer::print("Block: (" + to_string(mouseOnBlock->getbx()) + ","+to_string(mouseOnBlock->getby())+")", Color::black(), Writer::normal(), { 0,400,400,50 });
 		/*Writer::print("Temperature: " + to_string(mouseOnBlock->getTemperature()), Color::black(), Writer::normal(), { 0,440,400,50 });
 		Writer::print("Mass: " + to_string(mouseOnBlock->getMass()), Color::black(), Writer::normal(), { 0,480,400,50 });
 		Writer::print("Presure: " + to_string(mouseOnBlock->getPressure()), Color::black(), Writer::normal(), { 0,520,400,50 });
@@ -168,7 +174,7 @@ void Simulator::update()
 	int r2 = rand() % 30 + 1;
 
 	long start = clock();
-	world.jump(5, true);
+	world.jump(15, true);
 	simulationTime = clock() - start;
 }
 
@@ -194,16 +200,16 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 			{
 				Block*block = chunk.second->findBlock_N(i);
-				for (auto& cell : block->cells)
+				for (int j = 0; j < block->getAmountOfCells(); j++)
 				{
-					float distance = Vector::getLength(cell->getCenter(), Vector(pt.x, pt.y));
+					float distance = Vector::getLength(block->getCell(j)->getCenter(), Vector(pt.x, pt.y));
 					if(distance<smallestDistance)
 					{
 						if(distance<2)
 						{
 							found = true;
-							newSelectedID = cell->getId();
-							cellPtr = cell;
+							newSelectedID = block->getCell(i)->getId();
+							cellPtr = block->getCell(i);
 						}
 					}
 				}

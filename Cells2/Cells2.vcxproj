@@ -156,6 +156,7 @@
     <ClInclude Include="Mixture.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleFactory.h" />
+    <ClInclude Include="ParticlesOpenCL.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="Reactor.h" />
     <ClInclude Include="Shapes.h" />

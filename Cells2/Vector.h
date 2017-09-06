@@ -35,7 +35,7 @@ public:
 
 	float getLength() const;
 	float getLengthInvApprox() const;
-	bool isSmallerThenSquared(float i);
+	bool isSmallerThen(float i);
 	static float getLength(const Vector* v1, const Vector* v2);
 	static float getLength(const Vector& v1, const Vector& v2);
 

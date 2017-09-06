@@ -1,7 +1,7 @@
 #include "Cell.h"
 
 Cell::Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const double tRadius)
-	: CellFrame(_ws,tCenter,tRadius)
+	: CellFrame(_ws, tCenter,tRadius)
 {
 	age = 0;
 	dna = tDna;

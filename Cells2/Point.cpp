@@ -5,28 +5,33 @@ long Point::lastID = 0;
 
 Point::Point()
 {
-	mass = 0;
-}
-Point::Point(const Point & other)
-{
-	forcesExtern.set(other.forcesExtern);
-	forcesJoints.set(other.forcesJoints);
-	place.set(other.place);
-	velocity.set(other.velocity);
-	mass = other.mass;
-	id = other.id;
-	for (auto joint : other.joints)
-	{
-		joints.push_back(joint);
-	}
+	set = false;
 }
 
-void Point::init(float tx, float ty, float tMass)
+
+void Point::init(float tx, float ty, float tMass, bool _owned)
 {
 	place.set(tx, ty);
+	forcesExtern.set(0, 0);
+	forcesJoints.set(0, 0);
+	velocity.set(0, 0);
 	mass = tMass;
+	calcRadius();
+	owned = _owned;
+	registered = false;
+	set = true;
 	id = lastID;
 	lastID++;
+}
+
+void Point::deconstruct()
+{
+	set = false;
+	while(joints.size()>0)
+	{
+		joints[0]->deconstruct();
+		joints.erase(joints.begin());
+	}
 }
 
 void Point::addJoint(Joint * joint)
@@ -98,6 +103,21 @@ void Point::calcForcesJoints()
 	}
 }
 
+void Point::calcForcePoint(Point * other)
+{
+	Vector line(place, other->place);
+	float radiusSum = radiusCache + other->radiusCache;
+	if (line.isSmallerThen(radiusSum))
+	{
+		Vector force = line.getUnit() * radiusSum - line;
+		addForce(force*-0.6);
+		other->addForce(force*0.6);
+		Vector velocityLine(velocity, other->velocity);
+		addForce(velocityLine*0.6);
+		other->addForce(velocityLine*-0.6);
+	}
+}
+
 void Point::applyForces(float precision, float backgroundFriction)
 {
 	Vector sum = forcesExtern;
@@ -121,12 +141,6 @@ void Point::applyForces(float precision, float backgroundFriction)
 	
 	place.add(velocity*precision);
 	forcesJoints.set(0, 0);
-}
-
-void Point::applyForces(float precision, float backgroundFriction, float newMass)
-{
-	mass = newMass;
-	applyForces(precision, backgroundFriction);
 }
 
 const Vector& Point::getPlace()const
@@ -157,6 +171,17 @@ float Point::getMass()const
 void Point::setMass(float t)
 {
 	mass = t;
+	calcRadius();
+}
+
+float Point::getRadius()const
+{
+	return radiusCache;
+}
+
+void Point::calcRadius()
+{
+	radiusCache = sqrt(mass / 3.1415926535897);
 }
 
 int Point::getJointSize()const
@@ -167,6 +192,26 @@ int Point::getJointSize()const
 Joint * Point::getJoint(int i)const
 {
 	return joints[i];
+}
+
+bool Point::isSet() const
+{
+	return set;
+}
+
+bool Point::isOwned() const
+{
+	return owned;
+}
+
+bool Point::isRegistered() const
+{
+	return registered;
+}
+
+void Point::setRegistered(bool t)
+{
+	registered = t;
 }
 
 long Point::getID()

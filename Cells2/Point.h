@@ -13,8 +13,8 @@ using namespace std;
 class Point{
 public:
 	Point();
-	Point(const Point& other);
-	void init(float tx, float ty, float tMass);
+	void init(float tx, float ty, float tMass, bool _owned);
+	void deconstruct();
 
 	void addJoint(Joint* joint);
 	void deleteJoint(const long& _id);
@@ -23,8 +23,8 @@ public:
 	void addForce(Vector*f);
 	void addForce(float x,float y);
 	void calcForcesJoints();
+	void calcForcePoint(Point* other);
 	void applyForces(float precision, float backgroundFriction);
-	void applyForces(float precision, float backgroundFriction, float newMass);
 
 	const Vector& getPlace()const;
 	const Vector& getVelocity()const;
@@ -35,8 +35,16 @@ public:
 	float getMass()const;
 	void setMass(float t);
 
+	float getRadius()const;
+	void calcRadius();
+
 	int getJointSize()const;
 	Joint* getJoint(int i)const;
+
+	bool isSet()const;
+	bool isOwned()const;
+	bool isRegistered()const;
+	void setRegistered(bool t);
 
 	long getID();
 private:
@@ -49,6 +57,11 @@ private:
 	Vector velocity;
 
 	float mass;
+	float radiusCache;
+
+	bool set;
+	bool owned;
+	bool registered;
 
 	long id;
 	static long lastID;

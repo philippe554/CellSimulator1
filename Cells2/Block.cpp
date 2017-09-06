@@ -23,10 +23,10 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 
 	float bs = world->ws.blockSize;
 
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		Point p;
-		p.init(_bx*world->ws.blockSize + rand() % (int)world->ws.blockSize, _by*world->ws.blockSize + rand() % (int)world->ws.blockSize, 1.0f);
+		Point* p = new Point();
+		p->init(_bx*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, _by*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, 2.0f, false);
 		points.push_back(p);
 	}
 
@@ -57,16 +57,22 @@ Block::~Block()
 	{
 		delete cell;
 	}
+	for (auto point : points)
+	{
+		if (!point->isOwned())
+		{
+			delete point;
+		}
+	}
+	for (auto line : lines)
+	{
+		delete line;
+	}
 }
 
 void Block::createCell(shared_ptr<DNA> _dna, Vector & place, float radius)
 {
-	Cell* newCell = new Cell(_dna,&world->ws,place,radius);
-	/*for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
-	{
-		particles[i] -= newCell->getParticle(i);
-	}
-	energy -= newCell->getEnergy();*/
+	Cell* newCell = new Cell(_dna, &world->ws,place,radius);
 	cells.push_back(newCell);
 	for (auto cell : cells)
 	{
@@ -88,6 +94,24 @@ void Block::createCell(shared_ptr<DNA> _dna, Vector & place, float radius)
 			}
 		}
 	}
+}
+void Block::giveCell(Cell * _cell)
+{
+	cells.push_back(_cell);
+}
+
+void Block::searchAndDeregisterPoint(Point * point)
+{
+	for (int i = 0; i < points.size(); i++)
+	{
+		if (points[i]->getID() == point->getID())
+		{
+			points[i]->setRegistered(false);
+			points.erase(points.begin() + i);
+			return;
+		}
+	}
+	throw "ERROR!";
 }
 
 void Block::linkBlocks(int x, int y, int i1, int i2)
@@ -147,29 +171,33 @@ void Block::stage3()
 		//cell->exchange(this, 0, cell->getSurface());
 	}
 	
-	for (auto& point : points)
+	for (auto point : points)
 	{
-		point.applyForces(world->ws.precision, 0.0);
+		point->applyForces(world->ws.precision, 0.0);
 	}
 }
 void Block::stage4()
 {
 	for (int i = 0; i < points.size(); i++)
 	{
-		int newcx = world->calcChunk(points.at(i).getPlace().getX());
-		int newcy = world->calcChunk(points.at(i).getPlace().getY());
+		int newcx = world->calcChunk(points.at(i)->getPlace().getX());
+		int newcy = world->calcChunk(points.at(i)->getPlace().getY());
 		if (newcx >= world->ws.c_WorldBoundary || newcx < 0 || newcy >= world->ws.c_WorldBoundary || newcy < 0)
 		{
-			points.erase(points.begin() + i);
-			i--;
+			if (!points.at(i)->isOwned())
+			{
+				delete points.at(i);
+				points.erase(points.begin() + i);
+				i--;
+			}
 		}
 		else if (newcx != cx || newcy != cy)
 		{
 			Chunk* chunk = world->findChunk_C(newcx, newcy);
 			if (chunk != nullptr)
 			{
-				int newbx = world->calcBlock(points.at(i).getPlace().getX());
-				int newby = world->calcBlock(points.at(i).getPlace().getY());
+				int newbx = world->calcBlock(points.at(i)->getPlace().getX());
+				int newby = world->calcBlock(points.at(i)->getPlace().getY());
 				Block* newBlock = chunk->findBlock_B(newbx, newby);
 				newBlock->points.push_back(points[i]);
 			}
@@ -178,8 +206,8 @@ void Block::stage4()
 		}
 		else
 		{
-			int newbx = world->calcBlock(points.at(i).getPlace().getX());
-			int newby = world->calcBlock(points.at(i).getPlace().getY());
+			int newbx = world->calcBlock(points.at(i)->getPlace().getX());
+			int newby = world->calcBlock(points.at(i)->getPlace().getY());
 			if (bx != newbx || by != newby)
 			{
 				Block* newBlock = chunk->findBlock_B(newbx, newby);
@@ -196,6 +224,10 @@ void Block::stage4()
 	{
 		if (cells.at(i)->isBroken())
 		{
+			for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
+			{
+				searchAndDeregisterPoint(cells[i]->getPoint(j));
+			}
 			delete cells.at(i);
 			cells.erase(cells.begin() + i);
 			i--;
@@ -207,6 +239,10 @@ void Block::stage4()
 			int newcy = world->calcChunk(cells.at(i)->getCenter().getY());
 			if (newcx >= world->ws.c_WorldBoundary || newcx<0 || newcy >= world->ws.c_WorldBoundary || newcy < 0)
 			{
+				for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
+				{
+					searchAndDeregisterPoint(cells[i]->getPoint(j));
+				}
 				delete cells.at(i);
 				cells.erase(cells.begin() + i);
 				i--;
@@ -221,6 +257,10 @@ void Block::stage4()
 				}
 				else
 				{
+					for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
+					{
+						searchAndDeregisterPoint(cells[i]->getPoint(j));
+					}
 					delete cells.at(i);
 				}
 				cells.erase(cells.begin() + i);
@@ -245,12 +285,36 @@ void Block::stage4()
 					if (cells.at(i)->getStage() == 6)
 					{
 						vector<Cell*> newCells = cells.at(i)->split();
+						for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
+						{
+							searchAndDeregisterPoint(cells[i]->getPoint(j));
+						}
+						delete cells.at(i);
 						cells.erase(cells.begin() + i);
 						i--;
 						cells.push_back(newCells[0]);
 						cells.push_back(newCells[1]);
 					}
 				}
+			}
+		}
+	}
+	for (int i = 0; i < points.size(); i++)
+	{
+		if (points[i]->isOwned() && !points[i]->isSet())
+		{
+			searchAndDeregisterPoint(points[i]);
+			i--;
+		}
+	}
+	for (int i = 0; i < cells.size(); i++)
+	{
+		for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
+		{
+			if (cells[i]->getPoint(j)->isSet() && !cells[i]->getPoint(j)->isRegistered())
+			{
+				points.push_back(cells[i]->getPoint(j));
+				cells[i]->getPoint(j)->setRegistered(true);
 			}
 		}
 	}
@@ -293,21 +357,16 @@ void Block::calcJointForces()
 }
 void Block::calcParticlesForce()
 {
-	float distance = 2;
-
 	for (int i=0;i<points.size();++i)
 	{
+		points[i]->addForce(0.0,0.001);
 		for (int j = i + 1; j < points.size(); ++j)
 		{
-			pointPointForce(points[i], points[j], 2);
-		}
-		for (auto cell : cells)
-		{
-			cell->pointCellCollision(points[i], distance);
+			points[i]->calcForcePoint(points[j]);
 		}
 		for (int j = 0; j < lines.size(); j++)
 		{
-			pointLineForce(points[i], lines[j], distance / 2.0);
+			pointLineForce(points[i], lines[j]);
 		}
 		for (auto neighbour : neighbours)
 		{
@@ -315,50 +374,36 @@ void Block::calcParticlesForce()
 			{
 				for (int j = 0; j < neighbour->points.size(); ++j)
 				{
-					pointPointForce(points[i], neighbour->points[j], 2);
-				}
-				for (auto cell : neighbour->cells)
-				{
-					cell->pointCellCollision(points[i], distance);
+					points[i]->calcForcePoint(neighbour->points[j]);
 				}
 				for (int j = 0; j < neighbour->lines.size(); j++)
 				{
-					pointLineForce(points[i], neighbour->lines[j], distance / 2.0);
+					pointLineForce(points[i], neighbour->lines[j]);
 				}
 			}
 		}
 	}
 }
-void Block::pointLineForce(Point& point, Line& line, float radius)const
+void Block::pointLineForce(Point* point, Line* line)const
 {
-	Vector lineVector(line.getV1(), line.getV2());
+	Vector lineVector(line->getV1(), line->getV2());
 	Vector linePerpendicular = lineVector.getPerpendicularClockwise().getUnit();
-	Vector p1 = point.getPlace() + linePerpendicular * (2 * radius);
-	Vector p2 = point.getPlace() - linePerpendicular * (2 * radius);
+	Vector p1 = point->getPlace() + linePerpendicular * point->getRadius();
+	Vector p2 = point->getPlace() - linePerpendicular * point->getRadius();
 	Vector intersection(0.0, 0.0);
-	if (Shapes::lineSegementsIntersect(p1, p2, line.getV1(), line.getV2(), intersection))
+	if (Shapes::lineSegementsIntersect(p1, p2, line->getV1(), line->getV2(), intersection))
 	{
 		float l1 = Vector::getLength(intersection, p1);
 		float l2 = Vector::getLength(intersection, p2);
 
 		if (l1 > l2)
 		{
-			point.addForce(linePerpendicular * (2 * radius - l2) * 0.1);
+			point->addForce(linePerpendicular * (2 * point->getRadius() - l2) * 0.5);
 		}
 		else
 		{
-			point.addForce(linePerpendicular * (-2 * radius - l1) * 0.1);
+			point->addForce(linePerpendicular * (-2 * point->getRadius() - l1) * 0.5);
 		}
-	}
-}
-void Block::pointPointForce(Point & p1, Point & p2, float radiusSum) const
-{
-	Vector line(p1.getPlace(), p2.getPlace());
-	if (line.isSmallerThenSquared(radiusSum * radiusSum))
-	{
-		Vector force = line.getUnit() * radiusSum - line;
-		p1.addForce(force*-0.1);
-		p2.addForce(force*0.1);
 	}
 }
 
@@ -523,7 +568,7 @@ void Block::addLine(const double x1, const double y1, const double x2, const dou
 	}
 	if(intersectionFound)
 	{
-		lines.push_back(Line(l1.getX(), l1.getY(), l2.getX(), l2.getY()));
+		lines.push_back(new Line(l1.getX(), l1.getY(), l2.getX(), l2.getY()));
 	}
 }
 
@@ -578,4 +623,55 @@ vector<shared_ptr<DNA>> Block::getDNA()
 	}
 	return data;
 }
+
+const int Block::getAmountOfCells() const
+{
+	return cells.size();
+}
+
+const int Block::getAmountOfPoints() const
+{
+	return points.size();
+}
+
+const int Block::getAmountOfLines() const
+{
+	return lines.size();
+}
+
+Cell * Block::getCell(int i) const
+{
+	return cells[i];
+}
+
+Point * Block::getPoint(int i) const
+{
+	return points[i];
+}
+
+Line * Block::getLine(int i) const
+{
+	return lines[i];
+}
+
+int Block::getbx() const
+{
+	return bx;
+}
+
+int Block::getby() const
+{
+	return by;
+}
+
+int Block::getcx() const
+{
+	return cx;
+}
+
+int Block::getcy() const
+{
+	return cy;
+}
+
 

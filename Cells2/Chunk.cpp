@@ -134,7 +134,7 @@ void Chunk::acceptAllCells()
 			world->calcBlock(acceptedCells.at(0)->getCenter().getY()));
 		if (block != nullptr)
 		{
-			block->cells.push_back(acceptedCells.at(0));
+			block->giveCell(acceptedCells.at(0));
 		}
 		else
 		{

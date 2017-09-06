@@ -8,7 +8,7 @@ public:
 	WorldSettings();
 
 	//General
-	float blockSize = 5;
+	float blockSize = 3;
 	int chunkSize = 10;
 	float precision = 0.2;
 
@@ -53,8 +53,8 @@ public:
 	double c_LineCellFriction = 0.4;
 
 	double c_NewCellRadius = 2;
-	double c_NewCellRadiusStrength = 5.5;// 0.8;
-	double c_NewCellSideStrength = 3.07;// 0.8;
+	double c_NewCellRadiusStrength = 0.3;//5.5;// 0.8;
+	double c_NewCellSideStrength = 0.1;// 3.07;// 0.8;
 	double c_NewCellRadiusDamping = 0.5;// 0.8;
 	double c_NewCellSideDamping = 0.3;// 0.8;
 

@@ -112,9 +112,9 @@ float Vector::getLengthInvApprox() const
 	return y;
 }
 
-bool Vector::isSmallerThenSquared(float i)
+bool Vector::isSmallerThen(float i)
 {
-	return x*x + y*y < i;
+	return x*x + y*y < i*i;
 }
 
 float Vector::getLength(const Vector* v1, const Vector* v2)
