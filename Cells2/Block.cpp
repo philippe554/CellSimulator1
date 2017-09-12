@@ -23,10 +23,10 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 
 	float bs = world->ws.blockSize;
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		Point* p = new Point();
-		p->init(_bx*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, _by*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, 2.0f, false);
+		p->init(_bx*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, _by*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, 0.5f, false);
 		points.push_back(p);
 	}
 
@@ -102,13 +102,19 @@ void Block::giveCell(Cell * _cell)
 
 void Block::searchAndDeregisterPoint(Point * point)
 {
-	for (int i = 0; i < points.size(); i++)
+	int newbx = world->calcBlock(point->getPlace().getX());
+	int newby = world->calcBlock(point->getPlace().getY());
+	Block* newBlock = world->findBlock_B(newbx, newby);
+	if (newBlock != nullptr)
 	{
-		if (points[i]->getID() == point->getID())
+		for (int i = 0; i < newBlock->points.size(); i++)
 		{
-			points[i]->setRegistered(false);
-			points.erase(points.begin() + i);
-			return;
+			if (newBlock->points[i]->getID() == point->getID())
+			{
+				newBlock->points[i]->setRegistered(false);
+				newBlock->points.erase(newBlock->points.begin() + i);
+				return;
+			}
 		}
 	}
 	throw "ERROR!";
@@ -226,7 +232,10 @@ void Block::stage4()
 		{
 			for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
 			{
-				searchAndDeregisterPoint(cells[i]->getPoint(j));
+				if (cells[i]->getPoint(j)->isRegistered())
+				{
+					searchAndDeregisterPoint(cells[i]->getPoint(j));
+				}
 			}
 			delete cells.at(i);
 			cells.erase(cells.begin() + i);
@@ -359,7 +368,7 @@ void Block::calcParticlesForce()
 {
 	for (int i=0;i<points.size();++i)
 	{
-		points[i]->addForce(0.0,0.001);
+		//points[i]->addForce(0.0,0.001);
 		for (int j = i + 1; j < points.size(); ++j)
 		{
 			points[i]->calcForcePoint(points[j]);
@@ -368,17 +377,17 @@ void Block::calcParticlesForce()
 		{
 			pointLineForce(points[i], lines[j]);
 		}
-		for (auto neighbour : neighbours)
+		for (int k = 0; k < 4; k++)
 		{
-			if (neighbour != nullptr)
+			if (neighbours[k] != nullptr)
 			{
-				for (int j = 0; j < neighbour->points.size(); ++j)
+				for (int j = 0; j < neighbours[k]->points.size(); ++j)
 				{
-					points[i]->calcForcePoint(neighbour->points[j]);
+					points[i]->calcForcePoint(neighbours[k]->points[j]);
 				}
-				for (int j = 0; j < neighbour->lines.size(); j++)
+				for (int j = 0; j < neighbours[k]->lines.size(); j++)
 				{
-					pointLineForce(points[i], neighbour->lines[j]);
+					pointLineForce(points[i], neighbours[k]->lines[j]);
 				}
 			}
 		}

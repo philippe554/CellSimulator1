@@ -38,6 +38,8 @@ Chunk::Chunk(World*_world,const int _cx,const int _cy, long long _time)
 	linkChunk(cx, cy - 1, 6, 2);
 	linkChunk(cx + 1, cy - 1, 7, 3);
 
+	openCLInitFlag = false;
+
 	runningMutex.lock();
 	running = false;
 	runningMutex.unlock();
@@ -52,6 +54,12 @@ Chunk::~Chunk()
 		delete blocks[i];
 	}
 	delete[] blocks;
+
+	if (openCLInitFlag)
+	{
+		delete[] buffers;
+		delete[] kernels;
+	}
 }
 void Chunk::linkChunk(int x, int y, int i1, int i2)
 {
@@ -60,6 +68,41 @@ void Chunk::linkChunk(int x, int y, int i1, int i2)
 	{
 		neighbours[i1]->neighbours[i2] = this;
 	}
+}
+
+void Chunk::initOpenCL(cl::Device _device)
+{
+	cl::Context context({ _device });
+	cl::Program::Sources sources;
+
+	std::string kernel_code =
+		"   void kernel simple_add(global const int* A, global const int* B, global int* C){       "
+		"       C[get_global_id(0)]=A[get_global_id(0)]+B[get_global_id(0)];                 "
+		"   }                                                                               ";
+	sources.push_back({ kernel_code.c_str(),kernel_code.length() });
+
+	cl::Program program(context, sources);
+	if (program.build({ _device }) != CL_SUCCESS)
+	{
+		throw "OpenCLError";
+	}
+
+	queue = cl::CommandQueue(context, _device);
+
+	const int buffersPerPoint = 3;
+	kernels = new cl::Kernel[world->ws.chunkSize*world->ws.chunkSize];
+	buffers = new cl::Buffer[world->ws.chunkSize*world->ws.chunkSize*buffersPerPoint];
+	for (int i = 0; i < world->ws.chunkSize * world->ws.chunkSize; i++)
+	{
+		kernels[i] = cl::Kernel(program, "simple_add");
+		for (int j = 0; j < buffersPerPoint; j++)
+		{
+			buffers[i * buffersPerPoint + j] = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
+			kernels[i].setArg(j, buffers[i * buffersPerPoint + j]);
+		}
+	}
+
+	openCLInitFlag = true;
 }
 
 Block* Chunk::findBlock_B(int x, int y) const

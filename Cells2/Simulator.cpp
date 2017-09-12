@@ -208,8 +208,8 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 						if(distance<2)
 						{
 							found = true;
-							newSelectedID = block->getCell(i)->getId();
-							cellPtr = block->getCell(i);
+							newSelectedID = block->getCell(j)->getId();
+							cellPtr = block->getCell(j);
 						}
 					}
 				}

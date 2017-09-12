@@ -113,8 +113,8 @@ void Point::calcForcePoint(Point * other)
 		addForce(force*-0.6);
 		other->addForce(force*0.6);
 		Vector velocityLine(velocity, other->velocity);
-		addForce(velocityLine*0.6);
-		other->addForce(velocityLine*-0.6);
+		addForce(velocityLine*0.01);
+		other->addForce(velocityLine*-0.01);
 	}
 }
 

@@ -3,6 +3,10 @@
 #include <mutex>
 #include <memory>
 
+#include "WorldSettings.h"
+
+#include <CL/cl2.hpp>
+
 class Chunk;
 
 #include "World.h"
@@ -17,6 +21,8 @@ class Chunk
 public:
 	Chunk(World*tWorld,const int tcx, const int tcy, long long _time);
 	~Chunk();
+
+	void initOpenCL(cl::Device _device);
 
 	Block* findBlock_B(int x,  int y)const;
 	Block* findBlock_N(const int input)const;
@@ -50,6 +56,11 @@ private:
 
 	bool running;
 	mutex runningMutex;
+
+	bool openCLInitFlag;
+	cl::CommandQueue queue;
+	cl::Kernel* kernels;
+	cl::Buffer* buffers;
 
 	long long time;
 };

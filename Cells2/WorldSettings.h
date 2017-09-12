@@ -11,6 +11,7 @@ public:
 	float blockSize = 3;
 	int chunkSize = 10;
 	float precision = 0.2;
+	bool openCLOptimalization = true;
 
 	//Cells
 	float maxExpantion = 5;
@@ -39,9 +40,9 @@ public:
 
 
 
-	int c_Cores = 10;
+	int c_Cores = 3;
 
-	int c_WorldBoundary = 4;
+	int c_WorldBoundary = 1;
 
 	double c_WaterLevel = 0;
 	double c_WaterFriction = 0.00;//2;

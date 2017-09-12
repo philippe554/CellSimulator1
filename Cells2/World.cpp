@@ -20,6 +20,23 @@ World::World(WorldSettings _ws)
 			chunks[make_pair(i, j)]->addLine(product, 1, product, product);
 		}
 	}
+	if (ws.openCLOptimalization)
+	{
+		std::vector<cl::Platform> all_platforms;
+		cl::Platform::get(&all_platforms);
+		if (all_platforms.size() == 0) throw "OpenCL Error";
+		cl::Platform default_platform = all_platforms[0];
+		
+		std::vector<cl::Device> all_devices;
+		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+		if (all_devices.size() == 0) throw "OpenCL Error";
+		cl::Device default_device = all_devices[0];
+
+		for (auto chunk : chunks)
+		{
+			chunk.second->initOpenCL(default_device);
+		}
+	}
 }
 
 World::~World()
