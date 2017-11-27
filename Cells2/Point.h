@@ -6,6 +6,7 @@
 class Point;
 
 #include "Vector.h"
+#include "WorldSettings.h"
 #include "Joint.h"
 
 using namespace std;
@@ -13,7 +14,10 @@ using namespace std;
 class Point{
 public:
 	Point();
-	void init(float tx, float ty, float tMass, bool _owned);
+	void init(WorldSettings* _ws, float tx, float ty, float tMass, bool _owned);
+	bool combine(Point* other);
+	void split(Point* other, bool _owned, float ratio = 0.5); //leave negative to split fair
+
 	void deconstruct();
 
 	void addJoint(Joint* joint);
@@ -32,22 +36,24 @@ public:
 	void setPlace(const Vector&v);
 	void setVelocity(const Vector&v);
 
+	float getParticleCount(const int i)const;
 	float getMass()const;
-	void setMass(float t);
-
 	float getRadius()const;
-	void calcRadius();
 
 	int getJointSize()const;
 	Joint* getJoint(int i)const;
 
-	bool isSet()const;
-	bool isOwned()const;
-	bool isRegistered()const;
+	bool isSet()const;//exists
+	bool isOwned()const; //is part of a cell
+	bool isRegistered()const; //is registered in block?
 	void setRegistered(bool t);
 
 	long getID();
+
 private:
+	void calcMass();
+	void calcRadius();
+
 	vector<Joint*> joints;
 
 	Vector forcesExtern;
@@ -56,7 +62,9 @@ private:
 	Vector place;
 	Vector velocity;
 
-	float mass;
+	WorldSettings* ws;
+	float particles[WorldSettings::e_AmountOfParticles];
+	float massCache;
 	float radiusCache;
 
 	bool set;

@@ -7,7 +7,7 @@ class CellFrame;
 #include "Reactor.h"
 #include "Shapes.h"
 
-class CellFrame : public Reactor
+class CellFrame
 {
 public:
 	CellFrame(WorldSettings * _ws, const Vector& tCenter, const float radius);
@@ -38,7 +38,7 @@ public:
 
 	void applyPressure(float p);
 	double getSurface()const;
-	float calcVolume()const override;
+	float calcVolume()const;
 
 	bool isBroken()const;
 
@@ -66,6 +66,8 @@ public:
 	static const int MaxTailLength = 8;
 
 protected:
+	WorldSettings* ws;
+
 	Point center;
 	Point splitPoints[3];
 	Point edgePoints[AmountOfEdges];

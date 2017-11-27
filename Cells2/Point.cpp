@@ -6,21 +6,83 @@ long Point::lastID = 0;
 Point::Point()
 {
 	set = false;
+	registered = false;
 }
 
 
-void Point::init(float tx, float ty, float tMass, bool _owned)
+void Point::init(WorldSettings* _ws, float tx, float ty, float tMass, bool _owned)
 {
 	place.set(tx, ty);
 	forcesExtern.set(0, 0);
 	forcesJoints.set(0, 0);
 	velocity.set(0, 0);
-	mass = tMass;
+	
+	ws = _ws;
+	ws->setupMixure(particles, tMass);
+	calcMass();
 	calcRadius();
+
 	owned = _owned;
 	registered = false;
 	set = true;
 	id = lastID;
+	lastID++;
+}
+
+bool Point::combine(Point * other)
+{
+	if (Vector::getLength(place, other->place) < radiusCache + other->radiusCache)
+	{
+		place.set(Vector(place, massCache, other->place, other->massCache));
+		forcesExtern.set(Vector(forcesExtern, massCache, other->forcesExtern, other->massCache));
+		forcesJoints.set(Vector(forcesJoints, massCache, other->forcesJoints, other->massCache));
+		velocity.set(Vector(velocity, massCache, other->velocity, other->massCache));
+
+		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+		{
+			particles[i] += other->particles[i];
+		}
+
+		calcMass();
+		calcRadius();
+
+		while (other->joints.size()>0)
+		{
+			//joints[0]->deconstruct();
+			//joints.erase(joints.begin());
+		}
+
+		other->set = false;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void Point::split(Point * other, bool _owned, float ratio)
+{
+	other->place.set(place);
+	other->forcesExtern.set(0, 0);
+	other->forcesJoints.set(0, 0);
+	other->velocity.set(velocity);
+
+	other->ws = ws;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		other->particles[i] = particles[i] * ratio;
+		particles[i] *= (1.0-ratio);
+	}
+	other->calcMass();
+	other->calcRadius();
+	calcMass();
+	calcRadius();
+
+	other->owned = _owned;
+	other->registered = false;
+	other->set = true;
+	other->id = lastID;
 	lastID++;
 }
 
@@ -113,8 +175,8 @@ void Point::calcForcePoint(Point * other)
 		addForce(force*-0.6);
 		other->addForce(force*0.6);
 		Vector velocityLine(velocity, other->velocity);
-		addForce(velocityLine*0.01);
-		other->addForce(velocityLine*-0.01);
+		addForce(velocityLine*0.001);
+		other->addForce(velocityLine*-0.001);
 	}
 }
 
@@ -124,9 +186,8 @@ void Point::applyForces(float precision, float backgroundFriction)
 	forcesExtern.set(0, 0);
 
 	sum += forcesJoints;
-	//sum.addY(0.05*mass); // Gravity
 	sum.multiply(precision);
-	sum.devide(mass);
+	sum.devide(massCache);
 	velocity.add(sum);
 
 	Vector friction = velocity.getUnit()*(backgroundFriction*precision);
@@ -163,25 +224,19 @@ void Point::setVelocity(const Vector & v)
 	velocity.set(v);
 }
 
-float Point::getMass()const
+float Point::getParticleCount(const int i) const
 {
-	return mass;
+	return particles[i];
 }
 
-void Point::setMass(float t)
+float Point::getMass()const
 {
-	mass = t;
-	calcRadius();
+	return massCache;
 }
 
 float Point::getRadius()const
 {
 	return radiusCache;
-}
-
-void Point::calcRadius()
-{
-	radiusCache = sqrt(mass / 3.1415926535897);
 }
 
 int Point::getJointSize()const
@@ -217,4 +272,18 @@ void Point::setRegistered(bool t)
 long Point::getID()
 {
 	return id;
+}
+
+void Point::calcMass()
+{
+	massCache = 0;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		massCache += ws->particleProtoType[i].unitMass * particles[i];
+	}
+}
+
+void Point::calcRadius()
+{
+	radiusCache = sqrt(massCache / 3.1415926535897);
 }

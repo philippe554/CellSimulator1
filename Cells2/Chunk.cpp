@@ -58,7 +58,6 @@ Chunk::~Chunk()
 	if (openCLInitFlag)
 	{
 		delete[] buffers;
-		delete[] kernels;
 	}
 }
 void Chunk::linkChunk(int x, int y, int i1, int i2)
@@ -76,9 +75,59 @@ void Chunk::initOpenCL(cl::Device _device)
 	cl::Program::Sources sources;
 
 	std::string kernel_code =
-		"   void kernel simple_add(global const int* A, global const int* B, global int* C){       "
-		"       C[get_global_id(0)]=A[get_global_id(0)]+B[get_global_id(0)];                 "
-		"   }                                                                               ";
+		"   __kernel void simple_add("
+		"		__global float* px, __global float* py,"
+		"		__global float* vx, __global float* vy,"
+		"		__global float* ax, __global float* ay,"
+		"		__global const float* mass, __global const float* radius,"
+		"		const int count"
+		"		)"
+		"	{"
+		"		int id = get_global_id(0);"
+		"		float2 pos = (float2)(px[id],py[id]);"
+		"		float2 vel = (float2)(vx[id],vy[id]);"
+		"		float2 acc = (float2)(ax[id],ay[id]);"
+		"		float rad = radius[id];"
+		"		for(int i=id+1; i<count; i++)"
+		"		{"
+		"			float2 posOther = (float2)(px[i],py[i]);"
+		"			float2 line = posOther - pos;"
+		"			float radSum = rad + radius[i];"
+		"			if(line.x * line.x + line.y * line.y < radSum * radSum)"
+		"			{"
+		"				float len = length(line);"
+		"				float2 force = (line * radSum / len) - line;"
+		"				acc = acc + force * -0.6f;"
+		"				ax[i] = ax[i] + force.x * 0.6f;"
+		"				ay[i] = ay[i] + force.y * 0.6f;"
+		"				float2 velOther = (float2)(vx[i],vy[i]);"
+		"				float2 velLine = velOther - vel;"
+		"				acc = acc + velLine * 0.01f;"
+		"				ax[i] = ax[i] + velLine.x * -0.01f;"
+		"				ay[i] = ay[i] + velLine.y * -0.01f;"
+		"			}"
+		"		}"
+		"		ax[id] = acc.x;"
+		"		ay[id] = acc.y;"
+		"   } "
+		"  ";
+
+	std::string kernel_code2 = "\n" \
+		"#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
+		"__kernel void vecAdd(  __global double *a,                       \n" \
+		"                       __global double *b,                       \n" \
+		"                       __global double *c,                       \n" \
+		"                       const unsigned int n)                    \n" \
+		"{                                                               \n" \
+		"    //Get our global thread ID                                  \n" \
+		"    int id = get_global_id(0);                                  \n" \
+		"                                                                \n" \
+		"    //Make sure we do not go out of bounds                      \n" \
+		"    if (id < n)                                                 \n" \
+		"        c[id] = a[id] + b[id];                                  \n" \
+		"}                                                               \n" \
+		"\n";
+
 	sources.push_back({ kernel_code.c_str(),kernel_code.length() });
 
 	cl::Program program(context, sources);
@@ -89,18 +138,15 @@ void Chunk::initOpenCL(cl::Device _device)
 
 	queue = cl::CommandQueue(context, _device);
 
-	const int buffersPerPoint = 3;
-	kernels = new cl::Kernel[world->ws.chunkSize*world->ws.chunkSize];
-	buffers = new cl::Buffer[world->ws.chunkSize*world->ws.chunkSize*buffersPerPoint];
-	for (int i = 0; i < world->ws.chunkSize * world->ws.chunkSize; i++)
+	kernel = cl::Kernel(program, "simple_add");
+	buffers = new cl::Buffer[9];
+	for (int i = 0; i < 8; i++)
 	{
-		kernels[i] = cl::Kernel(program, "simple_add");
-		for (int j = 0; j < buffersPerPoint; j++)
-		{
-			buffers[i * buffersPerPoint + j] = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
-			kernels[i].setArg(j, buffers[i * buffersPerPoint + j]);
-		}
+		buffers[i] = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(float) * world->ws.maxParticlesPerChunk);
+		kernel.setArg(i, buffers[i]);
 	}
+	buffers[8] = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(int));
+	kernel.setArg(8, buffers[8]);
 
 	openCLInitFlag = true;
 }
@@ -156,6 +202,10 @@ void Chunk::run()
 	for (int i = 0; i < size; ++i)
 	{
 		blocks[i]->stage3();
+		if (world->ws.openCLOptimalization)
+		{
+			openCLTest();
+		}
 	}
 	for (int i = 0; i < size; ++i)
 	{
@@ -166,6 +216,75 @@ void Chunk::run()
 	runningMutex.lock();
 	running = false;
 	runningMutex.unlock();
+}
+
+void Chunk::openCLTest()
+{
+	float* px = new float[world->ws.maxParticlesPerChunk];
+	float* py = new float[world->ws.maxParticlesPerChunk];
+	float* vx = new float[world->ws.maxParticlesPerChunk];
+	float* vy = new float[world->ws.maxParticlesPerChunk];
+	float* ax = new float[world->ws.maxParticlesPerChunk];
+	float* ay = new float[world->ws.maxParticlesPerChunk];
+	float* mass = new float[world->ws.maxParticlesPerChunk];
+	float* radius = new float[world->ws.maxParticlesPerChunk];
+
+	int counter = 0;
+	const int size = world->ws.chunkSize*world->ws.chunkSize;
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < blocks[i]->getAmountOfPoints(); j++)
+		{
+			px[counter] = blocks[i]->getPoint(j)->getPlace().getX();
+			py[counter] = blocks[i]->getPoint(j)->getPlace().getY();
+			vx[counter] = blocks[i]->getPoint(j)->getVelocity().getX();
+			vy[counter] = blocks[i]->getPoint(j)->getVelocity().getY();
+			ax[counter] = 0.0f;
+			ay[counter] = 0.0f;
+			mass[counter] = blocks[i]->getPoint(j)->getMass();
+			radius[counter] = blocks[i]->getPoint(j)->getRadius();
+			counter++;
+			if (counter > world->ws.maxParticlesPerChunk)
+			{
+				throw "gpu memory allowcation too small";
+			}
+		}
+	}
+
+	queue.enqueueWriteBuffer(buffers[0], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, px);
+	queue.enqueueWriteBuffer(buffers[1], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, py);
+	queue.enqueueWriteBuffer(buffers[2], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, vx);
+	queue.enqueueWriteBuffer(buffers[3], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, vy);
+	queue.enqueueWriteBuffer(buffers[4], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, ax);
+	queue.enqueueWriteBuffer(buffers[5], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, ay);
+	queue.enqueueWriteBuffer(buffers[6], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, mass);
+	queue.enqueueWriteBuffer(buffers[7], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, radius);
+	queue.enqueueWriteBuffer(buffers[8], CL_TRUE, 0, sizeof(int), &counter);
+
+	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(counter), cl::NullRange);
+	queue.finish();
+
+	queue.enqueueReadBuffer(buffers[4], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, ax);
+	queue.enqueueReadBuffer(buffers[5], CL_TRUE, 0, sizeof(float) * world->ws.maxParticlesPerChunk, ay);
+	queue.finish();
+
+	counter = 0;
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < blocks[i]->getAmountOfPoints(); j++)
+		{
+			blocks[i]->getPoint(j)->addForce(ax[counter], ay[counter]);
+			counter++;
+		}
+	}
+	delete[] px;
+	delete[] py;
+	delete[] vx;
+	delete[] vy;
+	delete[] ax;
+	delete[] ay;
+	delete[] mass;
+	delete[] radius;
 }
 
 void Chunk::acceptAllCells()

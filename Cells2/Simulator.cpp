@@ -8,7 +8,7 @@
 Simulator::Simulator(int x, int y, int xSize, int ySize) 
 :View(x, y, xSize, ySize), world(WorldSettings())
 {
-	scale = 4;
+	scale = 8;
 	xOffset = 0;
 	yOffset = 0;
 	srand(time(NULL));
@@ -130,16 +130,16 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 	if (selectedCell != nullptr)
 	{
 		Writer::print("Cell:", Color::black(), Writer::normal(), { 0,800,400,50 });
-		Writer::print("Temperature: " + to_string(selectedCell->getTemperature()), Color::black(), Writer::normal(), { 0,840,400,50 });
-		Writer::print("Mass: " + to_string(selectedCell->getMass()), Color::black(), Writer::normal(), { 0,880,400,50 });
-		Writer::print("Presure: " + to_string(selectedCell->getPressure()), Color::black(), Writer::normal(), { 0,920,400,50 });
-		Writer::print("Volume: " + to_string(selectedCell->getVolume()), Color::black(), Writer::normal(), { 0,960,400,50 });
-		for (int i = 0; i<WorldSettings::e_AmountOfParticles; i++)
-		{
-			Writer::print(to_string(i) + ": M = " + to_string(selectedCell->getParticle(i)) +
-				", C = " + to_string(selectedCell->getConcentration(i))
-				, Color::black(), Writer::normal(), { 0,float(1000 + i * 40),600,50 });
-		}
+		//Writer::print("Temperature: " + to_string(selectedCell->getTemperature()), Color::black(), Writer::normal(), { 0,840,400,50 });
+		//Writer::print("Mass: " + to_string(selectedCell->getMass()), Color::black(), Writer::normal(), { 0,880,400,50 });
+		//Writer::print("Presure: " + to_string(selectedCell->getPressure()), Color::black(), Writer::normal(), { 0,920,400,50 });
+		//Writer::print("Volume: " + to_string(selectedCell->getVolume()), Color::black(), Writer::normal(), { 0,960,400,50 });
+		//for (int i = 0; i<WorldSettings::e_AmountOfParticles; i++)
+		//{
+		//	Writer::print(to_string(i) + ": M = " + to_string(selectedCell->getParticle(i)) +
+		//		", C = " + to_string(selectedCell->getConcentration(i))
+		//		, Color::black(), Writer::normal(), { 0,float(1000 + i * 40),600,50 });
+		//}
 	}
 }
 

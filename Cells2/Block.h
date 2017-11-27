@@ -33,10 +33,6 @@ public:
 	void calcJointForces();
 	void calcParticlesForce();
 	void pointLineForce(Point * point, Line * line)const;
-	void cellCellCollision();
-
-	void calcFlow();
-	//Vector getFlow()const;
 
 	void loadDefaultChunk();
 	void addLine(const double x1, const double y1, const double x2, const double y2);

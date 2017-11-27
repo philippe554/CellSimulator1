@@ -1,10 +1,10 @@
 #include "Reactor.h"
 
 Particle Reactor::prototypes[WorldSettings::e_AmountOfParticles] = {
-	Particle(WorldSettings::p_hydrogen,2,false,0,0),
-	Particle(WorldSettings::p_carbon,10,false,0,0),
-	Particle(WorldSettings::p_oxygen,22,false,0,0),
-	Particle(WorldSettings::p_nitrogen,24,false,0,0)
+	//Particle(WorldSettings::p_hydrogen,2,false,0,0),
+	//Particle(WorldSettings::p_carbon,10,false,0,0),
+	//Particle(WorldSettings::p_oxygen,22,false,0,0),
+	//Particle(WorldSettings::p_nitrogen,24,false,0,0)
 };
 
 Reactor::Reactor()
@@ -13,6 +13,7 @@ Reactor::Reactor()
 
 void Reactor::init(WorldSettings* _ws, float _volume, float _temperature)
 {
+	throw "Old code";
 	ws = _ws;
 	for (auto f : flow)
 	{
@@ -179,7 +180,8 @@ void Reactor::cacheParameters()
 			throw "ERROR!";
 		}
 		amountOfParticles += particles[i];
-		mass += particles[i] * prototypes[i].mass;
+		//mass += particles[i] * prototypes[i].mass;
+		throw "Old code";
 	}
 
 	if(amountOfParticles <= 0)

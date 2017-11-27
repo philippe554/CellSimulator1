@@ -2,16 +2,21 @@
 
 #include <math.h>
 
+class WorldSettings;
+
+#include "Particle.h"
+
 class WorldSettings
 {
 public: 
 	WorldSettings();
 
 	//General
-	float blockSize = 3;
+	float blockSize = 30;
 	int chunkSize = 10;
 	float precision = 0.2;
-	bool openCLOptimalization = true;
+	bool openCLOptimalization = false;
+	int maxParticlesPerChunk = 100;
 
 	//Cells
 	float maxExpantion = 5;
@@ -26,13 +31,14 @@ public:
 	float membraneResistance = 0.01;
 	float membranePumpStrength = 0.2;
 
+	//Particles
 	enum particlesName
 	{
 		p_hydrogen, p_carbon, p_oxygen, p_nitrogen,
 		e_AmountOfParticles
 	};
-
-
+	Particle particleProtoType[e_AmountOfParticles];
+	void setupMixure(float* arr, float _mass);
 
 
 
@@ -42,11 +48,11 @@ public:
 
 	int c_Cores = 3;
 
-	int c_WorldBoundary = 1;
+	int c_WorldBoundary = 3;
 
 	double c_WaterLevel = 0;
 	double c_WaterFriction = 0.00;//2;
-	double c_Gravity = 0.02;
+	double c_Gravity = 0.0;//0.02;
 
 	double c_CellCellCollisionForce = 2;// 0.54;//0.3;
 	double c_CellCellFriction = 1;// 0.4;

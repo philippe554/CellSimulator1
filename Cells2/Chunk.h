@@ -29,6 +29,8 @@ public:
 
 	void run();
 
+	void openCLTest();
+
 	long long getTime()const;
 	long long getMaxTimeDifference()const;
 
@@ -59,7 +61,7 @@ private:
 
 	bool openCLInitFlag;
 	cl::CommandQueue queue;
-	cl::Kernel* kernels;
+	cl::Kernel kernel;
 	cl::Buffer* buffers;
 
 	long long time;

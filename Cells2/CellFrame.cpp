@@ -23,14 +23,14 @@ CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float rad
 	float x = tCenter.getX();
 	float y = tCenter.getY();
 
-	center.init(tCenter.getX(), tCenter.getY(), pointMass, true);
+	center.init(ws, tCenter.getX(), tCenter.getY(), pointMass, true);
 
-	edgePoints[0].init(x, y - 20 * radius / 20, pointMass, true);
-	edgePoints[1].init(x + 17.32 * radius / 20, y - 10 * radius / 20, pointMass, true);
-	edgePoints[2].init(x + 17.32 * radius / 20, y + 10 * radius / 20, pointMass, true);
-	edgePoints[3].init(x, y + 20 * radius / 20, pointMass, true);
-	edgePoints[4].init(x - 17.32 * radius / 20, y + 10 * radius / 20, pointMass, true);
-	edgePoints[5].init(x - 17.32 * radius / 20, y - 10 * radius / 20, pointMass, true);
+	edgePoints[0].init(ws, x, y - 20 * radius / 20, pointMass, true);
+	edgePoints[1].init(ws, x + 17.32 * radius / 20, y - 10 * radius / 20, pointMass, true);
+	edgePoints[2].init(ws, x + 17.32 * radius / 20, y + 10 * radius / 20, pointMass, true);
+	edgePoints[3].init(ws, x, y + 20 * radius / 20, pointMass, true);
+	edgePoints[4].init(ws, x - 17.32 * radius / 20, y + 10 * radius / 20, pointMass, true);
+	edgePoints[5].init(ws, x - 17.32 * radius / 20, y - 10 * radius / 20, pointMass, true);
 
 	radiusJoints[0].init(&center, &edgePoints[0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
 	radiusJoints[1].init(&center, &edgePoints[1], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
@@ -52,7 +52,7 @@ CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter, const float rad
 		connectedCells[i] = nullptr;
 	}
 
-	init(_ws, CellFrame::calcVolume(), ws->defaultTemperature);
+	//init(_ws, CellFrame::calcVolume(), ws->defaultTemperature);
 
 	/*for (int i = 0; i < dna->tail.getAmountOfRows() - 1; i++)
 	{
@@ -433,8 +433,7 @@ bool CellFrame::nextStage()
 	else if (stage == 2)
 	{
 		//split center
-		splitPoints[0].init(center.getPlace().getX(), center.getPlace().getY(), 0.0, true);
-		splitPoints[0].setVelocity(center.getVelocity());
+		center.split(&splitPoints[0], true);
 
 		splitJoints[2].init(&edgePoints[(5 + splitLocation) % AmountOfEdges], &splitPoints[0], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
 		splitJoints[2].setTarget(unit, 0.01);
@@ -465,12 +464,8 @@ bool CellFrame::nextStage()
 	}
 	else if (stage == 4)
 	{
-		Vector avgPlace = Vector::getAverage(center.getPlace(), splitPoints[0].getPlace());
-		Vector avgVelocity = Vector::getAverage(center.getVelocity(), splitPoints[0].getVelocity());
-		splitPoints[1].init(avgPlace.getX(), avgPlace.getY(), 0.0, true);
-		splitPoints[1].setVelocity(avgVelocity);
-		splitPoints[2].init(avgPlace.getX(), avgPlace.getY(), 0.0, true);
-		splitPoints[2].setVelocity(avgVelocity);
+		edgePoints[(5 + splitLocation) % AmountOfEdges].split(&splitPoints[1], true);
+		edgePoints[(2 + splitLocation) % AmountOfEdges].split(&splitPoints[2], true);
 
 		splitJoints[5].init(&splitPoints[1], &center, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
 		splitJoints[5].setTarget(unit / 2.0, 0.01);
@@ -523,8 +518,8 @@ void CellFrame::growTail()
 				tailEndJoints[2].deconstruct();
 				tailEndJoints[3].deconstruct();
 				tailEndPoint.deconstruct();
-				tailPoints[(tailLength - 1) * 2].init(tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 2.0, true);
-				tailPoints[(tailLength - 1) * 2 + 1].init(tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 2.0, true);
+				tailPoints[(tailLength - 1) * 2].init(ws, tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 2.0, true);
+				tailPoints[(tailLength - 1) * 2 + 1].init(ws, tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 2.0, true);
 				if (tailLength == 1)
 				{
 					tailJoints[0].init(&tailPoints[0], &edgePoints[(tailLocation + 1) % AmountOfEdges], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
@@ -554,7 +549,7 @@ void CellFrame::growTail()
 			if (tailLength == 0)
 			{
 				Vector place = Vector::getAverage(edgePoints[tailLocation].getPlace(), edgePoints[(tailLocation + 1) % AmountOfEdges].getPlace());
-				tailEndPoint.init(place.getX(), place.getY(), 2.0, true);
+				tailEndPoint.init(ws, place.getX(), place.getY(), 2.0, true);
 				tailEndJoints[0].init(&tailEndPoint, &edgePoints[tailLocation], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
 				tailEndJoints[1].init(&edgePoints[(tailLocation + 1) % AmountOfEdges], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
 				if (splitLocation == tailLocation || (splitLocation + 1) % AmountOfEdges == tailLocation || (splitLocation + 5) % AmountOfEdges == tailLocation)
@@ -579,7 +574,7 @@ void CellFrame::growTail()
 			else if (tailLength == 1)
 			{
 				Vector place = Vector::getAverage(tailPoints[(tailLength - 1) * 2].getPlace(), tailPoints[(tailLength - 1) * 2 + 1].getPlace());
-				tailEndPoint.init(place.getX(), place.getY(), 2.0, true);
+				tailEndPoint.init(ws, place.getX(), place.getY(), 2.0, true);
 				tailEndJoints[0].init(&tailEndPoint, &tailPoints[(tailLength - 1) * 2], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
 				tailEndJoints[1].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
 				tailEndJoints[2].init(&edgePoints[tailLocation], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
@@ -589,7 +584,7 @@ void CellFrame::growTail()
 			else
 			{
 				Vector place = Vector::getAverage(tailPoints[(tailLength - 1) * 2].getPlace(), tailPoints[(tailLength - 1) * 2 + 1].getPlace());
-				tailEndPoint.init(place.getX(), place.getY(), 2.0, true);
+				tailEndPoint.init(ws, place.getX(), place.getY(), 2.0, true);
 				tailEndJoints[0].init(&tailEndPoint, &tailPoints[(tailLength - 1) * 2], ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
 				tailEndJoints[1].init(&tailPoints[(tailLength - 1) * 2 + 1], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, true);
 				tailEndJoints[2].init(&tailPoints[(tailLength - 2) * 2], &tailEndPoint, ws->c_NewCellRadiusStrength, ws->c_NewCellRadiusDamping, false);
@@ -645,7 +640,8 @@ void CellFrame::splitFrame(CellFrame* cell1, CellFrame* cell2)
 			splitFrameHelperCopyTail(cell1);
 		}
 		
-
+		throw "Redo this code"; //TODO
+		/*
 		float volume1 = cell1->getVolume();
 		float volume2 = cell2->getVolume();
 		float volumeTotal = volume1 + volume2;
@@ -669,6 +665,7 @@ void CellFrame::splitFrame(CellFrame* cell1, CellFrame* cell2)
 		splitFrameHelperConnectCells(cell1, (splitLocation + 2) % AmountOfEdges);
 		splitFrameHelperConnectCells(cell1, (splitLocation + 3) % AmountOfEdges);
 		splitFrameHelperConnectCells(cell1, (splitLocation + 4) % AmountOfEdges);
+		*/
 	}
 }
 void CellFrame::splitFrameHelperCopyTail(CellFrame * newCell)
@@ -677,8 +674,8 @@ void CellFrame::splitFrameHelperCopyTail(CellFrame * newCell)
 	newCell->tailLocation = tailLocation;
 	if (tailLength > 0)
 	{
-		newCell->tailPoints[0].init(tailPoints[0].getPlace().getX(), tailPoints[0].getPlace().getY(), 1.0, true);
-		newCell->tailPoints[1].init(tailPoints[1].getPlace().getX(), tailPoints[1].getPlace().getY(), 1.0, true);
+		newCell->tailPoints[0].init(ws, tailPoints[0].getPlace().getX(), tailPoints[0].getPlace().getY(), 1.0, true);
+		newCell->tailPoints[1].init(ws, tailPoints[1].getPlace().getX(), tailPoints[1].getPlace().getY(), 1.0, true);
 		newCell->tailPoints[0].setVelocity(tailPoints[0].getVelocity());
 		newCell->tailPoints[1].setVelocity(tailPoints[1].getVelocity());
 
@@ -690,8 +687,8 @@ void CellFrame::splitFrameHelperCopyTail(CellFrame * newCell)
 
 		for (int i = 1; i < tailLength; i++)
 		{
-			newCell->tailPoints[i * 2].init(tailPoints[i * 2].getPlace().getX(), tailPoints[i * 2].getPlace().getY(), 1.0, true);
-			newCell->tailPoints[i * 2 + 1].init(tailPoints[i * 2 + 1].getPlace().getX(), tailPoints[i * 2 + 1].getPlace().getY(), 1.0, true);
+			newCell->tailPoints[i * 2].init(ws, tailPoints[i * 2].getPlace().getX(), tailPoints[i * 2].getPlace().getY(), 1.0, true);
+			newCell->tailPoints[i * 2 + 1].init(ws, tailPoints[i * 2 + 1].getPlace().getX(), tailPoints[i * 2 + 1].getPlace().getY(), 1.0, true);
 			newCell->tailPoints[i * 2 ].setVelocity(tailPoints[i * 2].getVelocity());
 			newCell->tailPoints[i * 2 + 1].setVelocity(tailPoints[i * 2 + 1].getVelocity());
 
@@ -706,7 +703,7 @@ void CellFrame::splitFrameHelperCopyTail(CellFrame * newCell)
 	newCell->hasTailEnd = hasTailEnd;
 	if (hasTailEnd)
 	{
-		newCell->tailEndPoint.init(tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 1.0, true);
+		newCell->tailEndPoint.init(ws, tailEndPoint.getPlace().getX(), tailEndPoint.getPlace().getY(), 1.0, true);
 		newCell->tailEndPoint.setVelocity(tailEndPoint.getVelocity());
 
 		if (tailLength == 0)
@@ -916,7 +913,7 @@ Point* CellFrame::getPoint(int i)
 		return &edgePoints[i];
 	}
 	i -= AmountOfEdges;
-	if (i < tailLength * 2)
+	if (i < (tailLength * 2))
 	{
 		return &tailPoints[i];
 	}
@@ -925,7 +922,7 @@ Point* CellFrame::getPoint(int i)
 	{
 		return &tailEndPoint;
 	}
-	i--;
+	i -= hasTailEnd ? 1 : 0;
 	return &splitPoints[i];
 }
 const Vector & CellFrame::getPointPlace(int i)
@@ -938,7 +935,7 @@ const float CellFrame::getRadius(int i)
 }
 const int CellFrame::getAmountOfPoints() const
 {
-	return 1 + AmountOfEdges + tailLength * 2 + (hasTailEnd ? 1 : 0) + splitPointsLength;
+	return 1 + AmountOfEdges + (tailLength * 2) + (hasTailEnd ? 1 : 0) + splitPointsLength;
 }
 
 const Vector & CellFrame::getEdgeJoint(const int i, const bool p1) const
