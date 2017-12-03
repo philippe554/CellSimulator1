@@ -8,35 +8,34 @@ class Point;
 #include "Vector.h"
 #include "WorldSettings.h"
 #include "Joint.h"
+#include "Line.h"
 
 using namespace std;
 
 class Point{
 public:
 	Point();
-	void init(WorldSettings* _ws, float tx, float ty, float tMass, bool _owned);
+	bool init(WorldSettings* _ws, float tx, float ty, float tMass, bool _owned);
 	bool combine(Point* other);
-	void split(Point* other, bool _owned, float ratio = 0.5); //leave negative to split fair
-
-	void deconstruct();
+	bool split(Point* other, bool _owned, float ratio = 0.5); //leave negative to split fair
+	bool splitAndDeconstruct(Point* p1, bool _owned1, Point* p2, bool _owned2, float radio = 0.5);
+	bool moveAndDeconstruct(Point* other, bool _owned);
+	bool deconstruct();
 
 	void addJoint(Joint* joint);
 	void deleteJoint(const long& _id);
 
-	void addForce(Vector&f);
-	void addForce(Vector*f);
-	void addForce(float x,float y);
-	void calcForcesJoints();
+	void calcForceJoints();
 	void calcForcePoint(Point* other);
-	void applyForces(float precision, float backgroundFriction);
+	void calcForceLine(Line * line);
+	void applyForces(float precision);
+	void applyJointFlow(const float precision);
 
 	const Vector& getPlace()const;
 	const Vector& getVelocity()const;
 
-	void setPlace(const Vector&v);
-	void setVelocity(const Vector&v);
-
 	float getParticleCount(const int i)const;
+	bool moveParticle(Point* other, const int i, const float t);
 	float getMass()const;
 	float getRadius()const;
 
@@ -49,6 +48,7 @@ public:
 	void setRegistered(bool t);
 
 	long getID();
+	long getNewID();
 
 private:
 	void calcMass();
@@ -56,14 +56,13 @@ private:
 
 	vector<Joint*> joints;
 
-	Vector forcesExtern;
-	Vector forcesJoints;
-
 	Vector place;
-	Vector velocity;
+	Vector momentum;
+	Vector momentumAdded;
 
 	WorldSettings* ws;
 	float particles[WorldSettings::e_AmountOfParticles];
+	float particlesFlowing[WorldSettings::e_AmountOfParticles];
 	float massCache;
 	float radiusCache;
 

@@ -14,11 +14,12 @@ public:
 	void init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction);
 	void init(Point * tp1, Point * tp2, const Joint & other);
 	void deconstruct();
+	bool changeFromTo(Point* from, Point* to);
 
-	Vector calcFriction(const Vector& flow);
-	void applyPresureForce(float p);
+	//Vector calcFriction(const Vector& flow);
+	//void applyPresureForce(float p);
 	void jointJointCollision(Joint * other);
-	void setFriction(bool _friction);
+	//void setFriction(bool _friction);
 
 	Point* getP1()const;
 	Point* getP2()const;
@@ -30,7 +31,7 @@ public:
 	float getRealLength() const;
 
 	void setTarget(const float _targetLength, const float _growFactor);
-	bool grow(const float precision);
+	void logic(const float precision);
 
 	float getStrenth();
 	void setStrenth(float t);
@@ -38,7 +39,10 @@ public:
 	float getDamping();
 	void setDamping(float t);
 
-	const Vector& getFrictionForce() const;
+	float getFlowRate(int i)const;
+	void setFlowRate(const int i, const float t);
+
+	//const Vector& getFrictionForce() const;
 
 	long getId()const;
 
@@ -51,8 +55,9 @@ private:
 	float growFactor;
 	float strength;
 	float damping;
-	bool friction;
-	Vector frictionForce;
+	float flowRate[WorldSettings::e_AmountOfParticles];
+	//bool friction;
+	//Vector frictionForce;
 	int id;
 	static long lastID;
 };

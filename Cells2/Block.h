@@ -21,8 +21,13 @@ public:
 	~Block();
 
 	void createCell(shared_ptr<DNA> _dna, Vector& place, float radius);
+	void destroyCell(Cell* cell);
 	void giveCell(Cell* _cell);
 
+	void deregisterUnsetPoints();
+	void registerSetPoints();
+	void restructurePoints();
+	void restructureCells();
 	void searchAndDeregisterPoint(Point* point);
 
 	void stage1();
@@ -32,7 +37,6 @@ public:
 
 	void calcJointForces();
 	void calcParticlesForce();
-	void pointLineForce(Point * point, Line * line)const;
 
 	void loadDefaultChunk();
 	void addLine(const double x1, const double y1, const double x2, const double y2);

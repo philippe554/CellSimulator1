@@ -23,7 +23,7 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 
 	float bs = world->ws.blockSize;
 
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 0; i++)
 	{
 		Point* p = new Point();
 		p->init(&world->ws, _bx*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, _by*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, 1.0f, false);
@@ -95,11 +95,129 @@ void Block::createCell(shared_ptr<DNA> _dna, Vector & place, float radius)
 		}
 	}
 }
+void Block::destroyCell(Cell * cell)
+{
+	for (int j = 0; j < cell->getAmountOfPoints(); j++)
+	{
+	}
+}
 void Block::giveCell(Cell * _cell)
 {
 	cells.push_back(_cell);
 }
 
+void Block::deregisterUnsetPoints()
+{
+	for (int i = 0; i < points.size(); i++)
+	{
+		if (points[i]->isOwned() && !points[i]->isSet() && points[i]->isRegistered())
+		{
+			points[i]->setRegistered(false);
+			points.erase(points.begin() + i--);
+		}
+	}
+}
+void Block::registerSetPoints()
+{
+	for (int i = 0; i < cells.size(); i++)
+	{
+		for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
+		{
+			if (cells[i]->getPoint(j)->isSet() && !cells[i]->getPoint(j)->isRegistered())
+			{
+				points.push_back(cells[i]->getPoint(j));
+				cells[i]->getPoint(j)->setRegistered(true);
+			}
+		}
+	}
+}
+void Block::restructurePoints()
+{
+	for (int i = 0; i < points.size(); i++)
+	{
+		int newcx = world->calcChunk(points.at(i)->getPlace().getX());
+		int newcy = world->calcChunk(points.at(i)->getPlace().getY());
+		if (newcx >= world->ws.c_WorldBoundary || newcx < 0 || newcy >= world->ws.c_WorldBoundary || newcy < 0)
+		{
+			if (!points.at(i)->isOwned())
+			{
+				delete points.at(i);
+				points.erase(points.begin() + i--);
+			}
+		}
+		else if (newcx != cx || newcy != cy)
+		{
+			Chunk* chunk = world->findChunk_C(newcx, newcy);
+			if (chunk != nullptr)
+			{
+				int newbx = world->calcBlock(points.at(i)->getPlace().getX());
+				int newby = world->calcBlock(points.at(i)->getPlace().getY());
+				chunk->findBlock_B(newbx, newby)->points.push_back(points[i]);
+				points.erase(points.begin() + i--);
+			}
+			else
+			{
+				throw "Error";
+			}
+		}
+		else
+		{
+			int newbx = world->calcBlock(points.at(i)->getPlace().getX());
+			int newby = world->calcBlock(points.at(i)->getPlace().getY());
+			if (bx != newbx || by != newby)
+			{
+				chunk->findBlock_B(newbx, newby)->points.push_back(points.at(i));
+				points.erase(points.begin() + i--);
+			}
+		}
+	}
+}
+void Block::restructureCells()
+{
+	for (int i = 0; i < cells.size(); i++)
+	{
+		bool outOfWorld = false;
+		for (int j = 0; !outOfWorld && j < cells[i]->getAmountOfPoints(); j++)
+		{
+			int newcx = world->calcChunk(cells[i]->getPoint(j)->getPlace().getX());
+			int newcy = world->calcChunk(cells[i]->getPoint(j)->getPlace().getY());
+			if (newcx >= world->ws.c_WorldBoundary || newcx < 0 || newcy >= world->ws.c_WorldBoundary || newcy < 0)
+			{
+				destroyCell(cells[i]);
+				cells.erase(cells.begin() + i--);
+				outOfWorld = true;
+			}
+		}
+		if (!outOfWorld)
+		{
+			int newcx = world->calcChunk(cells.at(i)->getCenter().getX());
+			int newcy = world->calcChunk(cells.at(i)->getCenter().getY());
+			if (newcx != cx || newcy != cy)
+			{
+				Chunk* chunk = world->findChunk_C(newcx, newcy);
+				if (chunk != nullptr)
+				{
+					chunk->giveCell(cells.at(i));
+					cells.erase(cells.begin() + i--);
+				}
+				else
+				{
+					throw "Error";
+				}
+			}
+			else
+			{
+				int newbx = world->calcBlock(cells.at(i)->getCenter().getX());
+				int newby = world->calcBlock(cells.at(i)->getCenter().getY());
+				if (bx != newbx || by != newby)
+				{
+					chunk->findBlock_B(newbx, newby)->cells.push_back(cells.at(i));
+					cells.erase(cells.begin() + i--);
+				}
+			}
+		}
+	}
+}
 void Block::searchAndDeregisterPoint(Point * point)
 {
 	int newbx = world->calcBlock(point->getPlace().getX());
@@ -148,70 +266,33 @@ void Block::stage1()
 	for (auto cell : cells)
 	{
 		cell->cellLogic();
-		cell->growJoints();
-		//cell->cacheParameters();
+		cell->jointLogic(); //expand joints - Calc Flow
+		cell->calcJointForces(); //calc force of joints
 	}
-	//cacheParameters();
+	calcParticlesForce(); //point collision force
 }
 void Block::stage2()
 {
-	calcJointForces();
-	calcParticlesForce();
+	for (auto point : points)
+	{
+		point->applyJointFlow(world->ws.precision);//apply flow
+		point->applyForces(world->ws.precision);//sum forces
+	}
 }
 void Block::stage3()
 {	
-	for (auto point : points)
-	{
-		point->applyForces(world->ws.precision, 0.0);
-	}
-}
-void Block::stage4()
-{
-	for (int i = 0; i < points.size(); i++)
-	{
-		int newcx = world->calcChunk(points.at(i)->getPlace().getX());
-		int newcy = world->calcChunk(points.at(i)->getPlace().getY());
-		if (newcx >= world->ws.c_WorldBoundary || newcx < 0 || newcy >= world->ws.c_WorldBoundary || newcy < 0)
-		{
-			if (!points.at(i)->isOwned())
-			{
-				delete points.at(i);
-				points.erase(points.begin() + i);
-				i--;
-			}
-		}
-		else if (newcx != cx || newcy != cy)
-		{
-			Chunk* chunk = world->findChunk_C(newcx, newcy);
-			if (chunk != nullptr)
-			{
-				int newbx = world->calcBlock(points.at(i)->getPlace().getX());
-				int newby = world->calcBlock(points.at(i)->getPlace().getY());
-				Block* newBlock = chunk->findBlock_B(newbx, newby);
-				newBlock->points.push_back(points[i]);
-			}
-			points.erase(points.begin() + i);
-			i--;
-		}
-		else
-		{
-			int newbx = world->calcBlock(points.at(i)->getPlace().getX());
-			int newby = world->calcBlock(points.at(i)->getPlace().getY());
-			if (bx != newbx || by != newby)
-			{
-				Block* newBlock = chunk->findBlock_B(newbx, newby);
-				if (newBlock != nullptr)
-				{
-					newBlock->points.push_back(points.at(i));
-				}
-				points.erase(points.begin() + i);
-				i--;
-			}
-		}
-	}
 	for (int i = 0; i < cells.size(); i++)
 	{
-		if (cells.at(i)->isBroken())
+		if (cells.at(i)->readyToSplit())
+		{
+			Cell* newCell = cells.at(i)->split();
+			if (newCell != NULL)
+			{
+				cells.push_back(newCell);
+			}
+		}
+
+		/*if (cells.at(i)->isBroken())
 		{
 			for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
 			{
@@ -224,96 +305,22 @@ void Block::stage4()
 			cells.erase(cells.begin() + i);
 			i--;
 			world->ws.stats_CellsBroken++;
-		}
-		else
-		{
-			int newcx = world->calcChunk(cells.at(i)->getCenter().getX());
-			int newcy = world->calcChunk(cells.at(i)->getCenter().getY());
-			if (newcx >= world->ws.c_WorldBoundary || newcx<0 || newcy >= world->ws.c_WorldBoundary || newcy < 0)
-			{
-				for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
-				{
-					searchAndDeregisterPoint(cells[i]->getPoint(j));
-				}
-				delete cells.at(i);
-				cells.erase(cells.begin() + i);
-				i--;
-				world->ws.stats_CellsBroken++;
-			}
-			else if (newcx != cx || newcy != cy)
-			{
-				Chunk* chunk = world->findChunk_C(newcx, newcy);
-				if (chunk != nullptr)
-				{
-					chunk->giveCell(cells.at(i));
-				}
-				else
-				{
-					for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
-					{
-						searchAndDeregisterPoint(cells[i]->getPoint(j));
-					}
-					delete cells.at(i);
-				}
-				cells.erase(cells.begin() + i);
-				i--;
-			}
-			else
-			{
-				int newbx = world->calcBlock(cells.at(i)->getCenter().getX());
-				int newby = world->calcBlock(cells.at(i)->getCenter().getY());
-				if (bx != newbx || by != newby)
-				{
-					Block* newBlock = chunk->findBlock_B(newbx, newby);
-					if (newBlock != nullptr)
-					{
-						newBlock->cells.push_back(cells.at(i));
-					}
-					cells.erase(cells.begin() + i);
-					i--;
-				}
-				else
-				{
-					if (cells.at(i)->getStage() == 6)
-					{
-						vector<Cell*> newCells = cells.at(i)->split();
-						for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
-						{
-							searchAndDeregisterPoint(cells[i]->getPoint(j));
-						}
-						delete cells.at(i);
-						cells.erase(cells.begin() + i);
-						i--;
-						cells.push_back(newCells[0]);
-						cells.push_back(newCells[1]);
-					}
-				}
-			}
-		}
+		}*/
 	}
-	for (int i = 0; i < points.size(); i++)
-	{
-		if (points[i]->isOwned() && !points[i]->isSet() && points[i]->isRegistered())
-		{
-			searchAndDeregisterPoint(points[i]);
-			i--;
-		}
-	}
-	for (int i = 0; i < cells.size(); i++)
-	{
-		for (int j = 0; j < cells[i]->getAmountOfPoints(); j++)
-		{
-			if (cells[i]->getPoint(j)->isSet() && !cells[i]->getPoint(j)->isRegistered())
-			{
-				points.push_back(cells[i]->getPoint(j));
-				cells[i]->getPoint(j)->setRegistered(true);
-			}
-		}
-	}
+	
+}
+void Block::stage4()
+{
+	deregisterUnsetPoints();
+	registerSetPoints();
+
+	restructurePoints();
+	restructureCells();
 }
 
 void Block::calcJointForces()
 {
+	throw "old code";
 	for (auto cell : cells)
 	{
 		cell->calcJointForces();
@@ -361,7 +368,7 @@ void Block::calcParticlesForce()
 		}
 		for (int j = 0; j < lines.size(); j++)
 		{
-			pointLineForce(points[i], lines[j]);
+			points[i]->calcForceLine(lines[j]);
 		}
 		for (int k = 0; k < 4; k++)
 		{
@@ -376,31 +383,9 @@ void Block::calcParticlesForce()
 				}
 				for (int j = 0; j < neighbours[k]->lines.size(); j++)
 				{
-					pointLineForce(points[i], neighbours[k]->lines[j]);
+					points[i]->calcForceLine(neighbours[k]->lines[j]);
 				}
 			}
-		}
-	}
-}
-void Block::pointLineForce(Point* point, Line* line)const
-{
-	Vector lineVector(line->getV1(), line->getV2());
-	Vector linePerpendicular = lineVector.getPerpendicularClockwise().getUnit();
-	Vector p1 = point->getPlace() + linePerpendicular * point->getRadius();
-	Vector p2 = point->getPlace() - linePerpendicular * point->getRadius();
-	Vector intersection(0.0, 0.0);
-	if (Shapes::lineSegementsIntersect(p1, p2, line->getV1(), line->getV2(), intersection))
-	{
-		float l1 = Vector::getLength(intersection, p1);
-		float l2 = Vector::getLength(intersection, p2);
-
-		if (l1 > l2)
-		{
-			point->addForce(linePerpendicular * (2 * point->getRadius() - l2) * 0.1);
-		}
-		else
-		{
-			point->addForce(linePerpendicular * (-2 * point->getRadius() - l1) * 0.1);
 		}
 	}
 }

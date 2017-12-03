@@ -7,6 +7,12 @@ Cell::Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const
 	dna = tDna;
 	outerMembrane = new Membrane(dna->membrane);
 }
+Cell::Cell(Cell*parent) : CellFrame(parent)
+{
+	age = 0;
+	dna = parent->dna->mutate(0.1);
+	outerMembrane = new Membrane(dna->membrane);
+}
 
 Cell::~Cell()
 {
@@ -37,20 +43,19 @@ Membrane* Cell::getOuterMembrane() const
 	return outerMembrane;
 }
 
-vector<Cell*> Cell::split()
+bool Cell::readyToSplit()
+{ 
+	return stage == 6;
+}
+Cell* Cell::split()
 {
 	if (stage == 6)
 	{
-		Cell* cell1 = new Cell(dna->mutate(0.1), ws, center.getPlace(), unit);
-		Cell* cell2 = new Cell(dna->mutate(0.1), ws, splitPoints[0].getPlace(), unit);
-
-		splitFrame(cell1, cell2);
-
-		return { cell1, cell2 };
+		return new Cell(this);
 	}
 	else
 	{
-		return vector<Cell*>();
+		return NULL;
 	}
 }
 

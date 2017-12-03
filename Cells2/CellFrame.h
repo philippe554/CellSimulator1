@@ -11,9 +11,10 @@ class CellFrame
 {
 public:
 	CellFrame(WorldSettings * _ws, const Vector& tCenter, const float radius);
+	CellFrame(CellFrame* parent);
 	~CellFrame();
 
-	void growJoints();
+	void jointLogic();
 	//Vector calcJointForces(const Vector& flow);
 	void calcJointForces();
 	void movePoints(float precision, float backgroundFriction);
@@ -64,6 +65,8 @@ public:
 
 	static const int AmountOfEdges = 6;
 	static const int MaxTailLength = 8;
+
+	int loc(int i);
 
 protected:
 	WorldSettings* ws;

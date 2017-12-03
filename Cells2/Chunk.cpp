@@ -220,6 +220,8 @@ void Chunk::run()
 
 void Chunk::openCLTest()
 {
+	throw "Old Code";
+
 	float* px = new float[world->ws.maxParticlesPerChunk];
 	float* py = new float[world->ws.maxParticlesPerChunk];
 	float* vx = new float[world->ws.maxParticlesPerChunk];
@@ -273,7 +275,7 @@ void Chunk::openCLTest()
 	{
 		for (int j = 0; j < blocks[i]->getAmountOfPoints(); j++)
 		{
-			blocks[i]->getPoint(j)->addForce(ax[counter], ay[counter]);
+			//blocks[i]->getPoint(j)->addForce(ax[counter], ay[counter]);
 			counter++;
 		}
 	}

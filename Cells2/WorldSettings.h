@@ -12,7 +12,7 @@ public:
 	WorldSettings();
 
 	//General
-	float blockSize = 30;
+	float blockSize = 3;
 	int chunkSize = 10;
 	float precision = 0.2;
 	bool openCLOptimalization = false;
