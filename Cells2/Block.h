@@ -23,6 +23,7 @@ public:
 	void createCell(shared_ptr<DNA> _dna, Vector& place, float radius);
 	void destroyCell(Cell* cell);
 	void giveCell(Cell* _cell);
+	void givePoint(Point * _point);
 
 	void deregisterUnsetPoints();
 	void registerSetPoints();

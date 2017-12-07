@@ -35,10 +35,11 @@ public:
 	long long getMaxTimeDifference()const;
 
 	void giveCell(Cell*cell);
-	void acceptAllCells();
+	void givePoint(Point * point);
+	void acceptObjects();
 	vector<shared_ptr<DNA>> getDNA();
 
-	void schedule();
+	void setAsScheduled();
 	bool isRunning()const;
 
 	void addLine(const double x1, const double y1, const double x2, const double y2);
@@ -56,7 +57,10 @@ private:
 	vector<Cell*> acceptedCells;
 	mutex acceptedCellsMutex;
 
-	bool running;
+	vector<Point*> acceptedPoints;
+	mutex acceptedPointsMutex;
+
+	volatile bool running;
 	mutex runningMutex;
 
 	bool openCLInitFlag;
@@ -64,5 +68,5 @@ private:
 	cl::Kernel kernel;
 	cl::Buffer* buffers;
 
-	long long time;
+	volatile long long time;
 };

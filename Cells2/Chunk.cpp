@@ -189,29 +189,34 @@ Block* Chunk::findBlock_N(const int input) const
 
 void Chunk::run()
 {
-	acceptAllCells();
 	const int size = world->ws.chunkSize*world->ws.chunkSize;
-	for (int i = 0; i < size; ++i)
+	if (time%2 == 0)
 	{
-		blocks[i]->stage1();
-	}
-	for (int i = 0; i < size; ++i)
-	{
-		blocks[i]->stage2();
-	}
-	for (int i = 0; i < size; ++i)
-	{
-		blocks[i]->stage3();
-		if (world->ws.openCLOptimalization)
+		acceptObjects();	
+		for (int i = 0; i < size; ++i)
 		{
-			openCLTest();
+			blocks[i]->stage1();
 		}
 	}
-	for (int i = 0; i < size; ++i)
+	else
 	{
-		blocks[i]->stage4();
+		for (int i = 0; i < size; ++i)
+		{
+			blocks[i]->stage2();
+		}
+		for (int i = 0; i < size; ++i)
+		{
+			blocks[i]->stage3();
+			if (world->ws.openCLOptimalization)
+			{
+				openCLTest();
+			}
+		}
+		for (int i = 0; i < size; ++i)
+		{
+			blocks[i]->stage4();
+		}
 	}
-
 	time++;
 	runningMutex.lock();
 	running = false;
@@ -289,7 +294,7 @@ void Chunk::openCLTest()
 	delete[] radius;
 }
 
-void Chunk::acceptAllCells()
+void Chunk::acceptObjects()
 {
 	acceptedCellsMutex.lock();
 	while (acceptedCells.size()>0)
@@ -302,12 +307,40 @@ void Chunk::acceptAllCells()
 		}
 		else
 		{
-			//TODO: Cell is added to wrong chunk
-			throw "";
+			throw "Cell is added to wrong chunk";
 		}
 		acceptedCells.erase(acceptedCells.begin());
 	}
 	acceptedCellsMutex.unlock();
+
+	acceptedPointsMutex.lock();
+	while (acceptedPoints.size()>0)
+	{
+		Block*block = findBlock_B(world->calcBlock(acceptedPoints.at(0)->getPlace().getX()),
+			world->calcBlock(acceptedPoints.at(0)->getPlace().getY()));
+		if (block != nullptr)
+		{
+			block->givePoint(acceptedPoints.at(0));
+		}
+		else
+		{
+			throw "Point is added to wrong chunk";
+		}
+		acceptedPoints.erase(acceptedPoints.begin());
+	}
+	acceptedPointsMutex.unlock();
+}
+void Chunk::giveCell(Cell* cell)
+{
+	acceptedCellsMutex.lock();
+	acceptedCells.push_back(cell);
+	acceptedCellsMutex.unlock();
+}
+void Chunk::givePoint(Point* point)
+{
+	acceptedPointsMutex.lock();
+	acceptedPoints.push_back(point);
+	acceptedPointsMutex.unlock();
 }
 
 vector<shared_ptr<DNA>> Chunk::getDNA()
@@ -319,13 +352,6 @@ vector<shared_ptr<DNA>> Chunk::getDNA()
 		data.insert(data.end(), toBeAdded.begin(), toBeAdded.end());
 	}
 	return data;
-}
-
-void Chunk::giveCell(Cell* cell)
-{
-	acceptedCellsMutex.lock();
-	acceptedCells.push_back(cell);
-	acceptedCellsMutex.unlock();
 }
 
 long long Chunk::getTime() const
@@ -347,7 +373,7 @@ long long Chunk::getMaxTimeDifference()const
 	}
 	return max;
 }
-void Chunk::schedule()
+void Chunk::setAsScheduled()
 {
 	runningMutex.lock();
 	running = true;

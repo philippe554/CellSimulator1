@@ -38,7 +38,6 @@ World::World(WorldSettings _ws)
 		}
 	}
 }
-
 World::~World()
 {
 	for(auto chunk : chunks)
@@ -50,7 +49,7 @@ World::~World()
 
 void World::jump(long long amount, bool visualReady)
 {
-	const long long target = time + amount;
+	const long long target = time + (amount*2);
 	bool allFinished = false;
 	while (!allFinished)
 	{
@@ -64,7 +63,7 @@ void World::jump(long long amount, bool visualReady)
 				{
 					if (chunk.second->getMaxTimeDifference() == 0)
 					{
-						chunk.second->schedule();
+						chunk.second->setAsScheduled();
 						Core::runChunk(chunk.second);
 					}
 				}
@@ -76,7 +75,7 @@ void World::jump(long long amount, bool visualReady)
 	{
 		for (auto chunk : chunks)
 		{
-			chunk.second->acceptAllCells();
+			chunk.second->acceptObjects();
 		}
 	}
 	time = target;
@@ -135,7 +134,7 @@ vector<shared_ptr<DNA>> World::getDNA()
 
 long long World::getTime()
 {
-	return time;
+	return time/2;
 }
 
 /*void World::step()
