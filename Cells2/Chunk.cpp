@@ -469,4 +469,30 @@ void Chunk::addLine(const double x1, const double y1, const double x2, const dou
 		}
 	}
 }
+void Chunk::addPoint(float tx, float ty, float tMass)
+{
+	const double left = cx*world->ws.blockSize * world->ws.chunkSize;
+	const double top = cy*world->ws.blockSize * world->ws.chunkSize;
+	const double right = left + world->ws.blockSize * world->ws.chunkSize;
+	const double bottom = top + world->ws.blockSize * world->ws.chunkSize;
+
+	if (left <= tx && tx <= right && top <= ty && ty <= bottom)
+	{
+		points.push_back(new Point(&world->ws, tx, ty, tMass));
+	}
+}
+
+int Chunk::getAmountOfPoints() const
+{
+	return points.size();
+}
+Point * Chunk::getPoint(int i) const
+{
+	return points[i];
+}
+
+Chunk * Chunk::getNeighbour(int i) const
+{
+	return neighbours[i];
+}
 

@@ -14,13 +14,10 @@ using namespace std;
 
 class Point{
 public:
-	Point();
-	bool init(WorldSettings* _ws, float tx, float ty, float tMass, bool _owned);
+	Point(WorldSettings * _ws, float tx, float ty, float tMass, bool tOwned = false);
 	bool combine(Point* other);
-	bool split(Point* other, bool _owned, float ratio = 0.5); //leave negative to split fair
-	bool splitAndDeconstruct(Point* p1, bool _owned1, Point* p2, bool _owned2, float radio = 0.5);
-	bool moveAndDeconstruct(Point* other, bool _owned);
-	bool deconstruct();
+	Point(Point * other, float ratio, bool tOwned = false);
+	~Point();
 
 	void addJoint(Joint* joint);
 	void deleteJoint(const long& _id);
@@ -42,10 +39,8 @@ public:
 	int getJointSize()const;
 	Joint* getJoint(int i)const;
 
-	bool isSet()const;//exists
-	bool isOwned()const; //is part of a cell
-	bool isRegistered()const; //is registered in block?
-	void setRegistered(bool t);
+	void setOwned(bool tOwned);
+	bool isOwned()const;
 
 	long getID();
 	long getNewID();
@@ -60,16 +55,13 @@ private:
 	Vector momentum;
 	Vector momentumAdded;
 
-	WorldSettings* ws;
 	float particles[WorldSettings::e_AmountOfParticles];
 	float particlesFlowing[WorldSettings::e_AmountOfParticles];
 	float massCache;
 	float radiusCache;
 
-	bool set;
+	WorldSettings* ws;
 	bool owned;
-	bool registered;
-
 	long id;
 	static long lastID;
 };

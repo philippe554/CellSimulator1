@@ -3,43 +3,30 @@
 
 long Point::lastID = 0;
 
-Point::Point()
+Point::Point(WorldSettings* _ws, float tx, float ty, float tMass, bool tOwned)
 {
-	set = false;
-	registered = false;
+	place.set(tx, ty);
+	momentumAdded.set(0, 0);
+	momentum.set(0, 0);
+
+	ws = _ws;
+	ws->setupMixure(particles, tMass);
+	calcMass();
+	calcRadius();
 	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
 	{
 		particlesFlowing[i] = 0;
 	}
-}
-bool Point::init(WorldSettings* _ws, float tx, float ty, float tMass, bool _owned)
-{
-	if (!set)
-	{
-		place.set(tx, ty);
-		momentumAdded.set(0, 0);
-		momentum.set(0, 0);
 
-		ws = _ws;
-		ws->setupMixure(particles, tMass);
-		calcMass();
-		calcRadius();
-
-		owned = _owned;
-		set = true;
-		id = getNewID();
-		return true;
-	}
-	else
-	{
-		throw "Mass Error";
-		return false;
-	}
+	owned = tOwned;
+	id = getNewID();
 }
 bool Point::combine(Point * other)
 {
-	if (set && other->set && Vector::getLength(place, other->place) < radiusCache + other->radiusCache)
+	if (Vector::getLength(place, other->place) < radiusCache + other->radiusCache)
 	{
+		throw "Code needs to be changed to use owned before it can be used";
+
 		place.set(Vector(place, massCache, other->place, other->massCache));
 		momentumAdded += other->momentumAdded;
 		momentum += other->momentum;
@@ -61,109 +48,42 @@ bool Point::combine(Point * other)
 		calcMass();
 		calcRadius();
 
-		other->set = false;
 		return true;
 	}
 	else
 	{
-		throw "Mass Error";
 		return false;
 	}
 }
-bool Point::split(Point * other, bool _owned, float ratio)
+Point::Point(Point * other, float ratio, bool tOwned)
 {
-	if (set && !other->set)
-	{
-		other->place.set(place);
-		other->momentumAdded.set(0, 0);
-		other->momentum.set(momentum * ratio);
-		momentum.multiply(1 - ratio);
+	place.set(other->place);
+	momentumAdded.set(0, 0);
+	momentum.set(other->momentum * ratio);
+	other->momentum.multiply(1 - ratio);
 
-		other->ws = ws;
-		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
-		{
-			other->particles[i] = particles[i] * ratio;
-			particles[i] *= (1.0 - ratio);
-		}
-		other->calcMass();
-		other->calcRadius();
-		calcMass();
-		calcRadius();
-
-		other->owned = _owned;
-		other->set = true;
-		other->id = getNewID();
-		return true;
-	}
-	else
+	ws = other->ws;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
 	{
-		throw "Mass Error";
-		return false;
+		particles[i] = other->particles[i] * ratio;
+		other->particles[i] *= (1.0 - ratio);
+		particlesFlowing[i] = 0;
 	}
+	other->calcMass();
+	other->calcRadius();
+	calcMass();
+	calcRadius();
+
+	owned = tOwned;
+	id = getNewID();
 }
-bool Point::splitAndDeconstruct(Point * p1, bool _owned1, Point * p2, bool _owned2, float radio)
+Point::~Point()
 {
-	if (set && !p1->set && !p2->set)
-	{
-		//Optimalization possible by hardcoding these 2 functions
-		split(p2, _owned2, radio);
-		moveAndDeconstruct(p1, _owned1);
-		return true;
-	}
-	else
-	{
-		throw "Mass Error";
-		return false;
-	}
-}
-bool Point::moveAndDeconstruct(Point * other, bool _owned)
-{
-	if (set && !other->set)
-	{
-		other->place.set(place);
-		other->momentumAdded.set(momentumAdded);
-		other->momentum.set(momentum);
-
-		while (joints.size()>0)
-		{
-			if (!joints[0]->changeFromTo(this, other))
-			{
-				throw "Data Object Error";
-			}
-			other->joints.push_back(joints[0]);
-			joints.erase(joints.begin());
-		}
-
-		other->ws = ws;
-		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
-		{
-			other->particles[i] = particles[i];
-		}
-		other->calcMass();
-		other->calcRadius();
-
-		set = false;
-		other->owned = _owned;
-		other->set = true;
-		other->id = lastID;
-		lastID++;
-		return true;
-	}
-	else
-	{
-		throw "Mass Error";
-		return false;
-	}
-}
-bool Point::deconstruct()
-{
-	set = false;
 	while(joints.size()>0)
 	{
 		joints[0]->deconstruct();
 		joints.erase(joints.begin());
 	}
-	return true;
 }
 
 void Point::addJoint(Joint * joint)
@@ -172,13 +92,18 @@ void Point::addJoint(Joint * joint)
 }
 void Point::deleteJoint(const long& _id)
 {
+	bool found = false;
 	for (int i = 0; i < joints.size(); i++)
 	{
 		if (joints[i]->getId() == _id)
 		{
-			joints.erase(joints.begin() + i);
-			i--;
+			found = true;
+			joints.erase(joints.begin() + i--);
 		}
+	}
+	if (!found)
+	{
+		throw "Jow";
 	}
 }
 
@@ -341,22 +266,16 @@ Joint * Point::getJoint(int i)const
 	return joints[i];
 }
 
-bool Point::isSet() const
+void Point::setOwned(bool tOwned)
 {
-	return set;
+	owned = tOwned;
 }
+
 bool Point::isOwned() const
 {
 	return owned;
 }
-bool Point::isRegistered() const
-{
-	return registered;
-}
-void Point::setRegistered(bool t)
-{
-	registered = t;
-}
+
 long Point::getID()
 {
 	return id;

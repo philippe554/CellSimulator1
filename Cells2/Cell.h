@@ -9,7 +9,7 @@ class Cell;
 
 class Cell : public CellFrame{
 public:
-	Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const double tRadius);
+	Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter);
 	Cell(Cell * parent);
 	~Cell();
 

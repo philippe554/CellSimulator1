@@ -20,32 +20,21 @@ public:
 	Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int _bx, const int _by);
 	~Block();
 
-	void createCell(shared_ptr<DNA> _dna, Vector& place, float radius);
-	void destroyCell(Cell* cell);
+	void createCell(shared_ptr<DNA> _dna, Vector& place);
 	void giveCell(Cell* _cell);
 	void givePoint(Point * _point);
 
-	void deregisterUnsetPoints();
-	void registerSetPoints();
 	void restructurePoints();
 	void restructureCells();
-	void searchAndDeregisterPoint(Point* point);
 
 	void stage1();
 	void stage2();
 	void stage3();
 	void stage4();
 
-	void calcJointForces();
-	void calcParticlesForce();
-
 	void loadDefaultChunk();
 	void addLine(const double x1, const double y1, const double x2, const double y2);
 	
-	//float getConcentrationPoint(const int& particle, const Vector& place)const;
-	void addFrictionForce(const Vector& force);
-	//float calcVolume() const override;
-
 	vector<shared_ptr<DNA>> getDNA();
 
 	const int getAmountOfCells()const;

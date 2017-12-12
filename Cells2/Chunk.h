@@ -43,6 +43,12 @@ public:
 	bool isRunning()const;
 
 	void addLine(const double x1, const double y1, const double x2, const double y2);
+	void addPoint(float tx, float ty, float tMass);
+
+	int getAmountOfPoints()const;
+	Point* getPoint(int i)const;
+
+	Chunk* getNeighbour(int i)const;
 
 	World* world;
 private:
@@ -53,6 +59,8 @@ private:
 
 	Chunk* neighbours[8];
 	Block** blocks;
+
+	vector<Point*> points;
 
 	vector<Cell*> acceptedCells;
 	mutex acceptedCellsMutex;

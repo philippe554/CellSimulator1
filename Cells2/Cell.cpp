@@ -1,7 +1,7 @@
 #include "Cell.h"
 
-Cell::Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const double tRadius)
-	: CellFrame(_ws, tCenter,tRadius)
+Cell::Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter)
+	: CellFrame(_ws, tCenter)
 {
 	age = 0;
 	dna = tDna;
@@ -61,6 +61,6 @@ Cell* Cell::split()
 
 shared_ptr<DNA> Cell::getDNA()
 {
-	dna->fitness = center.getPlace().getX();
+	dna->fitness = center->getPlace().getX();
 	return dna;
 }

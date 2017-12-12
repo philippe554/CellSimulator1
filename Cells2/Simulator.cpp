@@ -19,34 +19,26 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 {
 	Cell* selectedCell = nullptr;
 
-	/*for (auto& chunk : world.chunks) {
-		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize;i++)
-		{
-			Block*block = chunk.second->findBlock_N(i);
-			fillRectrangle(RenderTarget, Vector(block->bx*world.ws.blockSize, block->by*world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
-				Color::heightMap(block->getTemperature() / 500));
-		}
-	}*/
 	for (auto& chunk : world.chunks) {
 		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			drawLine(RenderTarget, Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize),
-				Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize), Color::black());
-			drawLine(RenderTarget, Vector(block->getbx()*world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize),
-				Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize), Color::black());
+			drawRectrangle(RenderTarget, Vector(block->getbx()*world.ws.blockSize, block->getby()*world.ws.blockSize),
+				Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize), Color::gray());
+			
 			for (int i=0;i<block->getAmountOfPoints();i++)
 			{
 				drawCircle(RenderTarget, block->getPoint(i)->getPlace(), block->getPoint(i)->getRadius(), Color::gray());
 			}
-			
-			/*drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-				block->by*world.ws.blockSize + 0.5*world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10000, Color::black());*/
-
 		}
+		drawRectrangle(RenderTarget, Vector(chunk.first.first*world.ws.blockSize*world.ws.chunkSize, chunk.first.second*world.ws.blockSize*world.ws.chunkSize),
+			Vector(chunk.first.first*world.ws.blockSize*world.ws.chunkSize + world.ws.blockSize*world.ws.chunkSize, chunk.first.second*world.ws.blockSize*world.ws.chunkSize + world.ws.blockSize*world.ws.chunkSize), Color::black());
+	
+		for (int i = 0; i<chunk.second->getAmountOfPoints(); i++)
+		{
+			drawCircle(RenderTarget, chunk.second->getPoint(i)->getPlace(), chunk.second->getPoint(i)->getRadius(), Color::gray());
+		}
+
 	}
 
 	for (auto& chunk : world.chunks) 
@@ -82,18 +74,6 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				{
 					drawLine(RenderTarget, cell->getTailJoint(j, true), cell->getTailJoint(j, false), Color::black());
 				}
-
-				/*for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
-				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()),
-						Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()) + cell->getEdgeEdge(j).getFrictionForce()*100, Color::black());
-				}
-
-				for (int j = 0; j<cell->getAmountOfTailJoints(); j++)
-				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()),
-						Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()) + cell->getTailEdge(j).getFrictionForce()*100, Color::black());
-				}*/
 
 				if (selectedID == cell->getId())
 				{
@@ -155,6 +135,14 @@ void Simulator::drawLine(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector 
 	{ static_cast<float>(v2.getX()*scale+xOffset), static_cast<float>(v2.getY()*scale+yOffset) }, c);
 }
 
+void Simulator::drawRectrangle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c)
+{
+	drawLine(RenderTarget, v1, Vector(v1.getX(), v2.getY()), c);
+	drawLine(RenderTarget, v1, Vector(v2.getX(), v1.getY()), c);
+	drawLine(RenderTarget, v2, Vector(v1.getX(), v2.getY()), c);
+	drawLine(RenderTarget, v2, Vector(v2.getX(), v1.getY()), c);
+}
+
 void Simulator::fillRectrangle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c)
 {
 	RenderTarget->FillRectangle(D2D1::RectF(v1.getX()*scale+xOffset,v1.getY()*scale+yOffset,
@@ -174,7 +162,7 @@ void Simulator::update()
 	int r2 = rand() % 30 + 1;
 
 	long start = clock();
-	world.jump(10, true);
+	world.jump(15, true);
 	simulationTime = clock() - start;
 }
 

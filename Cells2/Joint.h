@@ -11,19 +11,21 @@ using namespace std;
 class Joint {
 public:
 	Joint();
-	void init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction);
-	void init(Point * tp1, Point * tp2, const Joint & other);
+	~Joint();
+	//void init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction);
+	void init(WorldSettings* ws, Point* tp1, Point* tp2, const float _targetLength = -1.0, const float _growFactor = 0.1);
+	//void init(Point * tp1, Point * tp2, const Joint & other);
 	void deconstruct();
 	bool changeFromTo(Point* from, Point* to);
 
 	//Vector calcFriction(const Vector& flow);
 	//void applyPresureForce(float p);
-	void jointJointCollision(Joint * other);
+	//void jointJointCollision(Joint * other);
 	//void setFriction(bool _friction);
 
 	Point* getP1()const;
 	Point* getP2()const;
-	Point* getOther(Point* p)const;
+	//Point* getOther(Point* p)const;
 
 	float getLength();
 	void setLength(float t);

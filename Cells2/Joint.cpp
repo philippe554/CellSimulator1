@@ -19,8 +19,16 @@ Joint::Joint()
 	}
 	//friction = 0;
 }
+Joint::~Joint()
+{
+	if(active)
+	{ 
+		p1->deleteJoint(id);
+		p2->deleteJoint(id);
+	}
+}
 
-void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction)
+/*void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction)
 {
 	active = true;
 	p1 = tp1;
@@ -39,10 +47,44 @@ void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDam
 	//friction = tfriction;
 	id = lastID;
 	lastID++;
+}*/
+
+void Joint::init(WorldSettings * ws, Point * tp1, Point * tp2, const float _targetLength, const float _growFactor)
+{
+	if (active)
+	{
+		deconstruct();
+	}
+
+	active = true;
+	p1 = tp1;
+	p2 = tp2;
+	p1->addJoint(this);
+	p2->addJoint(this);
+	length = Vector::getLength(tp1->getPlace(), tp2->getPlace());
+	if (_targetLength < 0.0)
+	{
+		targetLength = length;
+		growFactor = 0;
+	}
+	else
+	{
+		targetLength = _targetLength;
+		growFactor = _growFactor;
+	}
+	strength = ws->jointStrength;
+	damping = ws->jointDampening;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		flowRate[i] = 0.5;
+	}
+	id = lastID++;
 }
 
-void Joint::init(Point* tp1, Point* tp2, const Joint& other)
+/*void Joint::init(Point* tp1, Point* tp2, const Joint& other)
 {
+	if (active) throw  "You can not reactivate this";
+
 	active = true;
 	p1 = tp1;
 	p2 = tp2;
@@ -57,10 +99,9 @@ void Joint::init(Point* tp1, Point* tp2, const Joint& other)
 	{
 		flowRate[i] = other.flowRate[i];
 	}
-	//friction = other.friction;
 	id = lastID;
 	lastID++;
-}
+}*/
 
 void Joint::deconstruct()
 {
@@ -74,7 +115,6 @@ void Joint::deconstruct()
 	growFactor = 0;
 	strength = 0;
 	damping = 0;
-	//friction = 0;
 }
 
 bool Joint::changeFromTo(Point * from, Point * to)
@@ -82,15 +122,20 @@ bool Joint::changeFromTo(Point * from, Point * to)
 	if (from->getID() == p1->getID())
 	{
 		p1 = to;
+		from->deleteJoint(id);
+		to->addJoint(this);
 		return true;
 	}
 	else if (from->getID() == p2->getID())
 	{
 		p2 = to;
+		from->deleteJoint(id);
+		to->addJoint(this);
 		return true;
 	}
 	else
 	{
+		throw "not supposed to happen";
 		return false;
 	}
 }
@@ -148,7 +193,7 @@ bool Joint::changeFromTo(Point * from, Point * to)
 	p1->addForce(normal);
 	p2->addForce(normal);
 }*/
-
+/*
 void Joint::jointJointCollision(Joint* other)
 {
 	throw "Old Code";
@@ -176,7 +221,7 @@ void Joint::jointJointCollision(Joint* other)
 		//other->p2->addForce(force2*((j2l1) / (j2l1 + j2l2)));
 	}
 }
-
+*/
 /*void Joint::setFriction(bool _friction)
 {
 	friction = _friction;
@@ -191,17 +236,18 @@ Point* Joint::getP2()const
 {
 	return p2;
 }
-
+/*
 Point* Joint::getOther(Point* p)const
 {
 	if(p->getID()==p1->getID())
 	{
 		return p2;
-	}else
+	}
+	else
 	{
 		return p1;
 	}
-}
+}*/
 
 float Joint::getLength()
 {
@@ -258,7 +304,7 @@ void Joint::logic(const float precision)
 		float m1 = p1->getParticleCount(i);
 		float m2 = p2->getParticleCount(i);
 		float ratio = m1 / (m1+m2);
-		float flow = (flowRate[i] - ratio)*0.01;
+		float flow = (flowRate[i] - ratio)*0.05*precision;
 		if(flow < 0.0)
 		{
 			p1->moveParticle(p2, i, m1 * -flow);

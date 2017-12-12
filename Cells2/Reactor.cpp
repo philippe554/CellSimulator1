@@ -90,7 +90,7 @@ void Reactor::applyForce(const int index, const float amount)
 
 void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, Membrane* membrane)
 {
-	const float pressureDif = getPressure() - other->getPressure();
+	/*const float pressureDif = getPressure() - other->getPressure();
 	const float smp = surface * ws->membraneResistance * pressureDif;
 	const int index = movingCache*WorldSettings::e_AmountOfParticles;
 
@@ -112,12 +112,12 @@ void Reactor::calcExchange(Reactor* other, const int movingCache, const float su
 		{
 			particlesMoving[index + i] += smp * other->getConcentration(i);
 		}
-	}
+	}*/
 }
 
 void Reactor::calcExchange(Reactor* other, const int movingCache, const float surface, const int flowIndex)
 {
-	const float pressureDif = (getPressure() - other->getPressure()) * ws->flowConstant;
+	/*const float pressureDif = (getPressure() - other->getPressure()) * ws->flowConstant;
 	flow[flowIndex] = ws->flowBuildUpCorrected * flow[flowIndex] + (1.0-ws->flowBuildUpCorrected) * pressureDif;
 	const float sfp = surface * flow[flowIndex];
 	const int index = movingCache*WorldSettings::e_AmountOfParticles;
@@ -132,12 +132,12 @@ void Reactor::calcExchange(Reactor* other, const int movingCache, const float su
 		{
 			particlesMoving[index + i] = sfp * other->getConcentration(i);
 		}
-	}
+	}*/
 }
 
 void Reactor::exchange(Reactor* other, const int movingCache, const float surface)
 {
-	exchangeMutex.lock();
+	/*exchangeMutex.lock();
 
 	float temperatureDif = temperature - other->getTemperature();
 	float tcs = temperatureDif * ws->temperatureFlowConstant * surface * ws->precision;
@@ -164,7 +164,7 @@ void Reactor::exchange(Reactor* other, const int movingCache, const float surfac
 	other->energy += (energyLeaving - energyEntering);
 	energy += (-energyLeaving + energyEntering);
 
-	exchangeMutex.unlock();
+	exchangeMutex.unlock();*/
 }
 
 void Reactor::cacheParameters()

@@ -10,38 +10,25 @@ class CellFrame;
 class CellFrame
 {
 public:
-	CellFrame(WorldSettings * _ws, const Vector& tCenter, const float radius);
+	CellFrame(WorldSettings * _ws, const Vector& tCenter);
 	CellFrame(CellFrame* parent);
 	~CellFrame();
 
 	void jointLogic();
-	//Vector calcJointForces(const Vector& flow);
 	void calcJointForces();
-	void movePoints(float precision, float backgroundFriction);
 
-	void cellCellCollision(CellFrame* other);
-	void cellCellCollisionHelper(CellFrame * other, Joint & thisJoint);
-	void cellCellCollisionHelper(CellFrame* other);
-	
 	bool connectCells(CellFrame*other);
 	void disconnectCells(const int i);
 
 	void startSplit(const int location);
-	bool nextStage();
+	void nextStage();
 	int getStage();
 	void growTail();
 
-	void splitFrame(CellFrame* cell1, CellFrame* cell2);
-	void splitFrameHelperCopyTail(CellFrame * newCell);
-	void splitFrameHelperConnectCells(CellFrame* newCell, int own);
-
 	void setTailFibers(int i, float left, float right, float cross);
 
-	void applyPressure(float p);
-	double getSurface()const;
-	float calcVolume()const;
-
 	bool isBroken()const;
+	Point* getNextNewPoint();
 
 	Point* getPoint(int i);
 	const Vector& getPointPlace(int i);
@@ -69,11 +56,13 @@ public:
 	int loc(int i);
 
 protected:
+	void registerPoint(Point** place, Point* point);
+
 	WorldSettings* ws;
 
-	Point center;
-	Point splitPoints[3];
-	Point edgePoints[AmountOfEdges];
+	Point* center;
+	Point* splitPoints[3];
+	Point* edgePoints[AmountOfEdges];
 	Joint radiusJoints[AmountOfEdges];
 	Joint edgeJoints[AmountOfEdges];
 	Joint splitJoints[11];
@@ -82,15 +71,17 @@ protected:
 
 	int tailLength;
 	int tailLocation;
-	Point tailPoints[2 * MaxTailLength];
+	Point* tailPoints[2 * MaxTailLength];
 	Joint tailJoints[5 * MaxTailLength];
 	bool hasTailEnd;
-	Point tailEndPoint;
+	Point* tailEndPoint;
 	Joint tailEndJoints[4];
 
 	bool connectedCellsMaster[AmountOfEdges];
 	CellFrame* connectedCells[AmountOfEdges];
 	Joint connectedCellsJoints[2 * AmountOfEdges];
+
+	vector<Point*> pointsToRegister;
 
 	int stage;
 	int splitLocation;

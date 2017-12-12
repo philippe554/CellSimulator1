@@ -14,12 +14,27 @@ World::World(WorldSettings _ws)
 
 			float product = (ws.c_WorldBoundary * ws.blockSize * ws.chunkSize) - 2;
 
-			chunks[make_pair(i, j)]->addLine(1, 1, 1, product);
+			/*chunks[make_pair(i, j)]->addLine(1, 1, 1, product);
 			chunks[make_pair(i, j)]->addLine(1, 1, product, 1);
 			chunks[make_pair(i, j)]->addLine(1, product, product, product);
-			chunks[make_pair(i, j)]->addLine(product, 1, product, product);
+			chunks[make_pair(i, j)]->addLine(product, 1, product, product);*/
 		}
 	}
+
+	for (int i = 0; i < ws.c_WorldBoundary; i++)
+	{
+		for (int j = 0; j < ws.chunkSize; j+=3)
+		{
+			chunks[make_pair(i, 0)]->addPoint(i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 2, 100);
+			chunks[make_pair(i, ws.c_WorldBoundary-1)]->addPoint(i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 
+				ws.c_WorldBoundary * ws.blockSize * ws.chunkSize -2, 100);
+
+			chunks[make_pair(0, i)]->addPoint(2, i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 100);
+			chunks[make_pair(ws.c_WorldBoundary - 1, i)]->addPoint(ws.c_WorldBoundary * ws.blockSize * ws.chunkSize - 2,
+				i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 100);
+		}
+	}
+	
 	if (ws.openCLOptimalization)
 	{
 		std::vector<cl::Platform> all_platforms;
@@ -87,7 +102,7 @@ void World::addCell(shared_ptr<DNA> dna, const double x,const double y)
 
 	if (block != nullptr)
 	{
-		block->createCell(dna, Vector(x, y), ws.c_NewCellRadius);
+		block->createCell(dna, Vector(x, y));
 	}
 }
 
