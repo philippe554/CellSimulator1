@@ -148,13 +148,17 @@ void Point::calcForcePoint(Point * other)
 	float radiusSum = radiusCache + other->radiusCache;
 	if (line.isSmallerThen(radiusSum))
 	{
-		Vector force = line.getUnit() * radiusSum - line;
-		momentumAdded += (force*-0.6);
-		other->momentumAdded += (force*0.6);
+		Vector force = line.getUnit();
+		force.multiply(radiusSum);
+		force -= line;
+		force.multiply(0.6);
+		momentumAdded -= force;
+		other->momentumAdded += force;
 
 		Vector velocityLine(getVelocity(), other->getVelocity());
-		momentumAdded += (velocityLine*0.001);
-		other->momentumAdded += (velocityLine*-0.001);
+		velocityLine.multiply(0.001);
+		momentumAdded += velocityLine;
+		other->momentumAdded -= velocityLine;
 	}
 }
 void Point::calcForceLine(Line * line)

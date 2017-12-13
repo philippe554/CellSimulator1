@@ -22,8 +22,8 @@ public:
 
 	//Cells
 	float defaultRadius = 2;
-	float defaultMass = 4;
-	float maxExpantion = 5;
+	float defaultMass = 1;
+	float maxExpantion = 5; //old?
 
 	//joints
 	float jointStrength = 0.5;

@@ -23,7 +23,7 @@ Block::Block(World*tWorld, Chunk*tChunk, const int _cx, const int _cy, const int
 
 	float bs = world->ws.blockSize;
 
-	for (int i = 0; i < 0; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		Point* p = new Point(&world->ws, _bx*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, _by*world->ws.blockSize + (rand() % (int)(world->ws.blockSize*10.0)) / 10.0, 1.0f);
 		points.push_back(p);
@@ -212,48 +212,48 @@ void Block::linkBlocks(int x, int y, int i1, int i2)
 
 void Block::stage1()
 {
-	for (auto cell : cells)
+	int s1 = cells.size();
+	int s2;
+	for (int i = 0; i < s1; ++i)
 	{
-		cell->cellLogic();
-		cell->jointLogic(); //expand joints - Calc Flow
-		cell->calcJointForces(); //calc force of joints
+		cells[i]->cellLogic();
+		cells[i]->jointLogic(); //expand joints - Calc Flow
+		cells[i]->calcJointForces(); //calc force of joints
 	}
-	for (int i = 0; i<points.size(); ++i)
+	s1 = points.size();
+	for (int i = 0; i < s1; ++i)
 	{
-		for (int j = 0; j < chunk->getAmountOfPoints(); j++)
+		Point* p = points[i];
+		s2 = chunk->getAmountOfPoints();
+		for (int j = 0; j < s2; ++j)
 		{
-			points[i]->calcForcePoint(chunk->getPoint(j));
+			p->calcForcePoint(chunk->getPoint(j));
 		}
-		for (int k = 0; k < 8; k++)
+		for (int k = 0; k < 8; ++k)
 		{
 			Chunk* c = chunk->getNeighbour(k);
 			if (c != nullptr)
 			{
-				for (int j = 0; j < c->getAmountOfPoints(); j++)
+				s2 = c->getAmountOfPoints();
+				for (int j = 0; j < s2; j++)
 				{
-					points[i]->calcForcePoint(c->getPoint(j));
+					p->calcForcePoint(c->getPoint(j));
 				}
 			}
 		}
-		for (int j = i + 1; j < points.size(); ++j)
+		s2 = points.size();
+		for (int j = i + 1; j < s2; ++j)
 		{
-			points[i]->calcForcePoint(points[j]);
+			p->calcForcePoint(points[j]);
 		}
-		for (int j = 0; j < lines.size(); j++)
-		{
-			points[i]->calcForceLine(lines[j]);
-		}
-		for (int k = 0; k < 4; k++)
+		for (int k = 0; k < 4; ++k)
 		{
 			if (neighbours[k] != nullptr)
 			{
-				for (int j = 0; j < neighbours[k]->points.size(); ++j)
+				s2 = neighbours[k]->points.size();
+				for (int j = 0; j < s2; ++j)
 				{
-					points[i]->calcForcePoint(neighbours[k]->points[j]);
-				}
-				for (int j = 0; j < neighbours[k]->lines.size(); j++)
-				{
-					points[i]->calcForceLine(neighbours[k]->lines[j]);
+					p->calcForcePoint(neighbours[k]->points[j]);
 				}
 			}
 		}

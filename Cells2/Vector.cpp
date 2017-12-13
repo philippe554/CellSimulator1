@@ -242,13 +242,12 @@ Vector Vector::getUnit()const
 	return Vector(x / length, y / length);
 }
 
-Vector Vector::makeUnit()
+void Vector::makeUnit()
 {
 	float length = getLength();
 	if (length == 0)length = 0.001;
 	x /= length;
 	y /= length;
-	return *this;
 }
 
 void Vector::putSquare()

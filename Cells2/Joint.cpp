@@ -304,7 +304,7 @@ void Joint::logic(const float precision)
 		float m1 = p1->getParticleCount(i);
 		float m2 = p2->getParticleCount(i);
 		float ratio = m1 / (m1+m2);
-		float flow = (flowRate[i] - ratio)*0.05*precision;
+		float flow = (flowRate[i] - ratio) * 0.05 * precision;
 		if(flow < 0.0)
 		{
 			p1->moveParticle(p2, i, m1 * -flow);

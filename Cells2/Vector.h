@@ -67,7 +67,7 @@ public:
 	Vector getPerpendicularCounterClockwise()const;
 
 	Vector getUnit()const;
-	Vector makeUnit();
+	void makeUnit();
 
 	void putSquare();
 
