@@ -18,6 +18,8 @@ public:
 	void deconstruct();
 	bool changeFromTo(Point* from, Point* to);
 
+	bool isActive() const;
+
 	//Vector calcFriction(const Vector& flow);
 	//void applyPresureForce(float p);
 	//void jointJointCollision(Joint * other);

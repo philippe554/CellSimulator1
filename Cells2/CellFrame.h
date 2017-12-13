@@ -17,8 +17,8 @@ public:
 	void jointLogic();
 	void calcJointForces();
 
-	bool connectCells(CellFrame*other);
-	void disconnectCells(const int i);
+	//bool connectCells(CellFrame*other);
+	//void disconnectCells(const int i);
 
 	void startSplit(const int location);
 	void nextStage();
@@ -77,9 +77,12 @@ protected:
 	Point* tailEndPoint;
 	Joint tailEndJoints[4];
 
-	bool connectedCellsMaster[AmountOfEdges];
-	CellFrame* connectedCells[AmountOfEdges];
-	Joint connectedCellsJoints[2 * AmountOfEdges];
+	//bool connectedCellsMaster[AmountOfEdges];
+	//bool connectedToPoint[2 * AmountOfEdges];
+	//CellFrame* connectedCells[AmountOfEdges];
+	//Joint connectedCellsJoints[2 * AmountOfEdges];
+
+	Joint armJoints[AmountOfEdges];
 
 	vector<Point*> pointsToRegister;
 

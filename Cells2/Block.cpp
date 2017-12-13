@@ -73,7 +73,7 @@ void Block::createCell(shared_ptr<DNA> _dna, Vector & place)
 {
 	Cell* newCell = new Cell(_dna, &world->ws,place);
 	cells.push_back(newCell);
-	for (auto cell : cells)
+	/*for (auto cell : cells)
 	{
 		if (cell != newCell)
 		{
@@ -92,7 +92,7 @@ void Block::createCell(shared_ptr<DNA> _dna, Vector & place)
 				}
 			}
 		}
-	}
+	}*/
 }
 void Block::giveCell(Cell * _cell)
 {
@@ -223,11 +223,10 @@ void Block::stage1()
 	s1 = points.size();
 	for (int i = 0; i < s1; ++i)
 	{
-		Point* p = points[i];
 		s2 = chunk->getAmountOfPoints();
 		for (int j = 0; j < s2; ++j)
 		{
-			p->calcForcePoint(chunk->getPoint(j));
+			points[i]->checkForcePoint(chunk->getPoint(j));
 		}
 		for (int k = 0; k < 8; ++k)
 		{
@@ -237,23 +236,31 @@ void Block::stage1()
 				s2 = c->getAmountOfPoints();
 				for (int j = 0; j < s2; j++)
 				{
-					p->calcForcePoint(c->getPoint(j));
+					points[i]->checkForcePoint(c->getPoint(j));
 				}
 			}
 		}
-		s2 = points.size();
-		for (int j = i + 1; j < s2; ++j)
+		for (int j = i + 1; j < points.size(); ++j)
 		{
-			p->calcForcePoint(points[j]);
+			Point* p = points[i]->checkForcePoint(points[j],true);
+			if (p != nullptr)
+			{
+				points[i] = p;
+				points.erase(points.begin() + j);
+			}
 		}
 		for (int k = 0; k < 4; ++k)
 		{
 			if (neighbours[k] != nullptr)
 			{
-				s2 = neighbours[k]->points.size();
-				for (int j = 0; j < s2; ++j)
+				for (int j = 0; j < neighbours[k]->points.size(); ++j)
 				{
-					p->calcForcePoint(neighbours[k]->points[j]);
+					Point* p = points[i]->checkForcePoint(neighbours[k]->points[j], true);
+					if (p != nullptr)
+					{
+						points[i] = p;
+						neighbours[k]->points.erase(neighbours[k]->points.begin() + j);
+					}
 				}
 			}
 		}

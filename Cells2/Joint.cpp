@@ -140,6 +140,11 @@ bool Joint::changeFromTo(Point * from, Point * to)
 	}
 }
 
+bool Joint::isActive()const
+{
+	return active;
+}
+
 /*Vector Joint::calcFriction(const Vector& flow)
 {
 	if (friction) 

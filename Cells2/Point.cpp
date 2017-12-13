@@ -21,39 +21,39 @@ Point::Point(WorldSettings* _ws, float tx, float ty, float tMass, bool tOwned)
 	owned = tOwned;
 	id = getNewID();
 }
-bool Point::combine(Point * other)
+void Point::combine(Point * other)
 {
-	if (Vector::getLength(place, other->place) < radiusCache + other->radiusCache)
+	if (Vector::getLength(place, other->place) > radiusCache + other->radiusCache)
 	{
-		throw "Code needs to be changed to use owned before it can be used";
-
-		place.set(Vector(place, massCache, other->place, other->massCache));
-		momentumAdded += other->momentumAdded;
-		momentum += other->momentum;
-
-		while (other->joints.size()>0)
-		{
-			if (!other->joints[0]->changeFromTo(other, this))
-			{
-				throw "Data Object Error";
-			}
-			joints.push_back(other->joints[0]);
-			other->joints.erase(other->joints.begin());
-		}
-
-		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
-		{
-			particles[i] += other->particles[i];
-		}
-		calcMass();
-		calcRadius();
-
-		return true;
+		throw "Not close enough";
 	}
-	else
+	if (other->owned)
 	{
-		return false;
+		throw "Not save to remove other";
 	}
+
+	place.set(Vector(place, massCache, other->place, other->massCache));
+	momentumAdded += other->momentumAdded;
+	momentum += other->momentum;
+
+	while (other->joints.size()>0)
+	{
+		if (!other->joints[0]->changeFromTo(other, this))
+		{
+			throw "Data Object Error";
+		}
+		joints.push_back(other->joints[0]);
+		other->joints.erase(other->joints.begin());
+	}
+
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		particles[i] += other->particles[i];
+	}
+	calcMass();
+	calcRadius();
+
+	delete other;
 }
 Point::Point(Point * other, float ratio, bool tOwned)
 {
@@ -142,24 +142,49 @@ void Point::calcForceJoints()
 		momentumAdded += unitVel;
 	}
 }
-void Point::calcForcePoint(Point * other)
+Point* Point::checkForcePoint(Point * other, bool checkForCombine)
 {
 	Vector line(place, other->place);
 	float radiusSum = radiusCache + other->radiusCache;
 	if (line.isSmallerThen(radiusSum))
 	{
-		Vector force = line.getUnit();
-		force.multiply(radiusSum);
-		force -= line;
-		force.multiply(0.6);
-		momentumAdded -= force;
-		other->momentumAdded += force;
-
-		Vector velocityLine(getVelocity(), other->getVelocity());
-		velocityLine.multiply(0.001);
-		momentumAdded += velocityLine;
-		other->momentumAdded -= velocityLine;
+		if (checkForCombine && line.isSmallerThen(max(radiusCache, other->radiusCache)*0.5))
+		{
+			if (!other->owned)
+			{
+				combine(other);
+				return this;
+			}
+			else if(!owned)
+			{
+				other->combine(this);
+				return other;
+			}
+			else
+			{
+				calcForcePoint(other, line, radiusSum);
+			}
+		}
+		else
+		{
+			calcForcePoint(other, line, radiusSum);
+		}
 	}
+	return nullptr;
+}
+void Point::calcForcePoint(Point * other, Vector & line, float radiusSum)
+{
+	Vector force = line.getUnit();
+	force.multiply(radiusSum);
+	force -= line;
+	force.multiply(0.6);
+	momentumAdded -= force;
+	other->momentumAdded += force;
+
+	Vector velocityLine(getVelocity(), other->getVelocity());
+	velocityLine.multiply(0.001);
+	momentumAdded += velocityLine;
+	other->momentumAdded -= velocityLine;
 }
 void Point::calcForceLine(Line * line)
 {

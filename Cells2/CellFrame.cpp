@@ -32,8 +32,8 @@ CellFrame::CellFrame(WorldSettings * _ws, const Vector& tCenter)
 		radiusJoints[i].init(ws, center, edgePoints[i]);
 		edgeJoints[i].init(ws, edgePoints[i], edgePoints[loc(i+1)]);
 
-		connectedCellsMaster[i] = false;
-		connectedCells[i] = nullptr;
+		//connectedCellsMaster[i] = false;
+		//connectedCells[i] = nullptr;
 	}
 
 	/*for (int i = 0; i < dna->tail.getAmountOfRows() - 1; i++)
@@ -104,8 +104,8 @@ CellFrame::CellFrame(CellFrame* p)
 			radiusJoints[loc(i)].init(ws, center, edgePoints[loc(i)], unit, 0.01);
 			edgeJoints[loc(i)].init(ws, edgePoints[loc(i)], edgePoints[loc(i + 1)], unit, 0.01);
 
-			connectedCellsMaster[i] = false;
-			connectedCells[i] = nullptr;
+			//connectedCellsMaster[i] = false;
+			//connectedCells[i] = nullptr;
 		}
 
 		for (int i = 0; i < p->splitJointsLength; i++)
@@ -125,7 +125,11 @@ CellFrame::CellFrame(CellFrame* p)
 CellFrame::~CellFrame() {
 	for (int i = 0; i < AmountOfEdges; i++)
 	{
-		disconnectCells(i);
+		//disconnectCells(i);
+		if (armJoints[i].isActive())
+		{
+			armJoints[i].deconstruct();
+		}
 	}
 	center->setOwned(false);
 	for (int i = 0; i < 6; i++)
@@ -141,6 +145,8 @@ CellFrame::~CellFrame() {
 		throw "Not all points saved";
 	}
 }
+
+
 
 void CellFrame::jointLogic()
 {
@@ -165,11 +171,15 @@ void CellFrame::jointLogic()
 	}
 	for (int i = 0; i < AmountOfEdges; i++) 
 	{
-		if (connectedCellsMaster[i])
+		if (armJoints[i].isActive())
+		{
+			armJoints[i].logic(ws->precision);
+		}
+		/*if (connectedCellsMaster[i])
 		{
 			connectedCellsJoints[i * 2 + 0].logic(ws->precision);
 			connectedCellsJoints[i * 2 + 1].logic(ws->precision);
-		}
+		}*/
 	}
 	for (int i = 0; i < splitJointsLength; i++) {
 		splitJoints[i].logic(ws->precision);
@@ -196,6 +206,7 @@ void CellFrame::calcJointForces()
 	}
 }
 
+/*
 bool CellFrame::connectCells(CellFrame * otherCell)
 {
 	int own = 0;
@@ -209,13 +220,16 @@ bool CellFrame::connectCells(CellFrame * otherCell)
 				* Vector::getLength(edgePoints[(i+1)%AmountOfEdges]->getPlace(), otherCell->edgePoints[j]->getPlace());
 			if (d<distance && connectedCells[i] == nullptr &&  otherCell->connectedCells[j] == nullptr)
 			{
-				if (i != tailLocation || (!hasTailEnd && tailLength == 0))
+				if (!connectedToPoint[i * 2] && !connectedToPoint[i * 2 + 1])
 				{
-					if (j != otherCell->tailLocation || (!otherCell->hasTailEnd && otherCell->tailLength == 0))
+					if (i != tailLocation || (!hasTailEnd && tailLength == 0))
 					{
-						own = i;
-						other = j;
-						distance = d;
+						if (j != otherCell->tailLocation || (!otherCell->hasTailEnd && otherCell->tailLength == 0))
+						{
+							own = i;
+							other = j;
+							distance = d;
+						}
 					}
 				}
 			}
@@ -272,6 +286,7 @@ void CellFrame::disconnectCells(const int i)
 		connectedCells[i] = nullptr;
 	}
 }
+*/
 
 void CellFrame::startSplit(const int location)
 {

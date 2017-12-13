@@ -15,7 +15,7 @@ using namespace std;
 class Point{
 public:
 	Point(WorldSettings * _ws, float tx, float ty, float tMass, bool tOwned = false);
-	bool combine(Point* other);
+	void combine(Point* other);
 	Point(Point * other, float ratio, bool tOwned = false);
 	~Point();
 
@@ -23,7 +23,8 @@ public:
 	void deleteJoint(const long& _id);
 
 	void calcForceJoints();
-	void calcForcePoint(Point* other);
+	Point* checkForcePoint(Point* other, bool checkForCombine = false);
+	void calcForcePoint(Point* other, Vector& line, float radiusSum);
 	void calcForceLine(Line * line);
 	void applyForces(float precision);
 	void applyJointFlow(const float precision);

@@ -13,16 +13,16 @@ public:
 
 	//General
 	float blockSize = 3;
-	int chunkSize = 6;
+	int chunkSize = 6; //minimum of 2 for thread safety
 	float precision = 0.2;
 	int c_Cores = 3;
-	int c_WorldBoundary = 5;
+	int c_WorldBoundary = 50;
 	bool openCLOptimalization = false;
 	int maxParticlesPerChunk = 100;
 
 	//Cells
 	float defaultRadius = 2;
-	float defaultMass = 1;
+	float defaultMass = 4;
 	float maxExpantion = 5; //old?
 
 	//joints
