@@ -8,7 +8,7 @@
 Simulator::Simulator(int x, int y, int xSize, int ySize) 
 :View(x, y, xSize, ySize), world(WorldSettings())
 {
-	scale = 4;
+	scale = 8;
 	xOffset = 0;
 	yOffset = 0;
 	srand(time(NULL));
@@ -20,28 +20,25 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 	Cell* selectedCell = nullptr;
 
 	for (auto& chunk : world.chunks) {
-		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize;i++)
-		{
-			Block*block = chunk.second->findBlock_N(i);
-			fillRectrangle(RenderTarget, Vector(block->bx*world.ws.blockSize, block->by*world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
-				Color::heightMap(block->getTemperature() / 500));
-		}
-	}
-	for (auto& chunk : world.chunks) {
 		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			drawLine(RenderTarget, Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
-			drawLine(RenderTarget, Vector(block->bx*world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + world.ws.blockSize, block->by*world.ws.blockSize + world.ws.blockSize), Color::black());
-			drawLine(RenderTarget,Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-				block->by*world.ws.blockSize + 0.5*world.ws.blockSize),
-				Vector(block->bx*world.ws.blockSize + 0.5*world.ws.blockSize, 
-					block->by*world.ws.blockSize + 0.5*world.ws.blockSize) + block->getFlow()*10000, Color::black());
-
+			drawRectrangle(RenderTarget, Vector(block->getbx()*world.ws.blockSize, block->getby()*world.ws.blockSize),
+				Vector(block->getbx()*world.ws.blockSize + world.ws.blockSize, block->getby()*world.ws.blockSize + world.ws.blockSize), Color::gray());
+			
+			for (int i=0;i<block->getAmountOfPoints();i++)
+			{
+				drawCircle(RenderTarget, block->getPoint(i)->getPlace(), block->getPoint(i)->getRadius(), Color::gray());
+			}
 		}
+		drawRectrangle(RenderTarget, Vector(chunk.first.first*world.ws.blockSize*world.ws.chunkSize, chunk.first.second*world.ws.blockSize*world.ws.chunkSize),
+			Vector(chunk.first.first*world.ws.blockSize*world.ws.chunkSize + world.ws.blockSize*world.ws.chunkSize, chunk.first.second*world.ws.blockSize*world.ws.chunkSize + world.ws.blockSize*world.ws.chunkSize), Color::black());
+	
+		for (int i = 0; i<chunk.second->getAmountOfPoints(); i++)
+		{
+			drawCircle(RenderTarget, chunk.second->getPoint(i)->getPlace(), chunk.second->getPoint(i)->getRadius(), Color::gray());
+		}
+
 	}
 
 	for (auto& chunk : world.chunks) 
@@ -49,12 +46,18 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 		for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 		{
 			Block*block = chunk.second->findBlock_N(i);
-			for (auto& line : block->lines) {
-				drawLine(RenderTarget, line->getV1(), line->getV2(), Color::black());
+			for (int j = 0; j < block->getAmountOfLines(); j++)
+			{
+				drawLine(RenderTarget, block->getLine(j)->getV1(), block->getLine(j)->getV2(), Color::red());
 			}
 
-			for (auto& cell : block->cells)
+			for (int k = 0; k < block->getAmountOfCells(); k++)
 			{
+				Cell* cell = block->getCell(k);
+				for (int j = 0; j < cell->getAmountOfPoints(); j++)
+				{
+					drawCircle(RenderTarget, cell->getPointPlace(j), cell->getRadius(j), Color::black());
+				}
 				for (int j = 0; j < cell->getAmountOfEdgeJoints(); j++)
 				{
 					drawLine(RenderTarget, cell->getEdgeJoint(j,true), cell->getEdgeJoint(j,false), Color::black());
@@ -70,18 +73,6 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 				for (int j = 0; j < cell->getAmountOfTailJoints(); j++)
 				{
 					drawLine(RenderTarget, cell->getTailJoint(j, true), cell->getTailJoint(j, false), Color::black());
-				}
-
-				for(int j=0;j<cell->getAmountOfEdgeJoints();j++)
-				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()),
-						Vector::getAverage(cell->getEdgeEdge(j).getP1()->getPlace(), cell->getEdgeEdge(j).getP2()->getPlace()) + cell->getEdgeEdge(j).getFrictionForce()*100, Color::black());
-				}
-
-				for (int j = 0; j<cell->getAmountOfTailJoints(); j++)
-				{
-					drawLine(RenderTarget, Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()),
-						Vector::getAverage(cell->getTailEdge(j).getP1()->getPlace(), cell->getTailEdge(j).getP2()->getPlace()) + cell->getTailEdge(j).getFrictionForce()*100, Color::black());
 				}
 
 				if (selectedID == cell->getId())
@@ -103,8 +94,8 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 	Block* mouseOnBlock = world.findBlock_B(world.calcBlock((mouseX-xOffset) / scale), world.calcBlock((mouseY-yOffset) / scale));
 	if (mouseOnBlock != nullptr)
 	{
-		Writer::print("Block: (" + to_string(mouseOnBlock->bx) + ","+to_string(mouseOnBlock->by)+")", Color::black(), Writer::normal(), { 0,400,400,50 });
-		Writer::print("Temperature: " + to_string(mouseOnBlock->getTemperature()), Color::black(), Writer::normal(), { 0,440,400,50 });
+		Writer::print("Block: (" + to_string(mouseOnBlock->getbx()) + ","+to_string(mouseOnBlock->getby())+")", Color::black(), Writer::normal(), { 0,400,400,50 });
+		/*Writer::print("Temperature: " + to_string(mouseOnBlock->getTemperature()), Color::black(), Writer::normal(), { 0,440,400,50 });
 		Writer::print("Mass: " + to_string(mouseOnBlock->getMass()), Color::black(), Writer::normal(), { 0,480,400,50 });
 		Writer::print("Presure: " + to_string(mouseOnBlock->getPressure()), Color::black(), Writer::normal(), { 0,520,400,50 });
 		Writer::print("Volume: " + to_string(mouseOnBlock->getVolume()), Color::black(), Writer::normal(), { 0,560,400,50 });
@@ -113,22 +104,22 @@ void Simulator::render(ID2D1HwndRenderTarget* RenderTarget)
 			Writer::print(to_string(i)+": M = " + to_string(mouseOnBlock->getParticle(i)) +
 				", C = " + to_string(mouseOnBlock->getConcentrationPoint(i, Vector(mouseX / scale, mouseY / scale)))
 				, Color::black(), Writer::normal(), { 0,float(600+i*40),600,50 });
-		}
+		}*/
 	}
 
 	if (selectedCell != nullptr)
 	{
 		Writer::print("Cell:", Color::black(), Writer::normal(), { 0,800,400,50 });
-		Writer::print("Temperature: " + to_string(selectedCell->getTemperature()), Color::black(), Writer::normal(), { 0,840,400,50 });
-		Writer::print("Mass: " + to_string(selectedCell->getMass()), Color::black(), Writer::normal(), { 0,880,400,50 });
-		Writer::print("Presure: " + to_string(selectedCell->getPressure()), Color::black(), Writer::normal(), { 0,920,400,50 });
-		Writer::print("Volume: " + to_string(selectedCell->getVolume()), Color::black(), Writer::normal(), { 0,960,400,50 });
-		for (int i = 0; i<WorldSettings::e_AmountOfParticles; i++)
-		{
-			Writer::print(to_string(i) + ": M = " + to_string(selectedCell->getParticle(i)) +
-				", C = " + to_string(selectedCell->getConcentration(i))
-				, Color::black(), Writer::normal(), { 0,float(1000 + i * 40),600,50 });
-		}
+		//Writer::print("Temperature: " + to_string(selectedCell->getTemperature()), Color::black(), Writer::normal(), { 0,840,400,50 });
+		//Writer::print("Mass: " + to_string(selectedCell->getMass()), Color::black(), Writer::normal(), { 0,880,400,50 });
+		//Writer::print("Presure: " + to_string(selectedCell->getPressure()), Color::black(), Writer::normal(), { 0,920,400,50 });
+		//Writer::print("Volume: " + to_string(selectedCell->getVolume()), Color::black(), Writer::normal(), { 0,960,400,50 });
+		//for (int i = 0; i<WorldSettings::e_AmountOfParticles; i++)
+		//{
+		//	Writer::print(to_string(i) + ": M = " + to_string(selectedCell->getParticle(i)) +
+		//		", C = " + to_string(selectedCell->getConcentration(i))
+		//		, Color::black(), Writer::normal(), { 0,float(1000 + i * 40),600,50 });
+		//}
 	}
 }
 
@@ -142,6 +133,14 @@ void Simulator::drawLine(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector 
 {
 	RenderTarget->DrawLine({ static_cast<float>(v1.getX()*scale+xOffset) , static_cast<float>(v1.getY()*scale+yOffset) },
 	{ static_cast<float>(v2.getX()*scale+xOffset), static_cast<float>(v2.getY()*scale+yOffset) }, c);
+}
+
+void Simulator::drawRectrangle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c)
+{
+	drawLine(RenderTarget, v1, Vector(v1.getX(), v2.getY()), c);
+	drawLine(RenderTarget, v1, Vector(v2.getX(), v1.getY()), c);
+	drawLine(RenderTarget, v2, Vector(v1.getX(), v2.getY()), c);
+	drawLine(RenderTarget, v2, Vector(v2.getX(), v1.getY()), c);
 }
 
 void Simulator::fillRectrangle(ID2D1HwndRenderTarget* RenderTarget, Vector v1, Vector v2, ID2D1Brush* c)
@@ -163,7 +162,7 @@ void Simulator::update()
 	int r2 = rand() % 30 + 1;
 
 	long start = clock();
-	world.jump(5, true);
+	world.jump(10, true);
 	simulationTime = clock() - start;
 }
 
@@ -189,16 +188,16 @@ void Simulator::ViewProc(App*app, HWND hwnd, UINT message, WPARAM wParam, LPARAM
 			for (int i = 0; i < world.ws.chunkSize*world.ws.chunkSize; i++)
 			{
 				Block*block = chunk.second->findBlock_N(i);
-				for (auto& cell : block->cells)
+				for (int j = 0; j < block->getAmountOfCells(); j++)
 				{
-					float distance = Vector::getLength(cell->getCenter(), Vector(pt.x, pt.y));
+					float distance = Vector::getLength(block->getCell(j)->getCenter(), Vector(pt.x, pt.y));
 					if(distance<smallestDistance)
 					{
 						if(distance<2)
 						{
 							found = true;
-							newSelectedID = cell->getId();
-							cellPtr = cell;
+							newSelectedID = block->getCell(j)->getId();
+							cellPtr = block->getCell(j);
 						}
 					}
 				}

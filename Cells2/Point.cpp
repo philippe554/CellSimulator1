@@ -3,58 +3,111 @@
 
 long Point::lastID = 0;
 
-Point::Point()
-{
-	mass = 0;
-}
-void Point::init(double tx, double ty, double tMass)
+Point::Point(WorldSettings* _ws, float tx, float ty, float tMass, bool tOwned)
 {
 	place.set(tx, ty);
-	mass = tMass;
-	id = lastID;
-	lastID++;
+	momentumAdded.set(0, 0);
+	momentum.set(0, 0);
+
+	ws = _ws;
+	ws->setupMixure(particles, tMass);
+	calcMass();
+	calcRadius();
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		particlesFlowing[i] = 0;
+	}
+
+	owned = tOwned;
+	id = getNewID();
+}
+bool Point::combine(Point * other)
+{
+	if (Vector::getLength(place, other->place) < radiusCache + other->radiusCache)
+	{
+		throw "Code needs to be changed to use owned before it can be used";
+
+		place.set(Vector(place, massCache, other->place, other->massCache));
+		momentumAdded += other->momentumAdded;
+		momentum += other->momentum;
+
+		while (other->joints.size()>0)
+		{
+			if (!other->joints[0]->changeFromTo(other, this))
+			{
+				throw "Data Object Error";
+			}
+			joints.push_back(other->joints[0]);
+			other->joints.erase(other->joints.begin());
+		}
+
+		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+		{
+			particles[i] += other->particles[i];
+		}
+		calcMass();
+		calcRadius();
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+Point::Point(Point * other, float ratio, bool tOwned)
+{
+	place.set(other->place);
+	momentumAdded.set(0, 0);
+	momentum.set(other->momentum * ratio);
+	other->momentum.multiply(1 - ratio);
+
+	ws = other->ws;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		particles[i] = other->particles[i] * ratio;
+		other->particles[i] *= (1.0 - ratio);
+		particlesFlowing[i] = 0;
+	}
+	other->calcMass();
+	other->calcRadius();
+	calcMass();
+	calcRadius();
+
+	owned = tOwned;
+	id = getNewID();
+}
+Point::~Point()
+{
+	while(joints.size()>0)
+	{
+		joints[0]->deconstruct();
+		joints.erase(joints.begin());
+	}
 }
 
 void Point::addJoint(Joint * joint)
 {
 	joints.push_back(joint);
 }
-
 void Point::deleteJoint(const long& _id)
 {
+	bool found = false;
 	for (int i = 0; i < joints.size(); i++)
 	{
 		if (joints[i]->getId() == _id)
 		{
-			joints.erase(joints.begin() + i);
-			i--;
+			found = true;
+			joints.erase(joints.begin() + i--);
 		}
+	}
+	if (!found)
+	{
+		throw "Jow";
 	}
 }
 
-void Point::addForce(Vector & f)
-{
-	forceAddLock.lock();
-	forcesExtern += f;
-	forceAddLock.unlock();
-}
-
-void Point::addForce(Vector * f)
-{
-	forceAddLock.lock();
-	forcesExtern += f;
-	forceAddLock.unlock();
-}
-
-void Point::addForce(double x, double y)
-{
-	forceAddLock.lock();
-	forcesExtern.addX(x);
-	forcesExtern.addY(y);
-	forceAddLock.unlock();
-}
-
-void Point::calcForcesJoints()
+void Point::calcForceJoints()
 {
 	for (int i = 0; i < joints.size(); i++)
 	{
@@ -67,12 +120,12 @@ void Point::calcForcesJoints()
 		{
 			unitPos = Vector(joints[i]->getP1()->getPlace(), joints[i]->getP2()->getPlace());
 		}
-		double currentLength = unitPos.getLength();
+		float currentLength = unitPos.getLength();
 		if (currentLength != 0) {
 			unitPos.devide(currentLength);
-			double difference = joints[i]->getLength() - currentLength;
+			float difference = joints[i]->getLength() - currentLength;
 			unitPos.multiply(difference*joints[i]->getStrenth());
-			forcesJoints.add(unitPos);
+			momentumAdded += unitPos;
 		}
 
 		//dampening
@@ -86,84 +139,152 @@ void Point::calcForcesJoints()
 			unitVel = Vector(joints[i]->getP2()->getVelocity(), joints[i]->getP1()->getVelocity());
 		}
 		unitVel.multiply(joints[i]->getDamping());
-		forcesJoints.add(unitVel);
+		momentumAdded += unitVel;
 	}
 }
-
-void Point::applyForces(double precision, double backgroundFriction)
+void Point::calcForcePoint(Point * other)
 {
-	forceAddLock.lock();
-	Vector sum = forcesExtern;
-	forcesExtern.set(0, 0);
-	forceAddLock.unlock();
-
-	sum += forcesJoints;
-	//sum.addY(0.05*mass); // Gravity
-	sum.multiply(precision);
-	sum.devide(mass);
-	velocity.add(sum);
-
-	Vector friction = velocity.getUnit()*(backgroundFriction*precision);
-	if (velocity.getLength()>friction.getLength())
+	Vector line(place, other->place);
+	float radiusSum = radiusCache + other->radiusCache;
+	if (line.isSmallerThen(radiusSum))
 	{
-		velocity -= friction;
+		Vector force = line.getUnit();
+		force.multiply(radiusSum);
+		force -= line;
+		force.multiply(0.6);
+		momentumAdded -= force;
+		other->momentumAdded += force;
+
+		Vector velocityLine(getVelocity(), other->getVelocity());
+		velocityLine.multiply(0.001);
+		momentumAdded += velocityLine;
+		other->momentumAdded -= velocityLine;
+	}
+}
+void Point::calcForceLine(Line * line)
+{
+	Vector lineVector(line->getV1(), line->getV2());
+	Vector linePerpendicular = lineVector.getPerpendicularClockwise().getUnit();
+	Vector p1 = place + linePerpendicular * getRadius();
+	Vector p2 = place - linePerpendicular * getRadius();
+	Vector intersection(0.0, 0.0);
+	if (Shapes::lineSegementsIntersect(p1, p2, line->getV1(), line->getV2(), intersection))
+	{
+		float l1 = Vector::getLength(intersection, p1);
+		float l2 = Vector::getLength(intersection, p2);
+
+		if (l1 > l2)
+		{
+			momentumAdded += (linePerpendicular * (2 * getRadius() - l2) * 0.1);
+		}
+		else
+		{
+			momentumAdded += (linePerpendicular * (-2 * getRadius() - l1) * 0.1);
+		}
+	}
+}
+void Point::applyForces(float precision)
+{
+	//forcesSum.multiply(precision);
+	//forcesSum.devide(massCache);
+	//velocity.add(forcesSum);
+	momentum += momentumAdded;
+	place.add(getVelocity()*precision);
+	momentumAdded.set(0, 0);
+}
+
+void Point::calcMass()
+{
+	massCache = 0;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		massCache += ws->particleProtoType[i].unitMass * particles[i];
+	}
+}
+void Point::calcRadius()
+{
+	radiusCache = sqrt(massCache / 3.1415926535897);
+}
+
+void Point::applyJointFlow(const float precision)
+{
+	if (joints.size() > 0)
+	{
+		for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+		{
+			particles[i] += particlesFlowing[i] * precision;
+			if (particles[i] < 0.0)
+			{
+				throw "Anti Mater created";
+			}
+			particlesFlowing[i] = 0;
+		}
+		calcMass();
+		calcRadius();
+	}
+}
+bool Point::moveParticle(Point * other, const int i, const float t)
+{
+	if (t >= 0)
+	{
+		particlesFlowing[i] -= t;
+		other->particlesFlowing[i] += t;
+
+		Vector momentumDiff = momentum * (ws->particleProtoType[i].unitMass * t) / massCache;
+		momentumAdded -= momentumDiff;
+		other->momentumAdded += momentumDiff;
+		return true;
 	}
 	else
 	{
-		velocity.set(0, 0);
+		return false;
 	}
-	
-	place.add(velocity*precision);
-	forcesJoints.set(0, 0);
 }
-
-void Point::applyForces(double precision, double backgroundFriction, double newMass)
+float Point::getParticleCount(const int i) const
 {
-	mass = newMass;
-	applyForces(precision, backgroundFriction);
+	return particles[i];
 }
 
 const Vector& Point::getPlace()const
 {
 	return place;
 }
-
 const Vector& Point::getVelocity()const
 {
-	return velocity;
+	return momentum/massCache;
 }
-
-void Point::setPlace(const Vector & v)
+float Point::getMass()const
 {
-	place.set(v);
+	return massCache;
 }
-
-void Point::setVelocity(const Vector & v)
+float Point::getRadius()const
 {
-	velocity.set(v);
+	return radiusCache;
 }
-
-double Point::getMass()const
-{
-	return mass;
-}
-
-void Point::setMass(double t)
-{
-	mass = t;
-}
-
 int Point::getJointSize()const
 {
 	return joints.size();
 }
-
 Joint * Point::getJoint(int i)const
 {
 	return joints[i];
 }
 
+void Point::setOwned(bool tOwned)
+{
+	owned = tOwned;
+}
+
+bool Point::isOwned() const
+{
+	return owned;
+}
+
 long Point::getID()
 {
 	return id;
+}
+long Point::getNewID()
+{
+	return lastID++;
 }

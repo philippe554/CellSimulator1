@@ -21,10 +21,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 		CoUninitialize();
 	}
 }
+#else
+#include <iostream>
+#include <vector>
+#include <stdlib.h>
+#include <time.h>
+using namespace std;
+
+#include "WorldSettings.h"
+#include "Point.h"
+
+int main()
+{
+	WorldSettings ws;
+
+	Point pt;
+	pt.init(&ws, 0, 0, 2, true);
+
+	cout << pt.getMass() << endl << pt.getParticleCount(0) << " " << pt.getParticleCount(1);
+
+	cin.get();
+}
+
 #endif
 #include <memory>
 #include <chrono>
-#include "Reactor.h"
+
 
 #ifdef lawEnhancer
 #include <iostream>

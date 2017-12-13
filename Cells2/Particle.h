@@ -1,14 +1,17 @@
 #pragma once
 
+class Particle;
+
 class Particle
 {
 public:
-	Particle(int _id, float _weight, bool _composed, int _base1, int _base2);
+	void init(float _unitMass, bool _composed, int _base1, int _base2, float _distributionByMass);
 
-	int id;
-	float mass;
+	float unitMass;
 	bool composed;
 	int base1;
 	int base2;
+
+	float normalDistribution;
 };
 

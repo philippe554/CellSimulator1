@@ -36,14 +36,14 @@ void Line::setV2(double x, double y)
 	calcBox();
 }
 
-Vector * Line::getV1()
+Vector& Line::getV1()
 {
-	return &v1;
+	return v1;
 }
 
-Vector * Line::getV2()
+Vector& Line::getV2()
 {
-	return &v2;
+	return v2;
 }
 
 double Line::getLeft()

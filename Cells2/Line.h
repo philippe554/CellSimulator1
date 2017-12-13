@@ -19,8 +19,8 @@ public:
 	void setV1(double x, double y);
 	void setV2(double x, double y);
 
-	Vector* getV1();
-	Vector* getV2();
+	Vector& getV1();
+	Vector& getV2();
 
 	double getLeft();
 	double getRight();

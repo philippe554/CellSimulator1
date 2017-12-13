@@ -6,53 +6,62 @@
 class Point;
 
 #include "Vector.h"
+#include "WorldSettings.h"
 #include "Joint.h"
+#include "Line.h"
 
 using namespace std;
 
-class Point : public std::enable_shared_from_this<Point> {
+class Point{
 public:
-	Point();
-	void init(double tx, double ty, double tMass);
+	Point(WorldSettings * _ws, float tx, float ty, float tMass, bool tOwned = false);
+	bool combine(Point* other);
+	Point(Point * other, float ratio, bool tOwned = false);
+	~Point();
 
 	void addJoint(Joint* joint);
 	void deleteJoint(const long& _id);
 
-	void addForce(Vector&f);
-	void addForce(Vector*f);
-	void addForce(double x,double y);
-	void calcForcesJoints();
-private:
-	void applyForces(double precision, double backgroundFriction);
-public:
-	void applyForces(double precision, double backgroundFriction, double newMass);
+	void calcForceJoints();
+	void calcForcePoint(Point* other);
+	void calcForceLine(Line * line);
+	void applyForces(float precision);
+	void applyJointFlow(const float precision);
 
 	const Vector& getPlace()const;
 	const Vector& getVelocity()const;
 
-	void setPlace(const Vector&v);
-	void setVelocity(const Vector&v);
-
-	double getMass()const;
-	void setMass(double t);
+	float getParticleCount(const int i)const;
+	bool moveParticle(Point* other, const int i, const float t);
+	float getMass()const;
+	float getRadius()const;
 
 	int getJointSize()const;
 	Joint* getJoint(int i)const;
 
+	void setOwned(bool tOwned);
+	bool isOwned()const;
+
 	long getID();
+	long getNewID();
+
 private:
+	void calcMass();
+	void calcRadius();
+
 	vector<Joint*> joints;
 
-	Vector forcesExtern;
-	Vector forcesJoints;
-
 	Vector place;
-	Vector velocity;
+	Vector momentum;
+	Vector momentumAdded;
 
-	double mass;
+	float particles[WorldSettings::e_AmountOfParticles];
+	float particlesFlowing[WorldSettings::e_AmountOfParticles];
+	float massCache;
+	float radiusCache;
 
+	WorldSettings* ws;
+	bool owned;
 	long id;
 	static long lastID;
-
-	mutex forceAddLock;
 };

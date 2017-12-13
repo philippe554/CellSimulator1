@@ -224,5 +224,8 @@
     <ClInclude Include="Mixture.h">
       <Filter>Header Files\Physics\Chemical</Filter>
     </ClInclude>
+    <ClInclude Include="ParticlesOpenCL.h">
+      <Filter>Header Files\Physics\Objects\WorldParts</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

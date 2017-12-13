@@ -3,6 +3,10 @@
 #include <mutex>
 #include <memory>
 
+#include "WorldSettings.h"
+
+#include <CL/cl2.hpp>
+
 class Chunk;
 
 #include "World.h"
@@ -18,20 +22,33 @@ public:
 	Chunk(World*tWorld,const int tcx, const int tcy, long long _time);
 	~Chunk();
 
+	void initOpenCL(cl::Device _device);
+
 	Block* findBlock_B(int x,  int y)const;
 	Block* findBlock_N(const int input)const;
 
 	void run();
 
+	void openCLTest();
+
 	long long getTime()const;
 	long long getMaxTimeDifference()const;
 
 	void giveCell(Cell*cell);
-	void acceptAllCells();
+	void givePoint(Point * point);
+	void acceptObjects();
 	vector<shared_ptr<DNA>> getDNA();
 
-	void schedule();
+	void setAsScheduled();
 	bool isRunning()const;
+
+	void addLine(const double x1, const double y1, const double x2, const double y2);
+	void addPoint(float tx, float ty, float tMass);
+
+	int getAmountOfPoints()const;
+	Point* getPoint(int i)const;
+
+	Chunk* getNeighbour(int i)const;
 
 	World* world;
 private:
@@ -43,11 +60,21 @@ private:
 	Chunk* neighbours[8];
 	Block** blocks;
 
+	vector<Point*> points;
+
 	vector<Cell*> acceptedCells;
 	mutex acceptedCellsMutex;
 
-	bool running;
+	vector<Point*> acceptedPoints;
+	mutex acceptedPointsMutex;
+
+	volatile bool running;
 	mutex runningMutex;
 
-	long long time;
+	bool openCLInitFlag;
+	cl::CommandQueue queue;
+	cl::Kernel kernel;
+	cl::Buffer* buffers;
+
+	volatile long long time;
 };

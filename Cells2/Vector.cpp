@@ -7,7 +7,7 @@ Vector::Vector()
 }
 
 
-Vector::Vector(const double tx, const double ty)
+Vector::Vector(const float tx, const float ty)
 {
 	x = tx;
 	y = ty;
@@ -37,68 +37,92 @@ Vector::Vector(const Vector * v1, const Vector * v2)
 	y = v2->y - v1->y;
 }
 
-Vector::Vector(const Vector* v1, const double w1, const Vector* v2, const double w2)
+Vector::Vector(const Vector* v1, const float w1, const Vector* v2, const float w2)
 {
 	x = (v1->x*w1 + v2->x*w2) / (w1 + w2);
 	y = (v1->y*w1 + v2->y*w2) / (w1 + w2);
 }
 
-Vector::Vector(const Vector& v1, const double w1, const Vector& v2, const double w2)
+Vector::Vector(const Vector& v1, const float w1, const Vector& v2, const float w2)
 {
 	x = (v1.x*w1 + v2.x*w2) / (w1 + w2);
 	y = (v1.y*w1 + v2.y*w2) / (w1 + w2);
 }
 
-double Vector::getX()const
+float Vector::getX()const
 {
 	return x;
 }
 
-double Vector::getY()const
+float Vector::getY()const
 {
 	return y;
 }
 
-void Vector::setX(const double tx)
+void Vector::setX(const float tx)
 {
 	x = tx;
 }
 
-void Vector::setY(const double ty)
+void Vector::setY(const float ty)
 {
 	y = ty;
 }
 
-void Vector::add(const double tx, const double ty)
+void Vector::add(const float tx, const float ty)
 {
 	x += tx;
 	y += ty;
 }
 
-void Vector::multiply(const double t)
+void Vector::multiply(const float t)
 {
 	x *= t;
 	y *= t;
 }
 
-void Vector::devide(double t)
+void Vector::devide(float t)
 {
 	if (t == 0)t = 0.001;
 	x /= t;
 	y /= t;
 }
 
-double Vector::getLength()const
+float Vector::getLength()const
 {
 	return sqrt(x*x + y*y);
 }
 
-double Vector::getLength(const Vector* v1, const Vector* v2)
+float Vector::getLengthInvApprox() const
+{
+	float number = x*x + y*y;
+
+	long i;
+	float x2, y;
+	const float threehalfs = 1.5F;
+
+	x2 = number * 0.5F;
+	y = number;
+	i = *(long *)&y;                       // evil floating point bit level hacking
+	i = 0x5f3759df - (i >> 1);               // what the fuck? 
+	y = *(float *)&i;
+	y = y * (threehalfs - (x2 * y * y));   // 1st iteration
+	//	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+
+	return y;
+}
+
+bool Vector::isSmallerThen(float i)
+{
+	return x*x + y*y < i*i;
+}
+
+float Vector::getLength(const Vector* v1, const Vector* v2)
 {
 	return sqrt(((v1->x - v2->x)*(v1->x - v2->x)) + ((v1->y - v2->y)*(v1->y - v2->y)));
 }
 
-double Vector::getLength(const Vector & v1, const Vector & v2)
+float Vector::getLength(const Vector & v1, const Vector & v2)
 {
 	return sqrt(((v1.x - v2.x)*(v1.x - v2.x)) + ((v1.y - v2.y)*(v1.y - v2.y)));
 }
@@ -113,12 +137,12 @@ Vector Vector::getAverage(const Vector& v1, const Vector& v2)
 	return Vector((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
 }
 
-double Vector::cross(const Vector * v)const
+float Vector::cross(const Vector * v)const
 {
 	return x * v->y - y * v->x;
 }
 
-double Vector::cross(const Vector & v)const
+float Vector::cross(const Vector & v)const
 {
 	return x * v.y - y * v.x;
 }
@@ -160,23 +184,23 @@ Vector Vector::operator-() const
 	return Vector(-x, -y);
 }
 
-Vector Vector::operator*(double r)const
+Vector Vector::operator*(float r)const
 {
 	return Vector(x*r, y*r);
 }
 
-Vector Vector::operator/(double r)const
+Vector Vector::operator/(float r)const
 {
 	if (r == 0)r = 0.001;
 	return Vector(x / r, y / r);
 }
 
-double Vector::dot(const Vector & v)const
+float Vector::dot(const Vector & v)const
 {
 	return x*v.x + y*v.y;
 }
 
-double Vector::dot(const Vector * v)const
+float Vector::dot(const Vector * v)const
 {
 	return x*v->x + y*v->y;
 }
@@ -213,18 +237,17 @@ Vector Vector::getPerpendicularCounterClockwise()const
 
 Vector Vector::getUnit()const
 {
-	double length = getLength();
+	float length = getLength();
 	if (length == 0)length = 0.001;
 	return Vector(x / length, y / length);
 }
 
-Vector Vector::makeUnit()
+void Vector::makeUnit()
 {
-	double length = getLength();
+	float length = getLength();
 	if (length == 0)length = 0.001;
 	x /= length;
 	y /= length;
-	return *this;
 }
 
 void Vector::putSquare()
@@ -257,18 +280,18 @@ void Vector::set(const Vector & v)
 	y = v.y;
 }
 
-void Vector::set(const double tx, const double ty)
+void Vector::set(const float tx, const float ty)
 {
 	x = tx;
 	y = ty;
 }
 
-void Vector::addX(const double tx)
+void Vector::addX(const float tx)
 {
 	x += tx;
 }
 
-void Vector::addY(const double ty)
+void Vector::addY(const float ty)
 {
 	y += ty;
 }

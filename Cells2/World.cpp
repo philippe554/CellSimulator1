@@ -11,10 +11,48 @@ World::World(WorldSettings _ws)
 		for(int j=0;j<ws.c_WorldBoundary;j++)
 		{
 			chunks[make_pair(i, j)] = new Chunk(this, i, j,time);
+
+			float product = (ws.c_WorldBoundary * ws.blockSize * ws.chunkSize) - 2;
+
+			/*chunks[make_pair(i, j)]->addLine(1, 1, 1, product);
+			chunks[make_pair(i, j)]->addLine(1, 1, product, 1);
+			chunks[make_pair(i, j)]->addLine(1, product, product, product);
+			chunks[make_pair(i, j)]->addLine(product, 1, product, product);*/
+		}
+	}
+
+	for (int i = 0; i < ws.c_WorldBoundary; i++)
+	{
+		for (int j = 0; j < ws.chunkSize; j+=3)
+		{
+			chunks[make_pair(i, 0)]->addPoint(i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 2, 100);
+			chunks[make_pair(i, ws.c_WorldBoundary-1)]->addPoint(i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 
+				ws.c_WorldBoundary * ws.blockSize * ws.chunkSize -2, 100);
+
+			chunks[make_pair(0, i)]->addPoint(2, i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 100);
+			chunks[make_pair(ws.c_WorldBoundary - 1, i)]->addPoint(ws.c_WorldBoundary * ws.blockSize * ws.chunkSize - 2,
+				i * ws.blockSize * ws.chunkSize + j * ws.blockSize, 100);
+		}
+	}
+	
+	if (ws.openCLOptimalization)
+	{
+		std::vector<cl::Platform> all_platforms;
+		cl::Platform::get(&all_platforms);
+		if (all_platforms.size() == 0) throw "OpenCL Error";
+		cl::Platform default_platform = all_platforms[0];
+		
+		std::vector<cl::Device> all_devices;
+		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+		if (all_devices.size() == 0) throw "OpenCL Error";
+		cl::Device default_device = all_devices[0];
+
+		for (auto chunk : chunks)
+		{
+			chunk.second->initOpenCL(default_device);
 		}
 	}
 }
-
 World::~World()
 {
 	for(auto chunk : chunks)
@@ -26,7 +64,7 @@ World::~World()
 
 void World::jump(long long amount, bool visualReady)
 {
-	const long long target = time + amount;
+	const long long target = time + (amount*2);
 	bool allFinished = false;
 	while (!allFinished)
 	{
@@ -40,7 +78,7 @@ void World::jump(long long amount, bool visualReady)
 				{
 					if (chunk.second->getMaxTimeDifference() == 0)
 					{
-						chunk.second->schedule();
+						chunk.second->setAsScheduled();
 						Core::runChunk(chunk.second);
 					}
 				}
@@ -52,7 +90,7 @@ void World::jump(long long amount, bool visualReady)
 	{
 		for (auto chunk : chunks)
 		{
-			chunk.second->acceptAllCells();
+			chunk.second->acceptObjects();
 		}
 	}
 	time = target;
@@ -64,7 +102,7 @@ void World::addCell(shared_ptr<DNA> dna, const double x,const double y)
 
 	if (block != nullptr)
 	{
-		block->createCell(dna, Vector(x, y), ws.c_NewCellRadius);
+		block->createCell(dna, Vector(x, y));
 	}
 }
 
@@ -111,7 +149,7 @@ vector<shared_ptr<DNA>> World::getDNA()
 
 long long World::getTime()
 {
-	return time;
+	return time/2;
 }
 
 /*void World::step()

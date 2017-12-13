@@ -13,10 +13,22 @@ Joint::Joint()
 	growFactor = 0;
 	strength = 0;
 	damping = 0;
-	friction = 0;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		flowRate[i] = 0.5;
+	}
+	//friction = 0;
+}
+Joint::~Joint()
+{
+	if(active)
+	{ 
+		p1->deleteJoint(id);
+		p2->deleteJoint(id);
+	}
 }
 
-void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction)
+/*void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDamping, const bool tfriction)
 {
 	active = true;
 	p1 = tp1;
@@ -28,13 +40,51 @@ void Joint::init(Point* tp1, Point* tp2, const float tStrength, const float tDam
 	growFactor = 0;
 	strength = tStrength;
 	damping = tDamping;
-	friction = tfriction;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		flowRate[i] = 0.5;
+	}
+	//friction = tfriction;
 	id = lastID;
 	lastID++;
+}*/
+
+void Joint::init(WorldSettings * ws, Point * tp1, Point * tp2, const float _targetLength, const float _growFactor)
+{
+	if (active)
+	{
+		deconstruct();
+	}
+
+	active = true;
+	p1 = tp1;
+	p2 = tp2;
+	p1->addJoint(this);
+	p2->addJoint(this);
+	length = Vector::getLength(tp1->getPlace(), tp2->getPlace());
+	if (_targetLength < 0.0)
+	{
+		targetLength = length;
+		growFactor = 0;
+	}
+	else
+	{
+		targetLength = _targetLength;
+		growFactor = _growFactor;
+	}
+	strength = ws->jointStrength;
+	damping = ws->jointDampening;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		flowRate[i] = 0.5;
+	}
+	id = lastID++;
 }
 
-void Joint::init(Point* tp1, Point* tp2, const Joint& other)
+/*void Joint::init(Point* tp1, Point* tp2, const Joint& other)
 {
+	if (active) throw  "You can not reactivate this";
+
 	active = true;
 	p1 = tp1;
 	p2 = tp2;
@@ -45,10 +95,13 @@ void Joint::init(Point* tp1, Point* tp2, const Joint& other)
 	growFactor = other.growFactor;
 	strength = other.strength;
 	damping = other.damping;
-	friction = other.friction;
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		flowRate[i] = other.flowRate[i];
+	}
 	id = lastID;
 	lastID++;
-}
+}*/
 
 void Joint::deconstruct()
 {
@@ -62,10 +115,32 @@ void Joint::deconstruct()
 	growFactor = 0;
 	strength = 0;
 	damping = 0;
-	friction = 0;
 }
 
-Vector Joint::calcFriction(const Vector& flow)
+bool Joint::changeFromTo(Point * from, Point * to)
+{
+	if (from->getID() == p1->getID())
+	{
+		p1 = to;
+		from->deleteJoint(id);
+		to->addJoint(this);
+		return true;
+	}
+	else if (from->getID() == p2->getID())
+	{
+		p2 = to;
+		from->deleteJoint(id);
+		to->addJoint(this);
+		return true;
+	}
+	else
+	{
+		throw "not supposed to happen";
+		return false;
+	}
+}
+
+/*Vector Joint::calcFriction(const Vector& flow)
 {
 	if (friction) 
 {
@@ -98,7 +173,7 @@ Vector Joint::calcFriction(const Vector& flow)
 			p1->addForce(flowResponse);
 			p2->addForce(flowResponse);
 			flowResponse.multiply(2);
-			frictionForce = flowResponse;
+			//frictionForce = flowResponse;
 			return flowResponse;
 		}
 	}
@@ -108,8 +183,8 @@ Vector Joint::calcFriction(const Vector& flow)
 	}
 	return Vector(0.0, 0.0);
 }
-
-void Joint::applyPresureForce(float p)
+*/
+/*void Joint::applyPresureForce(float p)
 {
 	Vector jointLine = Vector(p1->getPlace(), p2->getPlace());
 	float surface = jointLine.getLength();
@@ -117,10 +192,11 @@ void Joint::applyPresureForce(float p)
 	normal.multiply(0.5*surface*p);
 	p1->addForce(normal);
 	p2->addForce(normal);
-}
-
+}*/
+/*
 void Joint::jointJointCollision(Joint* other)
 {
+	throw "Old Code";
 	Vector intersection(0.0, 0.0);
 	if (Shapes::lineSegementsIntersect(p1->getPlace(), p2->getPlace(), other->p1->getPlace(), other->p2->getPlace(), intersection))
 	{
@@ -138,18 +214,18 @@ void Joint::jointJointCollision(Joint* other)
 		float j2l1 = Vector::getLength(other->p1->getPlace(), intersection);
 		float j2l2 = Vector::getLength(other->p2->getPlace(), intersection);
 
-		p1->addForce(force1*((j1l2) / (j1l1 + j1l2)));
-		p2->addForce(force1*((j1l1) / (j1l1 + j1l2)));
+		//p1->addForce(force1*((j1l2) / (j1l1 + j1l2)));
+		//p2->addForce(force1*((j1l1) / (j1l1 + j1l2)));
 
-		other->p1->addForce(force2*((j2l2) / (j2l1 + j2l2)));
-		other->p2->addForce(force2*((j2l1) / (j2l1 + j2l2)));
+		//other->p1->addForce(force2*((j2l2) / (j2l1 + j2l2)));
+		//other->p2->addForce(force2*((j2l1) / (j2l1 + j2l2)));
 	}
 }
-
-void Joint::setFriction(bool _friction)
+*/
+/*void Joint::setFriction(bool _friction)
 {
 	friction = _friction;
-}
+}*/
 
 Point* Joint::getP1()const
 {
@@ -160,17 +236,18 @@ Point* Joint::getP2()const
 {
 	return p2;
 }
-
+/*
 Point* Joint::getOther(Point* p)const
 {
 	if(p->getID()==p1->getID())
 	{
 		return p2;
-	}else
+	}
+	else
 	{
 		return p1;
 	}
-}
+}*/
 
 float Joint::getLength()
 {
@@ -193,7 +270,7 @@ void Joint::setTarget(const float _targetLength, const float _growFactor)
 	growFactor = _growFactor;
 }
 
-bool Joint::grow(const float precision)
+void Joint::logic(const float precision)
 {
 	if (growFactor > 0 && targetLength != length)
 	{
@@ -203,12 +280,10 @@ bool Joint::grow(const float precision)
 			if (targetLength - length <= gf)
 			{
 				length = targetLength;
-				return true;
 			}
 			else
 			{
 				length += gf;
-				return false;
 			}
 		}
 		else
@@ -216,13 +291,27 @@ bool Joint::grow(const float precision)
 			if (length - targetLength <= gf)
 			{
 				length = targetLength;
-				return true;
 			}
 			else
 			{
 				length -= gf;
-				return false;
 			}
+		}
+	}
+
+	for (int i = 0; i < WorldSettings::e_AmountOfParticles; i++)
+	{
+		float m1 = p1->getParticleCount(i);
+		float m2 = p2->getParticleCount(i);
+		float ratio = m1 / (m1+m2);
+		float flow = (flowRate[i] - ratio) * 0.05 * precision;
+		if(flow < 0.0)
+		{
+			p1->moveParticle(p2, i, m1 * -flow);
+		}
+		else
+		{
+			p2->moveParticle(p1, i, m2 * flow);
 		}
 	}
 }
@@ -247,10 +336,20 @@ void Joint::setDamping(float t)
 	damping = t;
 }
 
-const Vector & Joint::getFrictionForce()const
+float Joint::getFlowRate(int i) const
+{
+	return flowRate[i];
+}
+
+void Joint::setFlowRate(const int i, const float t)
+{
+	flowRate[i] = t;
+}
+
+/*const Vector & Joint::getFrictionForce()const
 {
 	return frictionForce;
-}
+}*/
 
 long Joint::getId()const
 {

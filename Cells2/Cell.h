@@ -9,7 +9,8 @@ class Cell;
 
 class Cell : public CellFrame{
 public:
-	Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter, const double tRadius);
+	Cell(shared_ptr<DNA> tDna, WorldSettings*_ws, const Vector& tCenter);
+	Cell(Cell * parent);
 	~Cell();
 
 	void cellLogic();
@@ -18,7 +19,8 @@ public:
 
 	Membrane* getOuterMembrane()const;
 
-	vector<Cell*> split();
+	bool readyToSplit();
+	Cell* split();
 
 private:
 	shared_ptr<DNA> dna;
